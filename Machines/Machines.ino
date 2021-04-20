@@ -202,7 +202,8 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
       rssi = buf[0];
       if (sniffer->buf[0] == 0x80 /*beacon*/&& sniffer->buf[37] == 0x00 /*hidden ssid*/&& sniffer->buf[38] == 0xDD /*vendor info*/&& sniffer->buf[4] == 0xef /*magic word1*/&& sniffer->buf[5] == 0x50/*magic word2*/)
       {
-        //dont process data here in interrupt  
+        //dont process data here in interrupt!
+        // "inProcess" is set true and in the next loop "processData()" will be called to process the buffer (sniffer->buf).
       }
       else
       {
