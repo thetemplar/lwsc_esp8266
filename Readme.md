@@ -44,6 +44,8 @@ Sendet nun ein Gateway ein Paket, enthält es Chip-ID (MAC) des Empfängers (ode
 
 Damit die Reichweite nicht auf die die des Gateways beschräkt ist, sendet jede Relais-Platine (sofern sie nicht die Destination des Pakets ist oder das Paket schon ein Mal gesehen hat) das Paket weiter. Somit sollte das Paket jede Platine erreichen, auch wenn sie nur "verkettet" erreicht werden kann.
 
+Mehr Details dazu findet man unter ```wifi_send_pkt_freedom()```, da dies die benutzte API Schnittstelle des WIFI Stacks ist.
+
 ## Code
 ### ReleaisPlatinen
 Sämtlicher Code der Platinen ist in [Machines/Machines.ino](https://github.com/thetemplar/lwsc_esp8266/blob/4c43346d362184e6cd283a0189910880ec8b1b6a/Machines/Machines.ino#L275   "Machines/Machines.ino")  zu finden. Leider ist nicht 100% sicher, ob dies auch der Code ist, der auf den aktuell verbauten Platinen läuft, da es ein Repo-Problem gab. Daher wird aktuell einfach die vorhandene Firmware extrahiert und auf neue ESP8266 geflasht. Die ID wird durch die eindeutige MAC Adresse nicht doppelt vergeben.
