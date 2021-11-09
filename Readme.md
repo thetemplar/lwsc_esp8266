@@ -35,6 +35,9 @@ ESP8266 mit I2C-GPIO Port-Externdern für eine Matrix-Tastatur. Funkt direkt mit
 ### Android App
 App zur Steuerung der Relaisplatinen, sind im WLAN mit einem Gateway (entweder über Accesspoints oder direkt).
 
+### Rasperry Pi
+Es ist ein Rasp-Pi im WLAN Netz der Accesspoints vorgesehen gewesen, der sowohl als Gateway dient als auch als Datenbank für die App (Nutzer, Historie, ID<>Namen, etc...). Aktuell nur testweise und nicht im Betrieb.
+
 ## Funktionsweise
 Die eigentlichen Relais-Platinen werden nicht über WLAN angesprochen, sondern über ein modifiziertes Beacon Frame des IEEE 802.11 Standarts. Dabei wird von Gateway ein Paket "an alle" gesendet, die in Reichweite sind. Die jeweiligen Platinen/Clients, sind dabei in keinem Netzwerk verbunden, sondern aus Sicht des IEEE 802.11 Standarts "nicht verbunden". Sie empfangen jedoch alle Beacon Pakete aller sendenten WLAN Geräte in Reichweite.
 Sendet nun ein Gateway ein Paket, enthält es Chip-ID (MAC) des Empfängers (oder 0xFFFFFF für Broadcast), die eigene Chip-ID, den Message-Type, Payload, SqeuenceNumver und TTL. In der Payload steht zB "löse Relais 1 für 200ms aus", siehe [releaseRelais() in Machines.ino](https://github.com/thetemplar/lwsc_esp8266/blob/4c43346d362184e6cd283a0189910880ec8b1b6a/Machines/Machines.ino#L275   "Machines.ino"). 
