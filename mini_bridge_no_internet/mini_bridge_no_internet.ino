@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
-#include <oled.h>
 extern "C" {
 #include "user_interface.h"
 }
@@ -13,7 +12,7 @@ long lastSendTime = 0;        // last send time
 
 bool LoRaEnabled = false;
 
-const char* ssid = "lwsc_wifibridge_nodemcu";
+const char* ssid = "lwsc_wifibridge_simple";
 const char* password = "lauterbach";
 WiFiUDP wifiUdp;
 unsigned int udpPort = 5555;
@@ -100,7 +99,6 @@ void setup() {
 
 unsigned long next;
 void loop() {
-  /*
   int cb = wifiUdp.parsePacket();
   if (cb == 6) {    
     Serial.println("[wifi] package: " + String(packetBuffer[0], HEX) + " " + String(packetBuffer[1], HEX) + " " + String(packetBuffer[2], HEX) + " " + String(packetBuffer[3], HEX) + " " + String(packetBuffer[4], HEX) + " " + String(packetBuffer[5], HEX));
@@ -117,6 +115,5 @@ void loop() {
   {    
     Serial.printf("[wifi] length = %i\n", cb);
   }
-*/
   delay(1);
 }

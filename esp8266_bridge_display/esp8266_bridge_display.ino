@@ -32,8 +32,8 @@ uint32_t autosaveTime = 0;
 
 bool booted = false;
 
-String AppBuffer[4];
-String MachineBuffer[4];
+String AppBuffer[5];
+String MachineBuffer[5];
 
 
 const char* ssid = "lwsc_wifibridge_display";
@@ -117,6 +117,7 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
     rssi = buf[0];
     if (sniffer->buf[0] == 0x80 /*beacon*/&& sniffer->buf[37] == 0x00 /*hidden ssid*/&& sniffer->buf[38] == 0xDD /*vendor info*/&& sniffer->buf[4] == 0xef /*magic word1*/&& sniffer->buf[5] == 0x50/*magic word2*/)
     {
+    Serial.println("*");
       /*
       msgData msg;
       msg.dst = (sniffer->buf[6]  << 24) | (sniffer->buf[7]  << 16) | (sniffer->buf[8]  << 8) | sniffer->buf[9];
@@ -129,13 +130,14 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
       msg.dataLength = (sniffer->buf[39])-5;
       */
       char msg_dst[50] = {0};
-      sprintf(msg_dst,"%02X%02X%02X%02X",sniffer->buf[0],sniffer->buf[1],sniffer->buf[2],sniffer->buf[3]);
+      sprintf(msg_dst,"%02X %02X%02X%02X%02X>%02X%02X%02X%02X %02X",cbCounter,sniffer->buf[12],sniffer->buf[13],sniffer->buf[14],sniffer->buf[15], sniffer->buf[6],sniffer->buf[7],sniffer->buf[8],sniffer->buf[9], sniffer->buf[44]);
 
       
+      MachineBuffer[4] = MachineBuffer[3];
       MachineBuffer[3] = MachineBuffer[2];
       MachineBuffer[2] = MachineBuffer[1];
       MachineBuffer[1] = MachineBuffer[0];
-      MachineBuffer[0] = String(cbCounter) + " " + String(msg_dst) + " " + String(sniffer->buf[44], HEX);
+      MachineBuffer[0] = String(msg_dst);
       cbCounter++;
     }
   }
@@ -164,11 +166,11 @@ void setupAP()
   led::setColor(0,100,0);
   Serial.println("Setting up AP Mode");
   
-  WiFi.mode(WIFI_AP); 
-  WiFi.softAP(ssid, password);
+  wifi_promiscuous_enable(0);
   wifi_set_phy_mode(PHY_MODE_11B);
   wifi_set_channel(CHANNEL);
-  wifi_promiscuous_enable(0);
+  WiFi.mode(WIFI_AP); 
+  WiFi.softAP(ssid, password);
 }
 
 void setup() {
@@ -222,10 +224,13 @@ void loop() {
     delay(50);
     fire(packetBuffer[0], dest, packetBuffer[5]);
 
+    AppBuffer[4] = AppBuffer[3];
     AppBuffer[3] = AppBuffer[2];
     AppBuffer[2] = AppBuffer[1];
     AppBuffer[1] = AppBuffer[0];
-    AppBuffer[0] = String(seqnum) + " " + String(dest);
+    char msg_dst[50] = {0};
+    sprintf(msg_dst,"%04X %02X%02X%02X%02X %02X:%02X",seqnum,packetBuffer[1],packetBuffer[2],packetBuffer[3],packetBuffer[4],packetBuffer[0],packetBuffer[5]);
+    AppBuffer[0] = String(msg_dst);
   } else if (cb)
   {    
     Serial.printf("[wifi] length = %i\n", cb);

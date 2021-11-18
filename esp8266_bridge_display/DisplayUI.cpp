@@ -12,7 +12,7 @@ void DisplayUI::configInit() {
        make sure to have version 4 of the display library installed
        https://github.com/ThingPulse/esp8266-oled-ssd1306/releases/tag/4.0.0
      */
-    display.setFont(DejaVu_Sans_Mono_12);
+    display.setFont(DejaVu_Sans_Mono_8);
 
     display.setContrast(255);
 
@@ -283,6 +283,7 @@ void DisplayUI::drawLiveMachine() {
     drawString(1, MachineBuffer[1]);
     drawString(2, MachineBuffer[2]);
     drawString(3, MachineBuffer[3]);
+    drawString(4, MachineBuffer[4]);
 }
 
 extern String AppBuffer[4];
@@ -291,6 +292,7 @@ void DisplayUI::drawLiveApp() {
     drawString(1, AppBuffer[1]);
     drawString(2, AppBuffer[2]);
     drawString(3, AppBuffer[3]);
+    drawString(4, AppBuffer[4]);
 }
 
 void DisplayUI::drawMenu() {
