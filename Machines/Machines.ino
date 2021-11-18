@@ -22,7 +22,7 @@ extern "C" {
 
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-#include <SimpleTimer.h>
+#include "SimpleTimer.h"
 #include <map>
 #include "defines.h"
 
@@ -217,7 +217,6 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
 
 void sendKeepAlive()
 {
-  if(inUpdateMode) return;
   uint8_t result[sizeof(beacon_raw)];
   uint16_t seq = createPacket(result, {}, 0, 0xffffffff, MSG_KeepAlive);
   uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
@@ -253,7 +252,7 @@ void setup() {
   setupFreedom();
 
   sendKeepAlive();
-  //timer.setInterval(KEEPALIVE_INTERVAL * 1000 + (ESP.getChipId() & 0xfff), sendKeepAlive);
+  timer.setInterval(KEEPALIVE_INTERVAL * 1000 + (ESP.getChipId() & 0xfff) * 10, sendKeepAlive);
 
   localAddress = ESP.getChipId();
 }
@@ -317,7 +316,7 @@ void releaseRelais(byte lwscType, byte lwscPort)
       digitalWrite(2, ledState);
       digitalWrite(RELAIS1, HIGH);
       Serial.println("1st Release");
-      while (millis() < currentMillis + 1000) delay(1);
+      while (millis() < currentMillis + 3000) delay(1);
       digitalWrite(RELAIS1, LOW); 
     }
     
@@ -327,7 +326,7 @@ void releaseRelais(byte lwscType, byte lwscPort)
       digitalWrite(2, ledState);
       digitalWrite(RELAIS2, HIGH);
       Serial.println("2nd Release");
-      while (millis() < currentMillis + 1000) delay(1);
+      while (millis() < currentMillis + 3000) delay(1);
       digitalWrite(RELAIS2, LOW); 
     }
     
@@ -338,7 +337,7 @@ void releaseRelais(byte lwscType, byte lwscPort)
       digitalWrite(RELAIS1, HIGH);
       digitalWrite(RELAIS2, HIGH);
       Serial.println("Both Release");
-      while (millis() < currentMillis + 1000) delay(1);
+      while (millis() < currentMillis + 3000) delay(1);
       digitalWrite(RELAIS1, LOW); 
       digitalWrite(RELAIS2, LOW); 
     }
@@ -350,7 +349,7 @@ void releaseRelais(byte lwscType, byte lwscPort)
       digitalWrite(2, ledState);
       digitalWrite(RELAIS1, HIGH);
       Serial.println("1st Release");
-      while (millis() < currentMillis + 1000) delay(1);
+      while (millis() < currentMillis + 400) delay(1);
       digitalWrite(RELAIS1, LOW); 
     }
     
@@ -360,7 +359,7 @@ void releaseRelais(byte lwscType, byte lwscPort)
       digitalWrite(2, ledState);
       digitalWrite(RELAIS2, HIGH);
       Serial.println("2nd Release");
-      while (millis() < currentMillis + 1000) delay(1);
+      while (millis() < currentMillis + 400) delay(1);
       digitalWrite(RELAIS2, LOW); 
     }
     
@@ -371,7 +370,7 @@ void releaseRelais(byte lwscType, byte lwscPort)
       digitalWrite(RELAIS1, HIGH);
       digitalWrite(RELAIS2, HIGH);
       Serial.println("Both Release");
-      while (millis() < currentMillis + 1000) delay(1);
+      while (millis() < currentMillis + 400) delay(1);
       digitalWrite(RELAIS1, LOW); 
       digitalWrite(RELAIS2, LOW); 
     }
@@ -423,4 +422,3 @@ void releaseRelais(byte lwscType, byte lwscPort)
     }
   }
 }
-
