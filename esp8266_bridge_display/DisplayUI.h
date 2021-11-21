@@ -44,6 +44,9 @@ struct Menu {
 enum class DISPLAY_MODE { OFF,
                           MENU,
                           LIVE_MACHINE,
+                          REQ_RSSI,
+                          LIST_RSSI,
+                          LIST_CONNECTED,
                           LIVE_APP };
 
 class DisplayUI {
@@ -101,6 +104,9 @@ class DisplayUI {
     private:
         int16_t selectedID    = 0; // i.e. access point ID to draw the apMenu
         uint8_t scrollCounter = 0; // for horizontal scrolling
+        uint8_t listSelIndex  = 0;
+        uint8_t listSelLvl    = 0;
+        uint32_t listSelId    = 0;
 
         uint32_t scrollTime = 0;   // last time a character was moved
         uint32_t drawTime   = 0;   // last time a frame was drawn
@@ -145,6 +151,8 @@ class DisplayUI {
         void drawMenu();
         void drawLiveApp();
         void drawLiveMachine();
+        void drawConnectedApp();
+        void drawRSSIList();
         void clearMenu(Menu* menu);
 
         // menu functions

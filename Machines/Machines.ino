@@ -39,6 +39,7 @@ int localAddress = 0x00;      // address of this device
 bool LoRaEnabled = false;
 
 SimpleTimer timer;
+int timerId;
 
 bool inProcess = false;
 uint16_t ledState;
@@ -65,6 +66,9 @@ uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst,
   memcpy(&result[0], &beacon_raw[0], sizeof(beacon_raw));
   memcpy(&result[sizeof(beacon_raw)], &buf[0], len);
 
+
+  uint32_t id = ESP.getChipId();
+
   //dst
   result[4 + 2] = (dst >> 24) & 0xFF;
   result[4 + 3] = (dst >> 16) & 0xFF;
@@ -72,16 +76,16 @@ uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst,
   result[4 + 5] = (dst) & 0xFF;
 
   //src
-  result[10 + 2] = (ESP.getChipId() >> 24) & 0xFF;
-  result[10 + 3] = (ESP.getChipId() >> 16) & 0xFF;
-  result[10 + 4] = (ESP.getChipId() >> 8) & 0xFF;
-  result[10 + 5] = (ESP.getChipId()) & 0xFF;
+  result[10 + 2] = (id >> 24) & 0xFF;
+  result[10 + 3] = (id >> 16) & 0xFF;
+  result[10 + 4] = (id >> 8) & 0xFF;
+  result[10 + 5] = (id) & 0xFF;
 
   //transmitc
-  result[16 + 2] = (ESP.getChipId() >> 24) & 0xFF;
-  result[16 + 3] = (ESP.getChipId() >> 16) & 0xFF;
-  result[16 + 4] = (ESP.getChipId() >> 8) & 0xFF;
-  result[16 + 5] = (ESP.getChipId()) & 0xFF;
+  result[16 + 2] = (id >> 24) & 0xFF;
+  result[16 + 3] = (id >> 16) & 0xFF;
+  result[16 + 4] = (id >> 8) & 0xFF;
+  result[16 + 5] = (id) & 0xFF;
 
   result[22] = (seqnum >> 8) & 0xFF;
   result[23] = (seqnum) & 0xFF;
@@ -133,7 +137,7 @@ void processData(struct sniffer_buf2 *sniffer)
   msg.dataLength = (sniffer->buf[39])-5;
   memcpy(msg.data, &(sniffer->buf[45]), sniffer->buf[39]-5);
   
-  Serial.printf("Data (dst: %02x:%02x:%02x:%02x:%02x:%02x (0x%08x), src: %02x:%02x:%02x:%02x:%02x:%02x (0x%08x), rssi: %d, ttl: %d, type: %02x, seq: %d: ", sniffer->buf[4], sniffer->buf[5], sniffer->buf[6], sniffer->buf[7], sniffer->buf[8], sniffer->buf[9], msg.dst, sniffer->buf[10], sniffer->buf[11], sniffer->buf[12], sniffer->buf[13], sniffer->buf[14], sniffer->buf[15], msg.src, rssi, msg.ttl, msg.type, msg.seq);
+  Serial.printf("Data (dst: 0x%08x, src: 0x%08x, rssi: %d, ttl: %d, type: %02x, seq: %d:, len: %d: ", msg.dst, msg.src, rssi, msg.ttl, msg.type, msg.seq, msg.dataLength);
   for(uint16_t i = 0; i < msg.dataLength; i++)
     Serial.printf("%02x ", msg.data[i]);
   Serial.printf("\n"); 
@@ -156,36 +160,69 @@ void processData(struct sniffer_buf2 *sniffer)
   {
     delayMicroseconds(1000+random(20000)); //1-30ms delay to avoid parallel-fwd of multiple nodes
     //forward!
-    Serial.printf("Forward to dst(%d) from me(%d) with new ttl:%d!\n", msg.dst, ESP.getChipId(), (msg.ttl-1));
+    Serial.printf("Forward to dst(0x%08x) from me(0x%08x) with new ttl:%d!\n", msg.dst, ESP.getChipId(), (msg.ttl-1));
     forwardPacket(sniffer->buf);
     uint16_t res = wifi_send_pkt_freedom(sniffer->buf, sizeof(beacon_raw)+ msg.dataLength, 0);      
   }
   else
   {
-    Serial.printf("No Forward: TTL Death\n");  
+    Serial.printf("No Forward: TTL Death or I'm the dst\n");  
   }
   
-  if(msg.type == MSG_Data && (msg.dst == ESP.getChipId() || msg.dst == 0xffffffff))
-  {
-    releaseRelais(msg.data[0], msg.data[1]);
-    
+  if(msg.dst == ESP.getChipId() || msg.dst == 0xffffffff)
+  {      
     //i am the reciever! yaaaaaay
-    Serial.printf("I am the dst (dst(%d) == chipid(%d))! Sending ack...\n", msg.dst, ESP.getChipId());  
+    Serial.printf("I am the dst (dst(0x%08x) == chipid(0x%08x))! Sending ack...\n", msg.dst, ESP.getChipId());  
     Serial.printf("My data is:\n");    
     for(uint16_t i = 0; i < msg.dataLength; i++)
       Serial.printf("%02x ", msg.data[i]); 
     Serial.printf("\n\n");  
     
-    if(msg.dst != 0xffffffff)
+    if(msg.type == MSG_Data)
     {
-      //send reply
-      uint8_t result[sizeof(beacon_raw) + 2];    
-      uint8_t data[2] = {(msg.seq >> 8) & 0xFF, msg.seq & 0xFF}; //ack with msg.src & msg.seq
-      createPacket(result, data, 2, msg.src, MSG_Data_Ack);
+      releaseRelais(msg.data[0], msg.data[1]);
+      
+      if(msg.dst != 0xffffffff)
+      {
+        //send reply
+        uint8_t result[sizeof(beacon_raw) + 2];    
+        uint8_t data[2] = {(msg.seq >> 8) & 0xFF, msg.seq & 0xFF}; //ack with msg.src & msg.seq
+        createPacket(result, data, 2, msg.src, MSG_Data_Ack);
+        uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+        Serial.printf("Send MSG_Data_Ack");  
+        /*for(uint16_t i = 0; i < sizeof(result); i++)
+          Serial.printf("%02x ", result[i]); 
+        Serial.printf("\n"); */
+      }
+    } else if(msg.type == MSG_RequestRssi) {
+      timer.disable(timerId);
+      //Serial.printf("MSG_RequestRssi \n");  
+      uint8_t s = 5 * lastRssi.size() + 1;
+      uint8_t result[sizeof(beacon_raw) + s];    
+      uint8_t data[s] = {0};
+      
+      std::map<uint32_t, uint32_t>::iterator it;
+      result[sizeof(beacon_raw)] = lastRssi.size() & 0xFF;
+      uint8_t i = 1;
+      for (it = lastRssi.begin(); it != lastRssi.end(); it++)
+      {
+        memcpy((uint8_t*)&data[i], &(it->first), 4);
+        //Serial.printf("   id %08X - ", it->first);  
+        uint8_t it_rssi = it->second >> 24;
+        memcpy((uint8_t*)&data[i + 4], &(it_rssi), 1);
+        //Serial.printf("rssi %d - ", (int)(it->second >> 24));  
+        //Serial.printf("last %d \n", (millis() >> 8) - (it->second & 0xFFFFFF));  
+        i+=5;
+      }
+
+      uint32_t randNumber = random(3000);
+      delay(randNumber);
+      
+      createPacket(result, data, s, msg.src, MSG_SendRssi);
       uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-      /*for(uint16_t i = 0; i < sizeof(result); i++)
-        Serial.printf("%02x ", result[i]); 
-      Serial.printf("\n"); */
+      Serial.printf("Send MSG_RequestRssi \n"); 
+      delay(5000); //so the "air" stays free for others!
+      timer.enable(timerId);
     }
   }
  
@@ -252,7 +289,7 @@ void setup() {
   setupFreedom();
 
   sendKeepAlive();
-  timer.setInterval(KEEPALIVE_INTERVAL * 1000 + (ESP.getChipId() & 0xfff) * 10, sendKeepAlive);
+  timerId = timer.setInterval(KEEPALIVE_INTERVAL * 100 + (ESP.getChipId() & 0xfff) * 10, sendKeepAlive);
 
   localAddress = ESP.getChipId();
 }
@@ -261,7 +298,7 @@ void loop() {
   //uint32_t currentMillis = millis();
   if (millis() > 2592000000) ESP.restart(); //(every 30days)
   
-  //timer.run();
+  timer.run();
   if(inProcess)
   {
     processData(sniffer);

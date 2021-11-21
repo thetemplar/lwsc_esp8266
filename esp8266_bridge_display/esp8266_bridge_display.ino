@@ -21,6 +21,7 @@
 #include "led.h"
 #include "defines.h"
 
+#include <map>
 
 #define CHANNEL 1
 
@@ -35,11 +36,13 @@ bool booted = false;
 String AppBuffer[5];
 String MachineBuffer[5];
 
+std::map<uint32_t, std::map<uint32_t, uint8_t> > mapOfRssi;
 
 const char* ssid = "lwsc_wifibridge_display";
 const char* password = "lauterbach";
 WiFiUDP wifiUdp;
 unsigned int udpPort = 5555;
+
 byte msgCount = 0;            // count of outgoing messages
 int localAddress = 0x00;      // address of this device
 long lastSendTime = 0;        // last send time
@@ -103,12 +106,30 @@ void fire(uint8_t type, uint32_t dest, uint8_t cmd)
 {   
   uint8_t result[sizeof(beacon_raw) + 2];   
   uint8_t data[2] = {type, cmd};
-  createPacket(result, data, 2, dest, 0x01);
+  createPacket(result, data, 2, dest, MSG_Data);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  //delay(20);
+  //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   Serial.printf("fired to %08x cmd %d type %d = %d\n\n", dest, cmd, type, res);  
+  led::setColor(0,0,100);
+  delay(70);
+  led::setColor(0,100,0);
+}
+
+void reqRssi(uint32_t dest)
+{   
+  uint8_t result[sizeof(beacon_raw) + 1];  
+  uint8_t data[1] = {0}; 
+  createPacket(result, data, 1, 0xFFFFFFFF, MSG_RequestRssi);
+  int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  led::setColor(100,100,100);
+  delay(70);
+  led::setColor(0,100,0);
 }
 
 byte cbCounter;
+uint16_t lastSeq;
+uint32_t lastSrc;
 void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
 {
   uint32_t old_ints = intDisable();
@@ -117,8 +138,6 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
     rssi = buf[0];
     if (sniffer->buf[0] == 0x80 /*beacon*/&& sniffer->buf[37] == 0x00 /*hidden ssid*/&& sniffer->buf[38] == 0xDD /*vendor info*/&& sniffer->buf[4] == 0xef /*magic word1*/&& sniffer->buf[5] == 0x50/*magic word2*/)
     {
-    Serial.println("*");
-      /*
       msgData msg;
       msg.dst = (sniffer->buf[6]  << 24) | (sniffer->buf[7]  << 16) | (sniffer->buf[8]  << 8) | sniffer->buf[9];
       msg.src = (sniffer->buf[12] << 24) | (sniffer->buf[13] << 16) | (sniffer->buf[14] << 8) | sniffer->buf[15];
@@ -128,17 +147,45 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
       msg.ttl = sniffer->buf[43];
       msg.type = sniffer->buf[44];
       msg.dataLength = (sniffer->buf[39])-5;
-      */
-      char msg_dst[50] = {0};
-      sprintf(msg_dst,"%02X %02X%02X%02X%02X>%02X%02X%02X%02X %02X",cbCounter,sniffer->buf[12],sniffer->buf[13],sniffer->buf[14],sniffer->buf[15], sniffer->buf[6],sniffer->buf[7],sniffer->buf[8],sniffer->buf[9], sniffer->buf[44]);
+      memcpy(msg.data, &(sniffer->buf[45]), sniffer->buf[39]-5);
 
-      
-      MachineBuffer[4] = MachineBuffer[3];
-      MachineBuffer[3] = MachineBuffer[2];
-      MachineBuffer[2] = MachineBuffer[1];
-      MachineBuffer[1] = MachineBuffer[0];
-      MachineBuffer[0] = String(msg_dst);
-      cbCounter++;
+      if(msg.seq == lastSeq && msg.src == lastSrc)
+      {
+      }
+      else
+      {
+        lastSeq = msg.seq;
+        lastSrc = msg.src;
+        char msg_dst[50] = {0};
+        sprintf(msg_dst,"%02X %04X %02X%02X%02X%02X %02X %d",cbCounter,msg.seq,sniffer->buf[12],sniffer->buf[13],sniffer->buf[14],sniffer->buf[15], msg.type, sniffer->rx_ctrl.rssi);
+  
+        
+        MachineBuffer[4] = MachineBuffer[3];
+        MachineBuffer[3] = MachineBuffer[2];
+        MachineBuffer[2] = MachineBuffer[1];
+        MachineBuffer[1] = MachineBuffer[0];
+        MachineBuffer[0] = String(msg_dst);
+        cbCounter++;
+
+        if(cbCounter%2==0)
+          led::setColor(100,30,0);
+        else
+          led::setColor(100,0,30);
+
+        if(msg.type == MSG_SendRssi)
+        {  
+          //Serial.println(String(msg.src, HEX));
+          for(int i = 1; i < msg.dataLength; i+=5)
+          {
+            uint32_t id_tmp;
+            uint8_t rssi_tmp;
+            memcpy((uint8_t*)&id_tmp, (uint8_t*)&msg.data + i, 4);
+            memcpy((uint8_t*)&rssi_tmp, (uint8_t*)&msg.data + i + 4, 1);
+            Serial.println("_" + String(id_tmp, HEX) + ":" + String(rssi_tmp));
+            mapOfRssi[msg.src][id_tmp] = rssi_tmp;
+          }
+        }
+      }
     }
   }
   intEnable(old_ints);
@@ -170,7 +217,7 @@ void setupAP()
   wifi_set_phy_mode(PHY_MODE_11B);
   wifi_set_channel(CHANNEL);
   WiFi.mode(WIFI_AP); 
-  WiFi.softAP(ssid, password);
+  WiFi.softAP(ssid, password, CHANNEL);
 }
 
 void setup() {
@@ -198,6 +245,8 @@ void setup() {
   wifiUdp.begin(udpPort);  
 
   localAddress = ESP.getChipId();
+
+  seqnum = random(3000);
 }
 
 void loop() {
@@ -221,8 +270,6 @@ void loop() {
     dest += packetBuffer[2]<<16;
     dest += packetBuffer[1]<<24;
     fire(packetBuffer[0], dest, packetBuffer[5]);
-    delay(50);
-    fire(packetBuffer[0], dest, packetBuffer[5]);
 
     AppBuffer[4] = AppBuffer[3];
     AppBuffer[3] = AppBuffer[2];
@@ -231,8 +278,7 @@ void loop() {
     char msg_dst[50] = {0};
     sprintf(msg_dst,"%04X %02X%02X%02X%02X %02X:%02X",seqnum,packetBuffer[1],packetBuffer[2],packetBuffer[3],packetBuffer[4],packetBuffer[0],packetBuffer[5]);
     AppBuffer[0] = String(msg_dst);
-  } else if (cb)
-  {    
+  } else if (cb) {    
     Serial.printf("[wifi] length = %i\n", cb);
   }
   delay(1);

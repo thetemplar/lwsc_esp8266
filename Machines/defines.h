@@ -66,7 +66,7 @@ enum MsgTypes : uint8_t
 {
   MSG_Unknown = 0x00,
   //0x0...  Data
-	MSG_Data = 0x01,
+  MSG_Data = 0x01,
   MSG_Data_Ack = 0x02,
   //0x2... Network
   MSG_RequestRssi = 0x20,

@@ -1,3 +1,9 @@
+
+#ifndef DEFINES_H_
+#define DEFINES_H_
+
+#pragma once
+
 #define VERSION 0x03
 //uint8_t VERSION;
 #define START_TTL 0x05
@@ -94,3 +100,5 @@ uint8_t beacon_raw[] = {
   0x00, 0x00,             // 36-37: SSID (hidden)
   0xDD, 0x05, 0x07, 0xFA, VERSION, START_TTL, MSG_Unknown //38-44++
 };
+
+#endif
