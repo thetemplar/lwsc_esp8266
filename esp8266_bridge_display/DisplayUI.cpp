@@ -65,7 +65,9 @@ DisplayUI::~DisplayUI() {}
 extern void setupFreedom();
 extern void setupAP();
 extern void reqRssi(uint32_t dest);
-extern std::map<uint32_t, std::map<uint32_t, uint8_t>> mapOfRssi;
+extern std::map<uint32_t, std::map<uint32_t, int8_t>> mapOfRssi;
+extern std::map<uint32_t, String> resolveNames;
+extern bool showNames;
 
 void DisplayUI::setup() {
     configInit();
@@ -91,8 +93,8 @@ void DisplayUI::setup() {
           mode = DISPLAY_MODE::LIVE_MACHINE;
           setupFreedom();
         });
-        addMenuNode(&mainMenu, "LIST CONNECTED APPS", [this]() {
-          mode = DISPLAY_MODE::LIST_CONNECTED;
+        addMenuNode(&mainMenu, "SWAP ID<>NAME", [this]() {
+          showNames = !showNames;
         });
         addMenuNode(&mainMenu, "SEND RSSI REQ", [this]() {
           listSelIndex = 0;
@@ -105,6 +107,9 @@ void DisplayUI::setup() {
           listSelIndex = 0;
           listSelId = 0;
           mode = DISPLAY_MODE::LIST_RSSI;
+        });
+        addMenuNode(&mainMenu, "LIST CONNECTED APPS", [this]() {
+          mode = DISPLAY_MODE::LIST_CONNECTED;
         });
 
 #ifdef HIGHLIGHT_LED
@@ -337,7 +342,7 @@ String ipToString(IPAddress ip){
 void DisplayUI::drawRSSIList() {
   if(listSelLvl == 0)
   {
-    std::map<uint32_t, std::map<uint32_t, uint8_t> >::iterator it;
+    std::map<uint32_t, std::map<uint32_t, int8_t> >::iterator it;
     int i = 0;
     for (it = mapOfRssi.begin(); it != mapOfRssi.end(); it++)
     {
@@ -351,20 +356,27 @@ void DisplayUI::drawRSSIList() {
         cInd = '>';
         listSelId = it->first;
       }
-      sprintf(ctmp, "%c  %08X (Count: %d)", cInd, it->first, mapOfRssi[it->first].size());
+      if(showNames)
+        sprintf(ctmp, "%c %08X (Count: %d)", cInd, it->first, mapOfRssi[it->first].size());
+      else
+        sprintf(ctmp, "%c %s (Count: %d)", cInd, resolveNames[it->first], mapOfRssi[it->first].size());
+        
       drawString(i-listSelIndex, String(ctmp));
       
       i++;
     }
   } else {
-    std::map<uint32_t, uint8_t>::iterator it;
+    std::map<uint32_t, int8_t>::iterator it;
     int i = 0;
     for (it = mapOfRssi[listSelId].begin(); it != mapOfRssi[listSelId].end(); it++)
     {
       char ctmp[30] = { 0 };
       char cInd = ' ';
       if (listSelIndex == (i)) cInd = '>';
-      sprintf(ctmp, "%c  %08X (Rssi: %d)", cInd, it->first, it->second);
+      if(showNames)
+        sprintf(ctmp, "%c %08X (Rssi: %d db)", cInd, it->first, (int)it->second);
+      else
+        sprintf(ctmp, "%c %s (Rssi: %d db)", cInd, resolveNames[it->first], (int)it->second);
       drawString(i-listSelIndex, String(ctmp));
       i++;
     }

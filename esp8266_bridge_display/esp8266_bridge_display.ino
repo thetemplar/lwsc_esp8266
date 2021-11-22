@@ -36,7 +36,9 @@ bool booted = false;
 String AppBuffer[5];
 String MachineBuffer[5];
 
-std::map<uint32_t, std::map<uint32_t, uint8_t> > mapOfRssi;
+std::map<uint32_t, std::map<uint32_t, int8_t> > mapOfRssi;
+std::map<uint32_t, String> resolveNames;
+bool showNames = false;
 
 const char* ssid = "lwsc_wifibridge_display";
 const char* password = "lauterbach";
@@ -157,7 +159,10 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
         lastSeq = msg.seq;
         lastSrc = msg.src;
         char msg_dst[50] = {0};
-        sprintf(msg_dst,"%02X %04X %02X%02X%02X%02X %02X %d",cbCounter,msg.seq,sniffer->buf[12],sniffer->buf[13],sniffer->buf[14],sniffer->buf[15], msg.type, sniffer->rx_ctrl.rssi);
+        if(showNames)
+          sprintf(msg_dst,"%02X %04X %s %02X %d",cbCounter, msg.seq, resolveNames[msg.src], msg.type, sniffer->rx_ctrl.rssi);
+        else
+          sprintf(msg_dst,"%02X %04X %02X%02X%02X%02X %02X %d",cbCounter,msg.seq,sniffer->buf[12],sniffer->buf[13],sniffer->buf[14],sniffer->buf[15], msg.type, sniffer->rx_ctrl.rssi);
   
         
         MachineBuffer[4] = MachineBuffer[3];
@@ -178,7 +183,7 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
           for(int i = 1; i < msg.dataLength; i+=5)
           {
             uint32_t id_tmp;
-            uint8_t rssi_tmp;
+            int8_t rssi_tmp;
             memcpy((uint8_t*)&id_tmp, (uint8_t*)&msg.data + i, 4);
             memcpy((uint8_t*)&rssi_tmp, (uint8_t*)&msg.data + i + 4, 1);
             Serial.println("_" + String(id_tmp, HEX) + ":" + String(rssi_tmp));
@@ -247,6 +252,10 @@ void setup() {
   localAddress = ESP.getChipId();
 
   seqnum = random(3000);
+
+  resolveNames[0x002D5A05] = "DevBoard";  
+  resolveNames[0x0097EC6A] = "Display1";
+  resolveNames[0x009A5675] = "Display2";
 }
 
 void loop() {
@@ -276,7 +285,13 @@ void loop() {
     AppBuffer[2] = AppBuffer[1];
     AppBuffer[1] = AppBuffer[0];
     char msg_dst[50] = {0};
-    sprintf(msg_dst,"%04X %02X%02X%02X%02X %02X:%02X",seqnum,packetBuffer[1],packetBuffer[2],packetBuffer[3],packetBuffer[4],packetBuffer[0],packetBuffer[5]);
+    
+    if(showNames)
+      sprintf(msg_dst,"%04X %s %02X:%02X",seqnum,resolveNames[dest],packetBuffer[0],packetBuffer[5]);
+    else
+      sprintf(msg_dst,"%04X %02X%02X%02X%02X %02X:%02X",seqnum,packetBuffer[1],packetBuffer[2],packetBuffer[3],packetBuffer[4],packetBuffer[0],packetBuffer[5]);
+
+    
     AppBuffer[0] = String(msg_dst);
   } else if (cb) {    
     Serial.printf("[wifi] length = %i\n", cb);

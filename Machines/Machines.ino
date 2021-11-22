@@ -207,11 +207,13 @@ void processData(struct sniffer_buf2 *sniffer)
       for (it = lastRssi.begin(); it != lastRssi.end(); it++)
       {
         memcpy((uint8_t*)&data[i], &(it->first), 4);
-        //Serial.printf("   id %08X - ", it->first);  
-        uint8_t it_rssi = it->second >> 24;
+        int8_t it_rssi = it->second >> 24;
         memcpy((uint8_t*)&data[i + 4], &(it_rssi), 1);
-        //Serial.printf("rssi %d - ", (int)(it->second >> 24));  
-        //Serial.printf("last %d \n", (millis() >> 8) - (it->second & 0xFFFFFF));  
+        
+        Serial.printf("   id %08X - ", it->first);  
+        Serial.printf("rssi %d - ", (int8_t)(it->second >> 24));  
+        Serial.printf("last %d \n", (millis() >> 8) - (it->second & 0xFFFFFF));  
+        
         i+=5;
       }
 
