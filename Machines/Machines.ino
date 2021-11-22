@@ -217,7 +217,7 @@ void processData(struct sniffer_buf2 *sniffer)
         i+=5;
       }
 
-      uint32_t randNumber = random(3000);
+      uint32_t randNumber = random(5000);
       delay(randNumber);
       
       createPacket(result, data, s, msg.src, MSG_SendRssi);

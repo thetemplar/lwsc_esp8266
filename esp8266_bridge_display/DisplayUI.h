@@ -3,28 +3,13 @@
 #pragma once
 
 #include "A_config.h"
+#include "defines.h"
 
-// ===== adjustable ===== //
-#if defined(SSD1306_I2C)
-  #include <Wire.h>
-  #include "src/esp8266-oled-ssd1306-4.1.0/SSD1306Wire.h"
-#elif defined(SSD1306_SPI)
-  #include <SPI.h>
-  #include "src/esp8266-oled-ssd1306-4.1.0/SSD1306Spi.h"
-#elif defined(SH1106_I2C)
-  #include <Wire.h>
-  #include "src/esp8266-oled-ssd1306-4.1.0/SH1106Wire.h"
-#elif defined(SH1106_SPI)
-  #include <SPI.h>
-  #include "src/esp8266-oled-ssd1306-4.1.0/SH1106Spi.h"
-#endif /* if defined(SSD1306_I2C) */
-
-#ifdef RTC_DS3231
-#include "src/DS3231-1.0.3/DS3231.h"
-#endif // ifdef RTC_DS3231
+#include <Wire.h>
+#include "src/esp8266-oled-ssd1306-4.1.0/SH1106Wire.h"
 
 #include "src/SimpleButton/SimpleButton.h"
-#include "SimpleList.h"
+#include "src/SimpleList/SimpleList.h"
 
 using namespace simplebutton;
 
@@ -57,19 +42,9 @@ class DisplayUI {
         Button* up   = NULL;
         Button* down = NULL;
         Button* a    = NULL;
-        Button* b    = NULL;
 
         // ===== adjustable ===== //
-#if defined(SSD1306_I2C)
-        SSD1306Wire display = SSD1306Wire(I2C_ADDR, I2C_SDA, I2C_SCL);
-#elif defined(SSD1306_SPI)
-        SSD1306Spi display = SSD1306Spi(SPI_RES, SPI_DC, SPI_CS);
-#elif defined(SH1106_I2C)
         SH1106Wire display = SH1106Wire(I2C_ADDR, I2C_SDA, I2C_SCL);
-#elif defined(SH1106_SPI)
-        SH1106Spi display = SH1106Spi(SPI_RES, SPI_DC, SPI_CS);
-#endif /* if defined(SSD1306_I2C) */
-
         const uint8_t maxLen           = 18;
         const uint8_t lineHeight       = 10;
         const uint8_t buttonDelay      = 250;
@@ -116,10 +91,7 @@ class DisplayUI {
         bool enabled = false;      // display enabled
         bool tempOff = false;
 
-        // selected attack modes
-        bool beaconSelected = false;
-        bool deauthSelected = false;
-        bool probeSelected  = false;
+        bool showNames = false;
 
         // menus
         Menu* currentMenu;
@@ -146,6 +118,7 @@ class DisplayUI {
         String getChannel();
 
         // draw functions
+        String BufferToString(WifiLog entry);
         void draw(bool force = false);
         void drawButtonTest();
         void drawMenu();
@@ -173,12 +146,6 @@ class DisplayUI {
         int clockHour   = 6;
         int clockMinute = 0;
         int clockSecond = 0;
-
-        uint32_t clockTime = 0;
-
-#ifdef RTC_DS3231
-        DS3231 clock;
-#endif // ifdef RTC_DS3231
 };
 
 // ===== FONT ===== //

@@ -1,9 +1,9 @@
 /* This software is licensed under the MIT License: https://github.com/spacehuhntech/esp8266_deauther */
 
-#include<WiFiClient.h>
-#include<WiFiServer.h>
-#include<ESP8266WebServer.h>
-#include<map>
+#include <WiFiClient.h>
+#include <WiFiServer.h>
+#include <ESP8266WebServer.h>
+#include <map>
 
 #include "DisplayUI.h"
 
@@ -65,22 +65,14 @@ DisplayUI::~DisplayUI() {}
 extern void setupFreedom();
 extern void setupAP();
 extern void reqRssi(uint32_t dest);
-extern std::map<uint32_t, std::map<uint32_t, int8_t>> mapOfRssi;
-extern std::map<uint32_t, String> resolveNames;
+extern std::vector<MachineData> machines;
+extern std::map<uint32_t, uint8_t> machinesIndexCache;
 extern bool showNames;
 
 void DisplayUI::setup() {
     configInit();
     setupButtons();
     buttonTime = millis();
-
-#ifdef RTC_DS3231
-    bool h12;
-    bool PM_time;
-    clock.setClockMode(false);
-    clockHour   = clock.getHour(h12, PM_time);
-    clockMinute = clock.getMinute();
-#endif // ifdef RTC_DS3231
 
     // ===== MENUS ===== //
 
@@ -141,7 +133,6 @@ void DisplayUI::update(bool force) {
     up->update();
     down->update();
     a->update();
-    b->update();
 
     draw(force);
 
@@ -172,7 +163,6 @@ void DisplayUI::setupButtons() {
     up   = new ButtonPullup(BUTTON_UP);
     down = new ButtonPullup(BUTTON_DOWN);
     a    = new ButtonPullup(BUTTON_A);
-    b    = new ButtonPullup(BUTTON_B);
 
     // === BUTTON UP === //
     up->setOnClicked([this]() {
@@ -186,7 +176,7 @@ void DisplayUI::setupButtons() {
                 else currentMenu->selected = currentMenu->list->size() - 1;
             } else if (mode == DISPLAY_MODE::LIST_RSSI) {
                 if (listSelIndex > 0) listSelIndex--;
-                else listSelIndex = mapOfRssi.size() - 1;
+                else listSelIndex = machines.size() - 1;
             }
         }
     });
@@ -213,7 +203,7 @@ void DisplayUI::setupButtons() {
                 if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
                 else currentMenu->selected = 0;
             } else if (mode == DISPLAY_MODE::LIST_RSSI) {           // when in menu, go up or down with cursor
-                if (listSelIndex < mapOfRssi.size() - 1) listSelIndex++;
+                if (listSelIndex < machines.size() - 1) listSelIndex++;
                 else listSelIndex = 0;
             }
         }
@@ -286,19 +276,6 @@ void DisplayUI::draw(bool force) {
 
         updatePrefix();
 
-#ifdef RTC_DS3231
-        bool h12;
-        bool PM_time;
-        clockHour   = clock.getHour(h12, PM_time);
-        clockMinute = clock.getMinute();
-        clockSecond = clock.getSecond();
-#else // ifdef RTC_DS3231
-        if (millis() - clockTime >= 1000) {
-            setTime(clockHour, clockMinute, ++clockSecond);
-            clockTime += 1000;
-        }
-#endif // ifdef RTC_DS3231
-
         switch (mode) {
 
             case DISPLAY_MODE::MENU:
@@ -342,41 +319,39 @@ String ipToString(IPAddress ip){
 void DisplayUI::drawRSSIList() {
   if(listSelLvl == 0)
   {
-    std::map<uint32_t, std::map<uint32_t, int8_t> >::iterator it;
+    std::vector<MachineData>::iterator it;
     int i = 0;
-    for (it = mapOfRssi.begin(); it != mapOfRssi.end(); it++)
-    {
-      if(mapOfRssi[it->first].size() == 0)
-        continue;
-        
+    for (it = machines.begin(); it != machines.end(); it++)
+    {        
       char ctmp[30] = { 0 };
       char cInd = ' ';
       if (listSelIndex == (i)) 
       {
         cInd = '>';
-        listSelId = it->first;
+        listSelId = it->Id;
       }
       if(showNames)
-        sprintf(ctmp, "%c %08X (Count: %d)", cInd, it->first, mapOfRssi[it->first].size());
+        sprintf(ctmp, "%c %8.8s (Rssi: %-3d)", cInd, it->ShortName, (int8_t)it->Rssi);
       else
-        sprintf(ctmp, "%c %s (Count: %d)", cInd, resolveNames[it->first], mapOfRssi[it->first].size());
+        sprintf(ctmp, "%c %08X (Rssi: %-3d)", cInd, it->Id, (int8_t)it->Rssi);
         
       drawString(i-listSelIndex, String(ctmp));
       
       i++;
     }
-  } else {
+  } 
+  else {
     std::map<uint32_t, int8_t>::iterator it;
     int i = 0;
-    for (it = mapOfRssi[listSelId].begin(); it != mapOfRssi[listSelId].end(); it++)
+    for (it = machines[machinesIndexCache[listSelId]].RssiMap.begin(); it != machines[machinesIndexCache[listSelId]].RssiMap.end(); it++)
     {
       char ctmp[30] = { 0 };
       char cInd = ' ';
       if (listSelIndex == (i)) cInd = '>';
       if(showNames)
-        sprintf(ctmp, "%c %08X (Rssi: %d db)", cInd, it->first, (int)it->second);
+        sprintf(ctmp, "%c %8.8s (Rssi: %-3d db)", cInd, machines[machinesIndexCache[it->first]].ShortName, (int8_t)it->second);
       else
-        sprintf(ctmp, "%c %s (Rssi: %d db)", cInd, resolveNames[it->first], (int)it->second);
+        sprintf(ctmp, "%c %08X (Rssi: %-3d db)", cInd, it->first, (int8_t)it->second);
       drawString(i-listSelIndex, String(ctmp));
       i++;
     }
@@ -399,22 +374,40 @@ void DisplayUI::drawConnectedApp() {
   } 
 }
 
-extern String MachineBuffer[4];
-void DisplayUI::drawLiveMachine() {
-    drawString(0, MachineBuffer[0]);
-    drawString(1, MachineBuffer[1]);
-    drawString(2, MachineBuffer[2]);
-    drawString(3, MachineBuffer[3]);
-    drawString(4, MachineBuffer[4]);
+String DisplayUI::BufferToString(WifiLog entry)
+{
+  char tmp[30] = {0};
+  if(showNames)
+    sprintf(tmp, "%02X %8.8s %-3d %02X  %02X", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, entry.Cmd);
+  else
+    sprintf(tmp, "%02X %08X %-3d %02X  %02X", entry.Seq, entry.Id, entry.Rssi, entry.Type, entry.Cmd);
+  return String(tmp);
 }
 
-extern String AppBuffer[4];
-void DisplayUI::drawLiveApp() {
-    drawString(0, AppBuffer[0]);
-    drawString(1, AppBuffer[1]);
-    drawString(2, AppBuffer[2]);
-    drawString(3, AppBuffer[3]);
-    drawString(4, AppBuffer[4]);
+extern struct WifiLog MachineBuffer[255];
+extern uint8_t MachineBufferIndex;
+void DisplayUI::drawLiveMachine()
+{
+    drawString(0, "Sq ID/Name   db typ cmd");
+    
+    drawString(1, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 1]));
+    drawString(2, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 2]));
+    drawString(3, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 3]));
+    drawString(4, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 4]));
+    drawString(5, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 5]));
+}
+
+extern struct WifiLog AppBuffer[255];
+extern uint8_t AppBufferIndex;
+void DisplayUI::drawLiveApp()
+{
+    drawString(0, "Sq ID/Name  db typcmd");
+    
+    drawString(1, BufferToString(AppBuffer[(AppBufferIndex % 255) - 1]));
+    drawString(2, BufferToString(AppBuffer[(AppBufferIndex % 255) - 2]));
+    drawString(3, BufferToString(AppBuffer[(AppBufferIndex % 255) - 3]));
+    drawString(4, BufferToString(AppBuffer[(AppBufferIndex % 255) - 4]));
+    drawString(5, BufferToString(AppBuffer[(AppBufferIndex % 255) - 5]));
 }
 
 void DisplayUI::drawMenu() {
@@ -492,44 +485,4 @@ void DisplayUI::addMenuNode(Menu* menu, const char* ptr, std::function<void()>cl
 
 void DisplayUI::addMenuNode(Menu* menu, const char* ptr, Menu* next) {
     addMenuNode(menu, String(ptr), next);
-}
-
-void DisplayUI::setTime(int h, int m, int s) {
-    if (s >= 60) {
-        s = 0;
-        m++;
-    }
-
-    if (m >= 60) {
-        m = 0;
-        h++;
-    }
-
-    if (h >= 24) {
-        h = 0;
-    }
-
-    if (s < 0) {
-        s = 59;
-        m--;
-    }
-
-    if (m < 0) {
-        m = 59;
-        h--;
-    }
-
-    if (h < 0) {
-        h = 23;
-    }
-
-    clockHour   = h;
-    clockMinute = m;
-    clockSecond = s;
-
-#ifdef RTC_DS3231
-    clock.setHour(clockHour);
-    clock.setMinute(clockMinute);
-    clock.setSecond(clockSecond);
-#endif // ifdef RTC_DS3231
 }

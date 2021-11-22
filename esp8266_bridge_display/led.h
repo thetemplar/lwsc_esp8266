@@ -4,13 +4,6 @@
 
 #include <cstdint>
 
-enum LED_MODE {
-    OFF,
-    SCAN,
-    ATTACK,
-    IDLE
-};
-
 namespace led {
     void setup();
     void update();
