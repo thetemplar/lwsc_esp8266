@@ -219,12 +219,6 @@ void readWifi(char* buf, uint8_t len)
   dest += buf[2]<<16;
   dest += buf[1]<<24;
   fire(buf[0], dest, buf[5]);
-
-  AppBuffer[4] = AppBuffer[3];
-  AppBuffer[3] = AppBuffer[2];
-  AppBuffer[2] = AppBuffer[1];
-  AppBuffer[1] = AppBuffer[0];
-  char msg_dst[50] = {0};
   
   AppBuffer[AppBufferIndex].Id = dest;
   AppBuffer[AppBufferIndex].Cmd = buf[5];
