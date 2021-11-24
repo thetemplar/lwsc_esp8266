@@ -330,10 +330,10 @@ void DisplayUI::drawRSSIList() {
         cInd = '>';
         listSelId = it->Id;
       }
-      if(showNames)
-        sprintf(ctmp, "%c %8.8s (Rssi: %-3d)", cInd, it->ShortName, (int8_t)it->Rssi);
+      if(showNames && it->ShortName[0] != '?')
+        sprintf(ctmp, "%c %8.8s Rssi: %-4d", cInd, it->ShortName, (int8_t)it->Rssi);
       else
-        sprintf(ctmp, "%c %08X (Rssi: %-3d)", cInd, it->Id, (int8_t)it->Rssi);
+        sprintf(ctmp, "%c %08X Rssi: %-4d", cInd, it->Id, (int8_t)it->Rssi);
         
       drawString(i-listSelIndex, String(ctmp));
       
@@ -348,10 +348,10 @@ void DisplayUI::drawRSSIList() {
       char ctmp[30] = { 0 };
       char cInd = ' ';
       if (listSelIndex == (i)) cInd = '>';
-      if(showNames)
-        sprintf(ctmp, "%c %8.8s (Rssi: %-3d db)", cInd, machines[machinesIndexCache[it->first]].ShortName, (int8_t)it->second);
+      if(showNames && machines[machinesIndexCache[it->first]].ShortName[0] != '?')
+        sprintf(ctmp, "%c %8.8s Rssi: %-4d db", cInd, machines[machinesIndexCache[it->first]].ShortName, (int8_t)it->second);
       else
-        sprintf(ctmp, "%c %08X (Rssi: %-3d db)", cInd, it->first, (int8_t)it->second);
+        sprintf(ctmp, "%c %08X Rssi: %-4d db", cInd, it->first, (int8_t)it->second);
       drawString(i-listSelIndex, String(ctmp));
       i++;
     }
@@ -377,10 +377,15 @@ void DisplayUI::drawConnectedApp() {
 String DisplayUI::BufferToString(WifiLog entry)
 {
   char tmp[30] = {0};
-  if(showNames)
-    sprintf(tmp, "%02X %8.8s %-3d %02X  %02X", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, entry.Cmd);
+
+  char tmp2[10]  = {0};
+  if(entry.Type == MSG_Fire)
+    sprintf(tmp2, "%02X %d", entry.RelaisBitmask, entry.Duration/100);    
+  
+  if(showNames && machines[machinesIndexCache[entry.Id]].ShortName[0] != '?')
+    sprintf(tmp, "%02X %8.8s %-4d %02X %c", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, tmp2);
   else
-    sprintf(tmp, "%02X %08X %-3d %02X  %02X", entry.Seq, entry.Id, entry.Rssi, entry.Type, entry.Cmd);
+    sprintf(tmp, "%02X %08X %-4d %02X %c", entry.Seq, entry.Id, entry.Rssi, entry.Type, tmp2);
   return String(tmp);
 }
 
@@ -388,7 +393,7 @@ extern struct WifiLog MachineBuffer[255];
 extern uint8_t MachineBufferIndex;
 void DisplayUI::drawLiveMachine()
 {
-    drawString(0, "Sq ID/Name   db typ cmd");
+    drawString(0, "Sq  ID/Name  db  ty rm du");
     
     drawString(1, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 1]));
     drawString(2, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 2]));
@@ -401,7 +406,7 @@ extern struct WifiLog AppBuffer[255];
 extern uint8_t AppBufferIndex;
 void DisplayUI::drawLiveApp()
 {
-    drawString(0, "Sq ID/Name  db typcmd");
+    drawString(0, "Sq  ID/Name  db  ty rm du");
     
     drawString(1, BufferToString(AppBuffer[(AppBufferIndex % 255) - 1]));
     drawString(2, BufferToString(AppBuffer[(AppBufferIndex % 255) - 2]));

@@ -74,19 +74,21 @@ enum MsgTypes : uint8_t
 {
   MSG_Unknown = 0x00,
   //0x0...  Data
-	MSG_Data = 0x01,
-  MSG_Data_Ack = 0x02,
+	MSG_Fire = 0x01,
+  MSG_Fire_Ack = 0x02,
   //0x2... Network
   MSG_RequestRssi = 0x20,
   MSG_SendRssi = 0x21,
   //0xF... System
   MSG_KeepAlive = 0xFA,
+  MSG_Blink = 0xFB,
   MSG_ERROR = 0xFF
 };
 
 struct WifiLog {
   uint32_t Id;
-  uint8_t Cmd;
+  uint32_t Duration;
+  uint8_t RelaisBitmask;
   uint8_t Type;
   int8_t Rssi;
   uint8_t Seq;
@@ -94,8 +96,9 @@ struct WifiLog {
 };
 
 struct MachineFunction {
-  String Name;
-  uint8_t Cmd;
+  char Name[38];
+  uint8_t RelaisBitmask;
+  int32_t Duration; //-1 = toggle
   
   uint32_t SymbolX;
   uint32_t SymbolY;
@@ -103,19 +106,21 @@ struct MachineFunction {
 };
 
 struct MachineData {
-  String Name;
+  char Name[38];
   char ShortName[9];
   uint32_t Id;
-  std::map<uint32_t, int8_t> RssiMap;
   int8_t Rssi;
   uint8_t Distance;
+  uint8_t Disabled;
   uint32_t Relais1Counter;
   uint32_t Relais2Counter;
 
   uint32_t SymbolX;
   uint32_t SymbolY;
 
-  std::vector<MachineFunction> Functions;
+  MachineFunction Functions[5];
+  
+  std::map<uint32_t, int8_t> RssiMap; //Not persistent!
 };
 
 

@@ -178,18 +178,33 @@ void processData(struct sniffer_buf2 *sniffer)
       Serial.printf("%02x ", msg.data[i]); 
     Serial.printf("\n\n");  
     
-    if(msg.type == MSG_Data)
+    if(msg.type == MSG_Blink)
     {
-      releaseRelais(msg.data[0], msg.data[1]);
+      digitalWrite(2, LOW);
+      delay(400);      
+      digitalWrite(2, HIGH);
+    }
+    if(msg.type == MSG_Fire)
+    {
+      if (msg.dataLength == 5)
+      {
+        int32_t duration = (msg.data[0] << 24) | (msg.data[1]  << 16) | (msg.data[2] << 8) | msg.data[3];
+        uint8_t bitmask = msg.data[4];
+        releaseRelais(duration, bitmask);
+      }
+      else if (msg.dataLength == 2)
+      {
+        releaseRelais(msg.data[0], msg.data[1]);
+      }
       
       if(msg.dst != 0xffffffff)
       {
         //send reply
         uint8_t result[sizeof(beacon_raw) + 2];    
         uint8_t data[2] = {(msg.seq >> 8) & 0xFF, msg.seq & 0xFF}; //ack with msg.src & msg.seq
-        createPacket(result, data, 2, msg.src, MSG_Data_Ack);
+        createPacket(result, data, 2, msg.src, MSG_Fire_Ack);
         uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-        Serial.printf("Send MSG_Data_Ack");  
+        Serial.printf("Send MSG_Fire_Ack");  
         /*for(uint16_t i = 0; i < sizeof(result); i++)
           Serial.printf("%02x ", result[i]); 
         Serial.printf("\n"); */
@@ -310,7 +325,30 @@ void loop() {
 }
 
 
-void releaseRelais(byte lwscType, byte lwscPort)
+void releaseRelais(int32_t duration, uint8_t bitmask)
+{
+  uint32_t currentMillis = millis();
+  ledState != ledState;
+
+  
+  if(bitmask & 0b00000001)
+    digitalWrite(2, HIGH);
+  if(bitmask & 0b00000010)
+    digitalWrite(2, HIGH);
+
+  if(duration >= 0)
+  {
+    while (millis() < duration) delay(1);
+  
+    if(bitmask & 0b00000001)
+      digitalWrite(2, LOW);
+    if(bitmask & 0b00000010)
+      digitalWrite(2, LOW);
+  }
+}
+
+
+void releaseRelais_LegacyVersion(byte lwscType, byte lwscPort)
 {
   uint32_t currentMillis = millis();
   if(lwscType == 0xfa)

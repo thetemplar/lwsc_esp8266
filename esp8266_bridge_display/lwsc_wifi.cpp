@@ -40,7 +40,7 @@ uint8_t beacon_raw[] = {
 void /*ICACHE_RAM_ATTR*/ promisc_cb(uint8_t *buf, uint16_t len)
 {
   uint32_t old_ints = intDisable();
-  if (len == 128 && buf[12+4] == 0xef && buf[12] == 0x80){
+  if (len == 128 && buf[12+4] == 0xef && buf[12+5] == 0x50 && buf[12] == 0x80){
     sniffer = (struct sniffer_buf2*) buf;
     rssi = buf[0];
     if (sniffer->buf[0] == 0x80 /*beacon*/&& sniffer->buf[37] == 0x00 /*hidden ssid*/&& sniffer->buf[38] == 0xDD /*vendor info*/&& sniffer->buf[4] == 0xef /*magic word1*/&& sniffer->buf[5] == 0x50/*magic word2*/)
@@ -65,12 +65,14 @@ void /*ICACHE_RAM_ATTR*/ promisc_cb(uint8_t *buf, uint16_t len)
         lastSrc = msg.src;
   
         MachineBuffer[MachineBufferIndex].Id = msg.src;
-        MachineBuffer[MachineBufferIndex].Cmd = msg.data[0];
+        MachineBuffer[MachineBufferIndex].Duration = (msg.data[0] << 24) | (msg.data[1]  << 16) | (msg.data[2] << 8) | msg.data[3];
+        MachineBuffer[MachineBufferIndex].RelaisBitmask = msg.data[5];
         MachineBuffer[MachineBufferIndex].Type = msg.type;
         MachineBuffer[MachineBufferIndex].Rssi = sniffer->rx_ctrl.rssi;
         MachineBuffer[MachineBufferIndex].Seq = msg.seq;
         MachineBuffer[MachineBufferIndex].Timestamp = millis();
         MachineBufferIndex++;
+        Serial.println(" --> " + String(msg.src, HEX));
 
         if(MachineBufferIndex%2==0)
           led::setColor(100,30,0);
@@ -162,15 +164,30 @@ uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst,
   return seqTmp;
 }
 
-void fire(uint8_t type, uint32_t dest, uint8_t cmd)
+void blink(uint32_t dest)
 {   
   uint8_t result[sizeof(beacon_raw) + 2];   
-  uint8_t data[2] = {type, cmd};
-  createPacket(result, data, 2, dest, MSG_Data);
+  createPacket(result, {}, 0, dest, MSG_Blink);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("fired to %08x cmd %d type %d = %d\n\n", dest, cmd, type, res);  
+  Serial.printf("blink to %08x = %d\n\n", dest, res);  
+  led::setColor(0,0,100);
+  delay(70);
+  led::setColor(0,100,0);
+}
+
+void fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
+{ 
+  uint8_t result[sizeof(beacon_raw) + 5];   
+  uint8_t data[5] = {0}; 
+  memcpy((uint8_t*)&data, (uint8_t*)&duration, 4);
+  memcpy((uint8_t*)&data[4], (uint8_t*)&relaisBitmask, 1);
+  createPacket(result, data, 5, dest, MSG_Fire);
+  int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  //delay(20);
+  //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  Serial.printf("fired to %08x relaisBitmask %d duration %02X = %d\n\n", dest, duration, relaisBitmask, res);  
   led::setColor(0,0,100);
   delay(70);
   led::setColor(0,100,0);
@@ -218,10 +235,79 @@ void readWifi(char* buf, uint8_t len)
   dest += buf[3]<<8;
   dest += buf[2]<<16;
   dest += buf[1]<<24;
-  fire(buf[0], dest, buf[5]);
+
+  uint32_t duration;
+  uint8_t relaisBitmask;
+  //legacyMode
+  switch(buf[5])
+  {
+    case 0x01:
+      duration = 1000;
+      relaisBitmask = 0x01;
+      break;
+    case 0x11:
+      duration = 1000;
+      relaisBitmask = 0x02;
+      break;
+    case 0x21:
+      duration = 1000;
+      relaisBitmask = 0x03;
+      break;
+    case 0x03:
+      duration = 3000;
+      relaisBitmask = 0x01;
+      break;
+    case 0x13:
+      duration = 3000;
+      relaisBitmask = 0x02;
+      break;
+    case 0x23:
+      duration = 3000;
+      relaisBitmask = 0x03;
+      break;
+    case 0x04:
+      duration = 400;
+      relaisBitmask = 0x01;
+      break;
+    case 0x14:
+      duration = 400;
+      relaisBitmask = 0x02;
+      break;
+    case 0x24:
+      duration = 400;
+      relaisBitmask = 0x03;
+      break;
+    case 0x0a:
+      duration = -1;
+      relaisBitmask = 0x01;
+      break;
+    case 0x1a:
+      duration = -1;
+      relaisBitmask = 0x02;
+      break;
+    case 0x2a:
+      duration = -1;
+      relaisBitmask = 0x03;
+      break;
+    case 0x0b:
+      duration = 0;
+      relaisBitmask = 0x01;
+      break;
+    case 0x1b:
+      duration = 0;
+      relaisBitmask = 0x02;
+      break;
+    case 0x2b:
+      duration = 0;
+      relaisBitmask = 0x03;
+      break;
+  }
+  
+  fire(dest, duration, relaisBitmask);
   
   AppBuffer[AppBufferIndex].Id = dest;
-  AppBuffer[AppBufferIndex].Cmd = buf[5];
+  AppBuffer[AppBufferIndex].Duration = duration;
+  AppBuffer[AppBufferIndex].RelaisBitmask = relaisBitmask;
   AppBuffer[AppBufferIndex].Type = buf[0];
   AppBuffer[AppBufferIndex].Rssi = 0x00;
   AppBuffer[AppBufferIndex].Seq = seqnum;
@@ -231,64 +317,12 @@ void readWifi(char* buf, uint8_t len)
 
 void wifi_setup()
 {
-  memset((uint8_t*)&AppBuffer[0], 0, sizeof(WifiLog) * 255);
-  memset((uint8_t*)&MachineBuffer[0], 0, sizeof(WifiLog) * 255);
+  memset((uint8_t*)&AppBuffer, 0x00, sizeof(WifiLog) * 255);
+  memset((uint8_t*)&MachineBuffer, 0x00, sizeof(WifiLog) * 255);
   
   localAddress = ESP.getChipId();
 
   seqnum = random(3000);
 
   wifi_set_promiscuous_rx_cb(promisc_cb);  
-
-  MachineData* md = new MachineData();
-  md->Id = 0x00;
-  md->ShortName[0] = ' ';
-  md->ShortName[1] = ' ';
-  md->ShortName[2] = ' ';
-  md->ShortName[3] = ' ';
-  md->ShortName[4] = ' ';
-  md->ShortName[5] = ' ';
-  md->ShortName[6] = ' ';
-  md->ShortName[7] = ' ';
-  machines.push_back(*md);
-  machinesIndexCache[0x00] = machines.size() - 1;
-  
-  MachineData* md1 = new MachineData();
-  md1->Id = 0x002D5A05;
-  md1->ShortName[0] = 'D';
-  md1->ShortName[1] = 'e';
-  md1->ShortName[2] = 'v';
-  md1->ShortName[3] = 'B';
-  md1->ShortName[4] = 'o';
-  md1->ShortName[5] = 'a';
-  md1->ShortName[6] = 'r';
-  md1->ShortName[7] = 'd';
-  machines.push_back(*md1);
-  machinesIndexCache[0x002D5A05] = machines.size() - 1;
-  
-  MachineData* md2 = new MachineData();
-  md2->Id = 0x0097EC6A;
-  md2->ShortName[0] = 'D';
-  md2->ShortName[1] = 'i';
-  md2->ShortName[2] = 's';
-  md2->ShortName[3] = 'p';
-  md2->ShortName[4] = 'l';
-  md2->ShortName[5] = 'a';
-  md2->ShortName[6] = 'y';
-  md2->ShortName[7] = '1';
-  machines.push_back(*md2);
-  machinesIndexCache[0x0097EC6A] = machines.size() - 1;
-  
-  MachineData* md3 = new MachineData();
-  md3->Id = 0x009A5675;
-  md3->ShortName[0] = 'D';
-  md3->ShortName[1] = 'i';
-  md3->ShortName[2] = 's';
-  md3->ShortName[3] = 'p';
-  md3->ShortName[4] = 'l';
-  md3->ShortName[5] = 'a';
-  md3->ShortName[6] = 'y';
-  md3->ShortName[7] = '2';
-  machines.push_back(*md3);
-  machinesIndexCache[0x009A5675] = machines.size() - 1;
 }

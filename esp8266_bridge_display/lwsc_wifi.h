@@ -26,7 +26,7 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len);
 
 uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst, uint8_t type);
 
-void fire(uint8_t type, uint32_t dest, uint8_t cmd);
+void fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask);
 void reqRssi(uint32_t dest);
 
 void setupFreedom();
