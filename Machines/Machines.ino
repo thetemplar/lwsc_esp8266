@@ -25,6 +25,7 @@ extern "C" {
 #include "SimpleTimer.h"
 #include <map>
 #include "defines.h"
+#include <stack>          // std::stack
 
 WiFiClient client;
 WiFiServer server(9900);
@@ -41,15 +42,15 @@ bool LoRaEnabled = false;
 SimpleTimer timer;
 int timerId;
 
-bool inProcess = false;
 uint16_t ledState;
 
-struct sniffer_buf2 *sniffer;
+std::stack<struct sniffer_buf2> dataStack;
 
 uint16_t seqnum = 0x000;
-uint8_t rssi;
+int8_t rssi;
 std::map<uint32_t,uint16_t> lastSeqNum;
-std::map<uint32_t,uint32_t> lastRssi;
+std::map<uint32_t,uint32_t> lastTimestamp;
+std::map<uint32_t,int8_t> lastRssi;
 
 static inline uint32_t intDisable()
 {
@@ -123,9 +124,12 @@ void forwardPacket(uint8_t* result)
   result[16 + 5] = (ESP.getChipId()) & 0xFF;
 }
 
-void processData(struct sniffer_buf2 *sniffer)
+void processData()
 {
-  if(sniffer->buf[4] != 0xef || sniffer->buf[5] != 0x50) return;
+  struct sniffer_buf2 snifferElement = dataStack.top();
+  struct sniffer_buf2* sniffer = &snifferElement;
+  rssi = ((uint8_t*)sniffer)[0];
+  dataStack.pop();
   msgData msg;
   msg.dst = (sniffer->buf[6]  << 24) | (sniffer->buf[7]  << 16) | (sniffer->buf[8]  << 8) | sniffer->buf[9];
   msg.src = (sniffer->buf[12] << 24) | (sniffer->buf[13] << 16) | (sniffer->buf[14] << 8) | sniffer->buf[15];
@@ -136,18 +140,19 @@ void processData(struct sniffer_buf2 *sniffer)
   msg.type = sniffer->buf[44];
   msg.dataLength = (sniffer->buf[39])-5;
   memcpy(msg.data, &(sniffer->buf[45]), sniffer->buf[39]-5);
-  
   Serial.printf("Data (dst: 0x%08x, src: 0x%08x, rssi: %d, ttl: %d, type: %02x, seq: %d:, len: %d: ", msg.dst, msg.src, rssi, msg.ttl, msg.type, msg.seq, msg.dataLength);
-  for(uint16_t i = 0; i < msg.dataLength; i++)
-    Serial.printf("%02x ", msg.data[i]);
+  //for(uint16_t i = 0; i < msg.dataLength; i++)
+  //  Serial.printf("%02x ", msg.data[i]);
   Serial.printf("\n"); 
 
-  uint32_t newRssi = millis() >> 8;
   if(lastRssi.count(msg.src) > 0)
-    rssi = ((lastRssi[msg.src] >> 24) * 3 + sniffer->rx_ctrl.rssi) / 4;
+  {
+    //int8_t lastRssiVal = lastRssi[msg.src] >> 24;
+    //rssi = (lastRssiVal * 3 + sniffer->rx_ctrl.rssi) / 4;
+  }
 
-  newRssi += rssi << 24;
-  lastRssi[msg.src] = newRssi; //1byte rssi, 3byte timestamp
+  lastRssi[msg.src] = rssi; 
+  lastTimestamp[msg.src] = millis(); 
 
   if(lastSeqNum[msg.src] == msg.seq)
   {
@@ -172,11 +177,7 @@ void processData(struct sniffer_buf2 *sniffer)
   if(msg.dst == ESP.getChipId() || msg.dst == 0xffffffff)
   {      
     //i am the reciever! yaaaaaay
-    Serial.printf("I am the dst (dst(0x%08x) == chipid(0x%08x))! Sending ack...\n", msg.dst, ESP.getChipId());  
-    Serial.printf("My data is:\n");    
-    for(uint16_t i = 0; i < msg.dataLength; i++)
-      Serial.printf("%02x ", msg.data[i]); 
-    Serial.printf("\n\n");  
+    Serial.printf("I am the dst (dst(0x%08x) == chipid(0x%08x))! Sending ack...\n", msg.dst, ESP.getChipId());   
     
     if(msg.type == MSG_Blink)
     {
@@ -214,18 +215,21 @@ void processData(struct sniffer_buf2 *sniffer)
       }
     } else if(msg.type == MSG_RequestRssi) {
       Serial.printf("MSG_RequestRssi \n"); 
+      digitalWrite(2, LOW);
       if(msg.dst == 0xffffffff)
       {
         timer.disable(timerId);
         uint32_t randNumber = random(5000);
         delay(randNumber);
       }
-      sendRssi(msg.dst);
+      sendRssiToDest(msg.dst);
+      digitalWrite(2, HIGH);
       if(msg.dst == 0xffffffff)
       {
-        delay(5000 - randNumber); //so the "air" stays free for others!
+        delay(5000); //so the "air" stays free for others!
         timer.enable(timerId);
       }
+      Serial.printf("MSG_RequestRssi Done \n"); 
     }
   }
  
@@ -233,25 +237,15 @@ void processData(struct sniffer_buf2 *sniffer)
 
 void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
 {
-  uint32_t old_ints = intDisable();
+  //uint32_t old_ints = intDisable();
   if (len == 128 && buf[12+4] == 0xef && buf[12] == 0x80){
-    Serial.printf("*");
-    if (!inProcess ){
-      inProcess = true;  
-      sniffer = (struct sniffer_buf2*) buf;
-      rssi = buf[0];
-      if (sniffer->buf[0] == 0x80 /*beacon*/&& sniffer->buf[37] == 0x00 /*hidden ssid*/&& sniffer->buf[38] == 0xDD /*vendor info*/&& sniffer->buf[4] == 0xef /*magic word1*/&& sniffer->buf[5] == 0x50/*magic word2*/)
-      {
-        //dont process data here in interrupt!
-        // "inProcess" is set true and in the next loop "processData()" will be called to process the buffer (sniffer->buf).
-      }
-      else
-      {
-        inProcess = false; 
-      }
-    }
+    if(dataStack.size() < 10)
+    {
+      struct sniffer_buf2* b = (struct sniffer_buf2*)buf;
+      dataStack.push(*b);    
+    } 
   }
-  intEnable(old_ints);
+  //intEnable(old_ints);
 }
 
 void sendRssi()
@@ -265,18 +259,16 @@ void sendRssiToDest(uint32_t dest)
   uint8_t result[sizeof(beacon_raw) + s];    
   uint8_t data[s] = {0};
   
-  std::map<uint32_t, uint32_t>::iterator it;
+  std::map<uint32_t, int8_t>::iterator it;
   result[sizeof(beacon_raw)] = lastRssi.size() & 0xFF;
   uint8_t i = 1;
   for (it = lastRssi.begin(); it != lastRssi.end(); it++)
   {
     memcpy((uint8_t*)&data[i], &(it->first), 4);
-    int8_t it_rssi = it->second >> 24;
-    memcpy((uint8_t*)&data[i + 4], &(it_rssi), 1);
+    memcpy((uint8_t*)&data[i + 4], &(it->second), 1);
     
     Serial.printf("   id %08X - ", it->first);  
-    Serial.printf("rssi %d - ", (int8_t)(it->second >> 24));  
-    Serial.printf("last %d \n", (millis() >> 8) - (it->second & 0xFFFFFF));  
+    Serial.printf("rssi %d\n", it->second);  
     
     i+=5;
   }
@@ -333,12 +325,12 @@ void loop() {
   if (millis() > 2592000000) ESP.restart(); //(every 30days)
   
   timer.run();
-  if(inProcess)
+  if(!dataStack.empty())
   {
-    processData(sniffer);
-    inProcess = false;
+    Serial.printf("<"); 
+    processData();
+    Serial.println(">"); 
   }
-  delay(1);
 }
 
 
