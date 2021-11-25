@@ -140,20 +140,24 @@ void processData()
   msg.type = sniffer->buf[44];
   msg.dataLength = (sniffer->buf[39])-5;
   memcpy(msg.data, &(sniffer->buf[45]), sniffer->buf[39]-5);
-  Serial.printf("Data (dst: 0x%08x, src: 0x%08x, rssi: %d, ttl: %d, type: %02x, seq: %d:, len: %d: ", msg.dst, msg.src, rssi, msg.ttl, msg.type, msg.seq, msg.dataLength);
+  Serial.printf("Data (dst: 0x%06X, src: 0x%06X, trs: 0x%06X, rssi: %d, ttl: %d, type: %02X, seq: %d:, len: %d: ", msg.dst, msg.src, msg.trs, rssi, msg.ttl, msg.type, msg.seq, msg.dataLength);
   //for(uint16_t i = 0; i < msg.dataLength; i++)
   //  Serial.printf("%02x ", msg.data[i]);
   Serial.printf("\n"); 
 
-  if(lastRssi.count(msg.src) > 0)
+  //RSSI
+  if(lastRssi.count(msg.trs) > 0)
   {
-    //int8_t lastRssiVal = lastRssi[msg.src] >> 24;
-    //rssi = (lastRssiVal * 3 + sniffer->rx_ctrl.rssi) / 4;
+    int8_t lastRssiVal = lastRssi[msg.trs];
+    rssi = (lastRssiVal * 3 + rssi) / 4;
   }
+  lastRssi[msg.trs] = rssi; 
 
-  lastRssi[msg.src] = rssi; 
+  //TIMESTAMP
+  lastTimestamp[msg.trs] = millis(); 
   lastTimestamp[msg.src] = millis(); 
 
+  //SEQNUM
   if(lastSeqNum[msg.src] == msg.seq)
   {
     Serial.printf("No new seq num :(\n");    
@@ -302,7 +306,7 @@ void setup() {
   
   Serial.begin(115200);
   delay(2000);
-  Serial.printf("\n\nSDK version: %s - chipId: 0x%08x - fw-version: %d\n", system_get_sdk_version(), ESP.getChipId(), VERSION);
+  Serial.printf("\n\nSDK version: %s - chipId: 0x%08x - fw-version: %d - build-date: %s %s \n", system_get_sdk_version(), ESP.getChipId(), VERSION, __DATE__, __TIME__);
   pinMode(2, OUTPUT);
   digitalWrite(2, LOW);
   pinMode(RELAIS1, OUTPUT);

@@ -71,9 +71,9 @@ enum MsgTypes : uint8_t
   //0x2... Network
   MSG_RequestRssi = 0x20,
   MSG_SendRssi = 0x21,
-  //0x2... SPIFF
-  MSG_RequestReleases = 0x20,
-  MSG_SendReleases = 0x21,
+  //0x2... Version
+  MSG_RequestBuildDate = 0x30,
+  MSG_SendBuildDate = 0x31,
   //0xF... System
   MSG_KeepAlive = 0xFA,
   MSG_Blink = 0xFB,

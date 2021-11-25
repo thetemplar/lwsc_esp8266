@@ -33,6 +33,7 @@ void restServerRouting() {
     server.on(F("/machine_rssi"), HTTP_GET, rest_get_machine_rssi);
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
+    server.on(F("/fire"), HTTP_GET, rest_post_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/change_id"), HTTP_POST, rest_post_change_id);
     server.on(F("/config"), HTTP_GET, rest_get_config);  
@@ -349,8 +350,6 @@ void rest_get_all_functions() {
         doc[f]["functionId"] = i;
         doc[f]["machineId"] = it->Id;
         doc[f]["name"] = it->Functions[i].Name;
-        doc[f]["duration"] = it->Functions[i].Duration;
-        doc[f]["relaisBitmask"] = it->Functions[i].RelaisBitmask;
         f++;
       }
     }

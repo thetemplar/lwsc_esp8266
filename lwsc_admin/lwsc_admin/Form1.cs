@@ -60,6 +60,9 @@ namespace lwsc_admin
             public sbyte rssi;
             public Dictionary<uint, sbyte> rssiMap = new Dictionary<uint, sbyte>();
 
+            //local
+            internal bool minimized = true;
+
             public int FunctionCount()
             {
                 int i = 0;
@@ -214,7 +217,11 @@ namespace lwsc_admin
 
             var fArray = JsonConvert.DeserializeObject<SimpleFunction[]>(res);
             foreach(var f in fArray)
-                dgvFunctions.Rows.Add(f.name, f.duration + " ms", ((f.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((f.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), machines.FirstOrDefault(x => x.id == f.machineId)?.GetName(), f.functionId);
+            {
+                var mach = machines.FirstOrDefault(x => x.id == f.machineId);
+                var func = mach?.functions.FirstOrDefault(x => x.functionId == f.functionId);
+                dgvFunctions.Rows.Add(f.name, func?.duration + " ms", ((func?.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((func?.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), mach?.GetName(), f.functionId);
+            }
         }
 
         int mSelected = -1;

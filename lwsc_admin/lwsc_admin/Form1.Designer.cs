@@ -36,6 +36,13 @@ namespace lwsc_admin
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.dgvFunctions = new System.Windows.Forms.DataGridView();
+            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colRelais1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colRelais2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMachineId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMachineName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colFunctionId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pMachine = new System.Windows.Forms.Panel();
             this.tbMNewId = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -69,16 +76,9 @@ namespace lwsc_admin
             this.btDownloadConfig = new System.Windows.Forms.Button();
             this.btSave = new System.Windows.Forms.Button();
             this.btGetData = new System.Windows.Forms.Button();
+            this.lwscMap1 = new lwsc_admin.LWSCMap();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lwscMap1 = new lwsc_admin.LWSCMap();
-            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colRelais1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colRelais2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMachineId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMachineName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colFunctionId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -203,6 +203,61 @@ namespace lwsc_admin
             this.dgvFunctions.Size = new System.Drawing.Size(449, 498);
             this.dgvFunctions.TabIndex = 0;
             this.dgvFunctions.DoubleClick += new System.EventHandler(this.dgvFunctions_DoubleClick);
+            // 
+            // colName
+            // 
+            this.colName.HeaderText = "Name";
+            this.colName.MinimumWidth = 6;
+            this.colName.Name = "colName";
+            this.colName.ReadOnly = true;
+            this.colName.Width = 150;
+            // 
+            // colDuration
+            // 
+            this.colDuration.HeaderText = "Duration";
+            this.colDuration.MinimumWidth = 6;
+            this.colDuration.Name = "colDuration";
+            this.colDuration.ReadOnly = true;
+            this.colDuration.Width = 80;
+            // 
+            // colRelais1
+            // 
+            this.colRelais1.HeaderText = "Relais1";
+            this.colRelais1.MinimumWidth = 6;
+            this.colRelais1.Name = "colRelais1";
+            this.colRelais1.ReadOnly = true;
+            this.colRelais1.Width = 60;
+            // 
+            // colRelais2
+            // 
+            this.colRelais2.HeaderText = "Relais2";
+            this.colRelais2.MinimumWidth = 6;
+            this.colRelais2.Name = "colRelais2";
+            this.colRelais2.ReadOnly = true;
+            this.colRelais2.Width = 60;
+            // 
+            // colMachineId
+            // 
+            this.colMachineId.HeaderText = "Machine Id";
+            this.colMachineId.MinimumWidth = 6;
+            this.colMachineId.Name = "colMachineId";
+            this.colMachineId.ReadOnly = true;
+            this.colMachineId.Width = 120;
+            // 
+            // colMachineName
+            // 
+            this.colMachineName.HeaderText = "Machine Name";
+            this.colMachineName.MinimumWidth = 6;
+            this.colMachineName.Name = "colMachineName";
+            this.colMachineName.Width = 125;
+            // 
+            // colFunctionId
+            // 
+            this.colFunctionId.HeaderText = "Function Id";
+            this.colFunctionId.MinimumWidth = 6;
+            this.colFunctionId.Name = "colFunctionId";
+            this.colFunctionId.ReadOnly = true;
+            this.colFunctionId.Width = 80;
             // 
             // pMachine
             // 
@@ -527,6 +582,14 @@ namespace lwsc_admin
             this.btGetData.UseVisualStyleBackColor = true;
             this.btGetData.Click += new System.EventHandler(this.btGetData_Click);
             // 
+            // lwscMap1
+            // 
+            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
+            this.lwscMap1.Name = "lwscMap1";
+            this.lwscMap1.Size = new System.Drawing.Size(925, 742);
+            this.lwscMap1.TabIndex = 2;
+            // 
             // statusStrip1
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
@@ -542,69 +605,6 @@ namespace lwsc_admin
             // 
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
-            // 
-            // lwscMap1
-            // 
-            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
-            this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(925, 742);
-            this.lwscMap1.TabIndex = 2;
-            // 
-            // colName
-            // 
-            this.colName.HeaderText = "Name";
-            this.colName.MinimumWidth = 6;
-            this.colName.Name = "colName";
-            this.colName.ReadOnly = true;
-            this.colName.Width = 150;
-            // 
-            // colDuration
-            // 
-            this.colDuration.HeaderText = "Duration";
-            this.colDuration.MinimumWidth = 6;
-            this.colDuration.Name = "colDuration";
-            this.colDuration.ReadOnly = true;
-            this.colDuration.Width = 80;
-            // 
-            // colRelais1
-            // 
-            this.colRelais1.HeaderText = "Relais1";
-            this.colRelais1.MinimumWidth = 6;
-            this.colRelais1.Name = "colRelais1";
-            this.colRelais1.ReadOnly = true;
-            this.colRelais1.Width = 60;
-            // 
-            // colRelais2
-            // 
-            this.colRelais2.HeaderText = "Relais2";
-            this.colRelais2.MinimumWidth = 6;
-            this.colRelais2.Name = "colRelais2";
-            this.colRelais2.ReadOnly = true;
-            this.colRelais2.Width = 60;
-            // 
-            // colMachineId
-            // 
-            this.colMachineId.HeaderText = "Machine Id";
-            this.colMachineId.MinimumWidth = 6;
-            this.colMachineId.Name = "colMachineId";
-            this.colMachineId.ReadOnly = true;
-            this.colMachineId.Width = 120;
-            // 
-            // colMachineName
-            // 
-            this.colMachineName.HeaderText = "Machine Name";
-            this.colMachineName.MinimumWidth = 6;
-            this.colMachineName.Name = "colMachineName";
-            this.colMachineName.Width = 125;
-            // 
-            // colFunctionId
-            // 
-            this.colFunctionId.HeaderText = "Function Id";
-            this.colFunctionId.MinimumWidth = 6;
-            this.colFunctionId.Name = "colFunctionId";
-            this.colFunctionId.ReadOnly = true;
-            this.colFunctionId.Width = 80;
             // 
             // Form1
             // 
