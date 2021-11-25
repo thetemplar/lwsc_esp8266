@@ -91,7 +91,7 @@ class DisplayUI {
         bool enabled = false;      // display enabled
         bool tempOff = false;
 
-        bool showNames = false;
+        bool showNames = true;
 
         // menus
         Menu* currentMenu;

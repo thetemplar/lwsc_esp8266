@@ -383,9 +383,9 @@ String DisplayUI::BufferToString(WifiLog entry)
     sprintf(tmp2, "%02X %d", entry.RelaisBitmask, entry.Duration/100);    
   
   if(showNames && machines[machinesIndexCache[entry.Id]].ShortName[0] != '?')
-    sprintf(tmp, "%02X %8.8s %-4d %02X %c", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, tmp2);
+    sprintf(tmp, "%02X %8.8s %-4d %02X %s", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, tmp2);
   else
-    sprintf(tmp, "%02X %08X %-4d %02X %c", entry.Seq, entry.Id, entry.Rssi, entry.Type, tmp2);
+    sprintf(tmp, "%02X %08X %-4d %02X %s", entry.Seq, entry.Id, entry.Rssi, entry.Type, tmp2);
   return String(tmp);
 }
 

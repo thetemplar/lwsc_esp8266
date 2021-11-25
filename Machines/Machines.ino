@@ -180,6 +180,7 @@ void processData(struct sniffer_buf2 *sniffer)
     
     if(msg.type == MSG_Blink)
     {
+      Serial.println("MSG_Blink");  
       digitalWrite(2, LOW);
       delay(400);      
       digitalWrite(2, HIGH);
@@ -188,13 +189,15 @@ void processData(struct sniffer_buf2 *sniffer)
     {
       if (msg.dataLength == 5)
       {
-        int32_t duration = (msg.data[0] << 24) | (msg.data[1]  << 16) | (msg.data[2] << 8) | msg.data[3];
+        int32_t duration = (msg.data[3] << 24) | (msg.data[2]  << 16) | (msg.data[1] << 8) | msg.data[0];
         uint8_t bitmask = msg.data[4];
+        Serial.println("releaseRelais " + String(duration) + " - 0x" + String(bitmask, HEX));  
         releaseRelais(duration, bitmask);
       }
       else if (msg.dataLength == 2)
       {
-        releaseRelais(msg.data[0], msg.data[1]);
+        Serial.println("releaseRelais_LegacyVersion");  
+        releaseRelais_LegacyVersion(msg.data[0], msg.data[1]);
       }
       
       if(msg.dst != 0xffffffff)
@@ -210,36 +213,19 @@ void processData(struct sniffer_buf2 *sniffer)
         Serial.printf("\n"); */
       }
     } else if(msg.type == MSG_RequestRssi) {
-      timer.disable(timerId);
-      //Serial.printf("MSG_RequestRssi \n");  
-      uint8_t s = 5 * lastRssi.size() + 1;
-      uint8_t result[sizeof(beacon_raw) + s];    
-      uint8_t data[s] = {0};
-      
-      std::map<uint32_t, uint32_t>::iterator it;
-      result[sizeof(beacon_raw)] = lastRssi.size() & 0xFF;
-      uint8_t i = 1;
-      for (it = lastRssi.begin(); it != lastRssi.end(); it++)
+      Serial.printf("MSG_RequestRssi \n"); 
+      if(msg.dst == 0xffffffff)
       {
-        memcpy((uint8_t*)&data[i], &(it->first), 4);
-        int8_t it_rssi = it->second >> 24;
-        memcpy((uint8_t*)&data[i + 4], &(it_rssi), 1);
-        
-        Serial.printf("   id %08X - ", it->first);  
-        Serial.printf("rssi %d - ", (int8_t)(it->second >> 24));  
-        Serial.printf("last %d \n", (millis() >> 8) - (it->second & 0xFFFFFF));  
-        
-        i+=5;
+        timer.disable(timerId);
+        uint32_t randNumber = random(5000);
+        delay(randNumber);
       }
-
-      uint32_t randNumber = random(5000);
-      delay(randNumber);
-      
-      createPacket(result, data, s, msg.src, MSG_SendRssi);
-      uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-      Serial.printf("Send MSG_RequestRssi \n"); 
-      delay(5000); //so the "air" stays free for others!
-      timer.enable(timerId);
+      sendRssi(msg.dst);
+      if(msg.dst == 0xffffffff)
+      {
+        delay(5000 - randNumber); //so the "air" stays free for others!
+        timer.enable(timerId);
+      }
     }
   }
  
@@ -268,13 +254,44 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
   intEnable(old_ints);
 }
 
+void sendRssi()
+{
+  sendRssiToDest(0xffffffff);
+}
+
+void sendRssiToDest(uint32_t dest)
+{
+  uint8_t s = 5 * lastRssi.size() + 1;
+  uint8_t result[sizeof(beacon_raw) + s];    
+  uint8_t data[s] = {0};
+  
+  std::map<uint32_t, uint32_t>::iterator it;
+  result[sizeof(beacon_raw)] = lastRssi.size() & 0xFF;
+  uint8_t i = 1;
+  for (it = lastRssi.begin(); it != lastRssi.end(); it++)
+  {
+    memcpy((uint8_t*)&data[i], &(it->first), 4);
+    int8_t it_rssi = it->second >> 24;
+    memcpy((uint8_t*)&data[i + 4], &(it_rssi), 1);
+    
+    Serial.printf("   id %08X - ", it->first);  
+    Serial.printf("rssi %d - ", (int8_t)(it->second >> 24));  
+    Serial.printf("last %d \n", (millis() >> 8) - (it->second & 0xFFFFFF));  
+    
+    i+=5;
+  }
+  
+  uint16_t seq = createPacket(result, data, s, dest, MSG_SendRssi);
+  uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  Serial.printf("sending MSG_SendRssi (seqnum: %d, res: %d)\n", seq, res);
+}
 
 void sendKeepAlive()
 {
   uint8_t result[sizeof(beacon_raw)];
   uint16_t seq = createPacket(result, {}, 0, 0xffffffff, MSG_KeepAlive);
   uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("sending KeepAlive (seqnum: %d, res: %d)\n", seq, res);
+  Serial.printf("sending MSG_KeepAlive (seqnum: %d, res: %d)\n", seq, res);
 }
 
 
@@ -306,7 +323,7 @@ void setup() {
   setupFreedom();
 
   sendKeepAlive();
-  timerId = timer.setInterval(KEEPALIVE_INTERVAL * 100 + (ESP.getChipId() & 0xfff) * 10, sendKeepAlive);
+  timerId = timer.setInterval(KEEPALIVE_INTERVAL * 1000 + (ESP.getChipId() & 0xffff) * 10, sendKeepAlive);
 
   localAddress = ESP.getChipId();
 }
@@ -330,20 +347,24 @@ void releaseRelais(int32_t duration, uint8_t bitmask)
   uint32_t currentMillis = millis();
   ledState != ledState;
 
-  
+  Serial.println("releaseRelais on " + String(duration));
+  digitalWrite(2, LOW);
   if(bitmask & 0b00000001)
-    digitalWrite(2, HIGH);
+    digitalWrite(RELAIS1, HIGH);
   if(bitmask & 0b00000010)
-    digitalWrite(2, HIGH);
+    digitalWrite(RELAIS2, HIGH);
 
   if(duration >= 0)
   {
-    while (millis() < duration) delay(1);
+    Serial.println("releaseRelais delay");
+    while (millis() < duration + currentMillis) delay(1);
   
+    Serial.println("releaseRelais off");
+    digitalWrite(2, HIGH);
     if(bitmask & 0b00000001)
-      digitalWrite(2, LOW);
+      digitalWrite(RELAIS1, LOW);
     if(bitmask & 0b00000010)
-      digitalWrite(2, LOW);
+      digitalWrite(RELAIS2, LOW);
   }
 }
 

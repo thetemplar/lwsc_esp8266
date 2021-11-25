@@ -14,6 +14,8 @@
 #include "led.h"
 #include "lwsc_wifi.h"
 #include "REST.h"
+#include "src/SimpleTimer/SimpleTimer.h"
+
 
 char packetBuffer[255];       //buffer to hold incoming packet 
 byte ibuffer[100];
@@ -27,6 +29,37 @@ const char* password = "lauterbach";
 unsigned int udpPort = 5555;
 
 WiFiUDP wifiUdp;
+
+SimpleTimer timer;
+int timerId;
+int rssiOngoing;
+
+
+void timer_query_rssi()
+{
+  Serial.println("timer_query_rssi");
+  rssiOngoing--;
+  Serial.println("rssiOngoing" + String(rssiOngoing));
+  if (rssiOngoing == 0)
+  {
+    Serial.println("timer.disable(timerId)");
+    timer.disable(timerId);
+    setupAP();
+  } else {
+    reqRssi(0xFFFFFFFF);
+  }
+}
+
+void start_query_rssi()
+{
+  if(rssiOngoing > 0)
+    return;
+  Serial.println("start_query_rssi");
+  setupFreedom();
+  reqRssi(0xFFFFFFFF);
+  rssiOngoing = 2;
+  timerId = timer.setInterval(7000, timer_query_rssi);
+}
 
 boolean InitalizeFileSystem() {   
   bool initok = false;   
@@ -233,7 +266,7 @@ void setup() {
 }
 
 void loop() {
-
+  timer.run();
   led::update();   // update LED color
   displayUI.update();
   server.handleClient();

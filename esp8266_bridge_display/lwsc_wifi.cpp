@@ -182,12 +182,15 @@ void fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   uint8_t result[sizeof(beacon_raw) + 5];   
   uint8_t data[5] = {0}; 
   memcpy((uint8_t*)&data, (uint8_t*)&duration, 4);
-  memcpy((uint8_t*)&data[4], (uint8_t*)&relaisBitmask, 1);
+  memcpy((uint8_t*)&data + 4, (uint8_t*)&relaisBitmask, 1);
+  
+  Serial.printf("data %02X %02X %02X %02X %02X\n", data[0], data[1], data[2], data[3], data[4]); 
+  
   createPacket(result, data, 5, dest, MSG_Fire);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("fired to %08x relaisBitmask %d duration %02X = %d\n\n", dest, duration, relaisBitmask, res);  
+  Serial.printf("fired to %08x duration %d relaisBitmask %02X = %d\n\n", dest, duration, relaisBitmask, res);  
   led::setColor(0,0,100);
   delay(70);
   led::setColor(0,100,0);
@@ -199,6 +202,7 @@ void reqRssi(uint32_t dest)
   uint8_t data[1] = {0}; 
   createPacket(result, data, 1, 0xFFFFFFFF, MSG_RequestRssi);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  Serial.printf("reqRssi to %08x = %d\n\n", dest, res);  
   led::setColor(100,100,100);
   delay(70);
   led::setColor(0,100,0);

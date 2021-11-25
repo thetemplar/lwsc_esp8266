@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -22,16 +23,25 @@ namespace lwsc_admin
             POST
         }
 
+        class SimpleFunction
+        {
+            public uint functionId;
+            public uint machineId;
+            public string name;
+            public byte relaisBitmask;
+            public int duration;
+        }
+
         public class MachineFunction
         {
             public uint machineId;
             public uint functionId;
             public string name;
-            public char relaisBitmask;
+            public byte relaisBitmask;
             public int duration;
             public uint symbolX;
             public uint symbolY;
-            public char rotation;
+            public byte rotation;
         }
 
         public class MachineData
@@ -45,6 +55,10 @@ namespace lwsc_admin
             public uint relais1Counter;
             public uint relais2Counter;
             public List<MachineFunction> functions;
+
+            //filled my rssi query
+            public sbyte rssi;
+            public Dictionary<uint, sbyte> rssiMap = new Dictionary<uint, sbyte>();
 
             public int FunctionCount()
             {
@@ -98,7 +112,7 @@ namespace lwsc_admin
 
                 foreach (MachineFunction f in m.functions)
                 {
-                    TreeNode nodeFF = new TreeNode(f.functionId.ToString());
+                    TreeNode nodeFF = new TreeNode(f.functionId.ToString() + (f.name.Length > 0 ? ": " + f.name : ""));
                     nodeFF.Tag = (int)f.functionId;
                     nodeF.Nodes.Add(nodeFF);
                     nodeFF.Nodes.Add("Name: " + f.name);
@@ -190,6 +204,19 @@ namespace lwsc_admin
             FillTreeView();
         }
 
+        private void btGetFunctions_Click(object sender, EventArgs e)
+        {
+            dgvFunctions.Rows.Clear();
+            string res = "";
+            var status = RESTful("/all_functions", RESTType.GET, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
+
+            var fArray = JsonConvert.DeserializeObject<SimpleFunction[]>(res);
+            foreach(var f in fArray)
+                dgvFunctions.Rows.Add(f.name, f.duration + " ms", ((f.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((f.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), machines.FirstOrDefault(x => x.id == f.machineId)?.GetName(), f.functionId);
+        }
+
         int mSelected = -1;
         int fSelected = -1;
         private void tvMachines_AfterSelect(object sender, TreeViewEventArgs e)
@@ -229,6 +256,7 @@ namespace lwsc_admin
 
             if (mSelected >= 0)
             {
+                tbMNewId.Text = machines[mSelected].id.ToString("X8");
                 lbMName.Text = machines[mSelected].GetName();
                 tbMName.Text = machines[mSelected].name;
                 tbMShortName.Text = machines[mSelected].shortName;
@@ -239,8 +267,10 @@ namespace lwsc_admin
                 lbFName.Text = machines[mSelected].GetName() + "[" + fSelected + "]";
                 tbFName.Text = machines[mSelected].functions[fSelected].name;
                 tbFDuration.Text = machines[mSelected].functions[fSelected].duration.ToString();
-                cbFRelais2.Checked = (machines[mSelected].functions[fSelected].relaisBitmask > 0) & (char)0x01 == (char)0x01 ? true : false;
-                cbFRelais2.Checked = (machines[mSelected].functions[fSelected].relaisBitmask > 1) & (char)0x02 == (char)0x01 ? true : false;
+                var x = machines[mSelected].functions[fSelected].relaisBitmask & 0x01;
+                var y = machines[mSelected].functions[fSelected].relaisBitmask & 0x02;
+                cbFRelais1.Checked = x == 0x01;
+                cbFRelais2.Checked = y == 0x02;
             }
         }
 
@@ -266,15 +296,98 @@ namespace lwsc_admin
 
             f.name = tbFName.Text;
             f.duration = int.Parse(tbFDuration.Text);
-            f.relaisBitmask = (char)0x00;
-            if (cbFRelais1.Checked) f.relaisBitmask += (char)0x01;
-            if (cbFRelais2.Checked) f.relaisBitmask += (char)0x02;
+            f.relaisBitmask = 0x00;
+            if (cbFRelais1.Checked) f.relaisBitmask += 0x01;
+            if (cbFRelais2.Checked) f.relaisBitmask += 0x02;
 
             string res = "";
             var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
                 throw new Exception();
             FillTreeView();
+        }
+
+        private void btMReassign_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Are you sure?", "Reassign ID", MessageBoxButtons.YesNo);
+            if (dialogResult != DialogResult.Yes)
+                return;
+            var m = machines[mSelected];
+
+            var old_id = m.id;
+            m.id = uint.Parse(tbMNewId.Text, System.Globalization.NumberStyles.HexNumber);
+
+            string res = "";
+            var status = RESTful("/change_id?id=" + old_id + "&new_id=" + m.id, RESTType.POST, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
+            btGetData_Click(null, null);
+        }
+
+        private void btDownloadConfig_Click(object sender, EventArgs e)
+        {
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(baseurl + "/config", "machines.conf");
+            }
+            FileInfo f = new FileInfo(Application.ExecutablePath);
+            Process.Start(f.DirectoryName);
+        }
+
+        private void btUploadConfig_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Are you sure?", "Override Config", MessageBoxButtons.YesNo);
+            if (dialogResult != DialogResult.Yes)
+                return;
+            using(WebClient client = new WebClient())
+            {
+                client.UploadFile(baseurl + "/upload", "machines.conf");
+            }
+        }
+
+        private void btQueryRSSI_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("WIFI will be disconnected, sure?", "Query RSSI", MessageBoxButtons.YesNo);
+            if (dialogResult != DialogResult.Yes)
+                return;
+
+            string res = "";
+            var status = RESTful("/query_rssi", RESTType.POST, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
+        }
+
+        private void btGetRSSI_Click(object sender, EventArgs e)
+        {
+            foreach (var m in machines)
+            {
+                string res = "";
+                var status = RESTful("/machine_rssi?id=" + m.id, RESTType.GET, out res);
+                if (status != HttpStatusCode.OK)
+                    MessageBox.Show("Error @ " + m.id.ToString("X8"));
+
+                dynamic dJson = JsonConvert.DeserializeObject(res);
+                m.rssi = dJson["rssi"];
+
+                if (dJson["rssiMap"] == null)
+                    continue;
+
+                foreach(var r in dJson["rssiMap"])
+                {
+                    uint id = r["id"];
+                    sbyte rssi  = r["rssi"];
+                    m.rssiMap[id] = rssi;
+                }
+            }
+            lwscMap1.Invalidate();
+        }
+
+        private void dgvFunctions_DoubleClick(object sender, EventArgs e)
+        {
+            var row = dgvFunctions.CurrentCell.RowIndex;
+            var m_id = uint.Parse(dgvFunctions.Rows[row].Cells[4].Value.ToString().Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
+            var f_id = (uint)dgvFunctions.Rows[row].Cells[6].Value;
+            LwscMap1_Fire(m_id, f_id);
         }
     }
 }

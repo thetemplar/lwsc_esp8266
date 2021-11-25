@@ -15,6 +15,10 @@ extern struct WifiLog AppBuffer[255];
 extern uint8_t AppBufferIndex;
 extern void ReadConfig();
 extern void WriteConfig();
+extern void setupFreedom();
+extern void setupAP();
+extern void reqRssi(uint32_t dest);
+extern void start_query_rssi();
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
@@ -26,19 +30,15 @@ void restServerRouting() {
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
     server.on(F("/machine"), HTTP_POST, rest_post_machine);
+    server.on(F("/machine_rssi"), HTTP_GET, rest_get_machine_rssi);
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
-
-    
-    server.on(F("/rssi"), HTTP_GET, rest_get_rssi);
-    server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/change_id"), HTTP_POST, rest_post_change_id);
     server.on(F("/config"), HTTP_GET, rest_get_config);  
-    server.on("/upload", HTTP_POST,                       // if the client posts to the upload page
-    [](){ server.send(200); },                          // Send status 200 (OK) to tell the client we are ready to receive
-    rest_upload_handler                                    // Receive and save the file
-  );
+    server.on("/upload", HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
+    server.on(F("/query_rssi"), HTTP_POST, rest_post_query_rssi);
+    server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
 }
 
 void rest_get_host() {
@@ -95,7 +95,7 @@ void rest_get_machine()
   
   for (int f = 0; f < 5; f++)
   {
-    if(md->Functions[f].RelaisBitmask > 0x00 || server.arg("force"))
+    if(md->Functions[f].RelaisBitmask > 0x00 || server.arg("force") != "")
     {    
       doc["functions"][f]["functionId"] = f;
       doc["functions"][f]["machineId"] = md->Id;
@@ -152,6 +152,35 @@ void rest_post_machine() {
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\"}");
 }
 
+void rest_get_machine_rssi() {
+  if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  uint32_t id = server.arg("id").toInt();
+  if(machinesIndexCache.count(id) == 0)
+  {
+    server.send(404, "text/json", "{\"result\": \"not existing\"}");
+  }  
+  
+  MachineData* md;
+  md = &machines[machinesIndexCache[id]];
+
+  String message = "";
+  DynamicJsonDocument doc(1024);
+  int i = 0;
+  doc["id"] = md->Id;
+  doc["rssi"] = md->Rssi;
+  std::map<uint32_t, int8_t>::iterator it;
+  for (it = md-> RssiMap.begin(); it != md->RssiMap.end(); it++)
+  {
+    doc["rssiMap"][i]["id"] = it->first;
+    doc["rssiMap"][i]["rssi"] = it->second;
+    i++;
+  }
+  serializeJson(doc, message);
+  server.send(200, "text/json", message);
+}
 
 void rest_post_function() {
   if (server.arg("id") == "" || server.arg("f_id") == "" || server.arg("name") == "" || server.arg("duration") == "" || server.arg("relaisBitmask") == "" || server.arg("symbolX") == "" || server.arg("symbolY") == "" || server.arg("rotation") == ""){
@@ -242,47 +271,20 @@ void rest_post_blink() {
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }
 
-
-
-
-
-
-
-
-
-void rest_get_all_functions() {
-  String message = "";
-  DynamicJsonDocument doc(1024);
-  std::vector<MachineData>::iterator it;
-  for (it = machines.begin(); it != machines.end(); it++)
-  {
-    for (int i = 0; i < 5; i++)
-    {
-      if(it->Functions[i].RelaisBitmask > 0x00 || server.arg("force"))
-        message += "{\"functionId\": 0x00" + String(i, HEX) + ", \"machineId\": 0x00" + String(it->Id, HEX) + ", \"name\": \"" + String(it->Functions[i].Name) + "\", \"duration\": " + String(it->Functions[i].Duration) + ", \"relaisBitmask\": 0x" + String(it->Functions[i].RelaisBitmask, HEX) + "},";
-    }
-  }
-  serializeJson(doc, message);
-  server.send(200, "text/json", message);
-}
-
-
-
-//curl -X POST -i 'http://192.168.4.1/change_id?id=3&new_id=4'
 void rest_post_change_id() {
   if (server.arg("id") == "" || server.arg("new_id") == ""){
-    server.send(200, "text/json", "{\"result\": \"fail\"}");
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
   uint32_t id = server.arg("id").toInt();
   uint32_t new_id = server.arg("new_id").toInt();
   if(machinesIndexCache.count(id) == 0)
   {
-    server.send(200, "text/json", "{\"result\": \"not existing\"}");
+    server.send(404, "text/json", "{\"result\": \"not existing\"}");
   }  
   if(machinesIndexCache.count(new_id) != 0)
   {
-    server.send(200, "text/json", "{\"result\": \"already existing\"}");
+    server.send(404, "text/json", "{\"result\": \"already existing\"}");
   }  
   uint8_t index = machinesIndexCache[id];
   MachineData* md = &machines[index]; 
@@ -293,27 +295,6 @@ void rest_post_change_id() {
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"change id\", \"id\": 0x00" + String(md->Id, HEX) + ", \"name\": \"" + md->Name + "\", \"shortName\": \"" + md->ShortName + "\"}");
 }
 
-//curl -X GET -i 'http://192.168.4.1/rssi'
-void rest_get_rssi() {
-  String message = "{\"result\": [";
-  std::vector<MachineData>::iterator it;
-  int i = 0;
-  for (it = machines.begin(); it != machines.end(); it++)
-  {
-    message += "{\"id\": \" 0x00" + String(it->Id, HEX) + "\", \"name\": \"" + it->Name + "\", \"shortName\": \"" + it->ShortName + "\", \"rssi\": \"" + String(it->Rssi) + "\", \"SymbolX\": \"" + String(it->SymbolX) + "\", \"SymbolY\": \"" + String(it->SymbolY) + "\", \"rssiMap\": [";
-    std::map<uint32_t, int8_t>::iterator it2;
-    for (it2 = machines[i].RssiMap.begin(); it2 != machines[i].RssiMap.end(); it2++)
-    {
-      message += "{\"id\": \"" + String(it2->first) + "\", \"rssi\": \"" + String((int8_t)it2->second) + "\"},";
-    }
-    message += "]},";
-    i++;
-  }
-  message += "]}";
-  server.send(200, "text/json", message);
-}
-
-//curl -X GET -i 'http://192.168.4.1/config'
 void rest_get_config() {
   File file = SPIFFS.open("/machines.conf", "r");                    // Open the file
   size_t sent = server.streamFile(file, "application/octet-stream");    // Send it to the client
@@ -321,7 +302,6 @@ void rest_get_config() {
   //server.send(200, "application/octet-stream", message);
 }
 
-//curl -F "data=@config" 192.168.4.1/config
 void rest_upload_handler(){ // upload a new file to the SPIFFS
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START){Serial.println("UPLOAD_FILE_START");
@@ -343,4 +323,38 @@ void rest_upload_handler(){ // upload a new file to the SPIFFS
       server.send(500, "text/plain", "500: couldn't create file");
     }
   }
+}
+
+void rest_post_query_rssi()
+{
+  server.send(200, "text/json", "{\"result\": \"success\"}");
+  delay(100);
+  start_query_rssi();
+}
+
+void rest_get_all_functions() {
+  String message = "";
+  DynamicJsonDocument doc(8192);
+  std::vector<MachineData>::iterator it;
+  int f = 0;
+  for (it = machines.begin(); it != machines.end(); it++)
+  {
+    if (it->Disabled == 1)
+      continue;
+      
+    for (int i = 0; i < 5; i++)
+    {
+      if(it->Functions[i].RelaisBitmask > 0x00)
+      {
+        doc[f]["functionId"] = i;
+        doc[f]["machineId"] = it->Id;
+        doc[f]["name"] = it->Functions[i].Name;
+        doc[f]["duration"] = it->Functions[i].Duration;
+        doc[f]["relaisBitmask"] = it->Functions[i].RelaisBitmask;
+        f++;
+      }
+    }
+  }
+  serializeJson(doc, message);
+  server.send(200, "text/json", message);
 }
