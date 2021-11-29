@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define ETH_ENABLE
+
 // ===== LED ===== //
 #define LED_NEOPIXEL_GRB
 #define LED_NUM 1

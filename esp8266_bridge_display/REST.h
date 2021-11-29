@@ -1,5 +1,6 @@
 #pragma once
 
+#include "A_config.h"
 
 void restServerRouting();
 void rest_get_host();
@@ -17,3 +18,11 @@ void rest_post_query_rssi();
 void rest_upload_handler();
 void rest_get_config();
 void rest_post_save_config();
+
+
+#ifdef ETH_ENABLE
+void rest_bt_up();
+void rest_bt_down();
+void rest_bt_click();
+void rest_bt_home();
+#endif

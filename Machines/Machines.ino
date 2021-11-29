@@ -191,20 +191,7 @@ void processData()
       digitalWrite(2, HIGH);
     }
     if(msg.type == MSG_Fire)
-    {
-      if (msg.dataLength == 5)
-      {
-        int32_t duration = (msg.data[3] << 24) | (msg.data[2]  << 16) | (msg.data[1] << 8) | msg.data[0];
-        uint8_t bitmask = msg.data[4];
-        Serial.println("releaseRelais " + String(duration) + " - 0x" + String(bitmask, HEX));  
-        releaseRelais(duration, bitmask);
-      }
-      else if (msg.dataLength == 2)
-      {
-        Serial.println("releaseRelais_LegacyVersion");  
-        releaseRelais_LegacyVersion(msg.data[0], msg.data[1]);
-      }
-      
+    {      
       if(msg.dst != 0xffffffff)
       {
         //send reply
@@ -216,6 +203,19 @@ void processData()
         /*for(uint16_t i = 0; i < sizeof(result); i++)
           Serial.printf("%02x ", result[i]); 
         Serial.printf("\n"); */
+      }
+      
+      if (msg.dataLength == 5)
+      {
+        int32_t duration = (msg.data[3] << 24) | (msg.data[2]  << 16) | (msg.data[1] << 8) | msg.data[0];
+        uint8_t bitmask = msg.data[4];
+        Serial.println("releaseRelais " + String(duration) + " - 0x" + String(bitmask, HEX));  
+        releaseRelais(duration, bitmask);
+      }
+      else if (msg.dataLength == 2)
+      {
+        Serial.println("releaseRelais_LegacyVersion");  
+        releaseRelais_LegacyVersion(msg.data[0], msg.data[1]);
       }
     } else if(msg.type == MSG_RequestRssi) {
       Serial.printf("MSG_RequestRssi \n"); 

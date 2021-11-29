@@ -23,13 +23,18 @@ namespace lwsc_admin
             POST
         }
 
-        class SimpleFunction
+        public class SimpleFunction
         {
             public uint functionId;
             public uint machineId;
             public string name;
             public byte relaisBitmask;
             public int duration;
+
+            public override string ToString()
+            {
+                return name;
+            }
         }
 
         public class MachineFunction
@@ -42,6 +47,10 @@ namespace lwsc_admin
             public uint symbolX;
             public uint symbolY;
             public byte rotation;
+            public override string ToString()
+            {
+                return name;
+            }
         }
 
         public class MachineData
@@ -72,7 +81,7 @@ namespace lwsc_admin
                 return i;
             }
 
-            public string GetName()
+            public override string ToString()
             {
                 string n = name.ToString();
                 if (n.Length == 0 || n == "?")
@@ -81,10 +90,13 @@ namespace lwsc_admin
                     n = "0x" + id.ToString("X8");
                 return n;
             }
+            
         }
 
-        const string baseurl = "http://192.168.4.1";
         static public List<MachineData> machines = new List<MachineData>();
+        static public List<SimpleFunction> functions = new List<SimpleFunction>();
+        static public Dictionary<string, SimpleFunction[,]> mappings = new Dictionary<string, SimpleFunction[,]>();
+
         public Form1()
         {
             InitializeComponent();
@@ -99,7 +111,7 @@ namespace lwsc_admin
             for (int i1 = 0; i1 < machines.Count; i1++)
             {
                 MachineData m = machines[i1];
-                TreeNode node = new TreeNode(m.GetName());
+                TreeNode node = new TreeNode(m.ToString());
                 node.Tag = i1;
                 tvMachines.Nodes.Add(node);
                 node.Nodes.Add("Id: " + "0x" + m.id.ToString("X8"));
@@ -140,7 +152,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/fire?id=" + m_id + "&f_id=" + f_id, RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+                MessageBox.Show("Error: " + status);
+                //throw new Exception();
+            else
+                MessageBox.Show(res);
         }
 
         private void LwscMap1_LocationUpdate(int i)
@@ -155,8 +170,8 @@ namespace lwsc_admin
         private HttpStatusCode RESTful(string url, RESTType type, out string result)
         {
             result = "";
-            var request = (HttpWebRequest)WebRequest.Create(baseurl + url);
-            request.Timeout = 2000;
+            var request = (HttpWebRequest)WebRequest.Create("http://" + tbIpAddress.Text + url);
+            request.Timeout = 3000;
 
             request.Method = (type == RESTType.GET) ? "GET" : "POST";
 
@@ -216,11 +231,13 @@ namespace lwsc_admin
                 throw new Exception();
 
             var fArray = JsonConvert.DeserializeObject<SimpleFunction[]>(res);
+            functions.Clear();
+            functions.AddRange(fArray);
             foreach(var f in fArray)
             {
                 var mach = machines.FirstOrDefault(x => x.id == f.machineId);
                 var func = mach?.functions.FirstOrDefault(x => x.functionId == f.functionId);
-                dgvFunctions.Rows.Add(f.name, func?.duration + " ms", ((func?.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((func?.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), mach?.GetName(), f.functionId);
+                dgvFunctions.Rows.Add(f.name, func?.duration + " ms", ((func?.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((func?.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), mach?.ToString(), f.functionId);
             }
         }
 
@@ -264,14 +281,14 @@ namespace lwsc_admin
             if (mSelected >= 0)
             {
                 tbMNewId.Text = machines[mSelected].id.ToString("X8");
-                lbMName.Text = machines[mSelected].GetName();
+                lbMName.Text = machines[mSelected].ToString();
                 tbMName.Text = machines[mSelected].name;
                 tbMShortName.Text = machines[mSelected].shortName;
                 cbMDisabled.Checked = machines[mSelected].disabled;
             }
             if (fSelected >= 0)
             {
-                lbFName.Text = machines[mSelected].GetName() + "[" + fSelected + "]";
+                lbFName.Text = machines[mSelected].ToString() + "[" + fSelected + "]";
                 tbFName.Text = machines[mSelected].functions[fSelected].name;
                 tbFDuration.Text = machines[mSelected].functions[fSelected].duration.ToString();
                 var x = machines[mSelected].functions[fSelected].relaisBitmask & 0x01;
@@ -335,7 +352,7 @@ namespace lwsc_admin
         {
             using (var client = new WebClient())
             {
-                client.DownloadFile(baseurl + "/config", "machines.conf");
+                client.DownloadFile("http://" + tbIpAddress.Text + "/config", "machines.conf");
             }
             FileInfo f = new FileInfo(Application.ExecutablePath);
             Process.Start(f.DirectoryName);
@@ -348,7 +365,7 @@ namespace lwsc_admin
                 return;
             using(WebClient client = new WebClient())
             {
-                client.UploadFile(baseurl + "/upload", "machines.conf");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "machines.conf");
             }
         }
 
@@ -395,6 +412,143 @@ namespace lwsc_admin
             var m_id = uint.Parse(dgvFunctions.Rows[row].Cells[4].Value.ToString().Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
             var f_id = (uint)dgvFunctions.Rows[row].Cells[6].Value;
             LwscMap1_Fire(m_id, f_id);
+        }
+
+        private void FillNewMapping(int x, int y)
+        {
+            for (int i = 0; i < y + 1; i++)
+            {
+                if (i < y)
+                {
+                    for (int j = 0; j < x; j++)
+                    {
+                        var cb = new ComboBox();
+                        cb.Location = new Point(pnMappings.Width / x * j, pnMappings.Height / (y + 1) * i);
+                        cb.Size = new Size(pnMappings.Width / x - 2, 20);
+                        cb.Tag = new int[] { j, i };
+                        cb.Items.Add("");
+                        cb.Items.AddRange(functions.Select(f => f.name).ToArray());
+                        pnMappings.Controls.Add(cb);
+                    }
+                }
+                else
+                {
+                    var lb = new Label();
+                    lb.Text = "Name: ";
+                    lb.Size = new Size(40, 20);
+                    lb.Location = new Point(0, pnMappings.Height / (y + 1) * i + 4);
+                    pnMappings.Controls.Add(lb);
+
+                    var tb = new TextBox();
+                    tb.Location = new Point(40, pnMappings.Height / (y + 1) * i);
+                    tb.Size = new Size(pnMappings.Width - 140, 20);
+                    pnMappings.Controls.Add(tb);
+
+                    var bt = new Button();
+                    bt.Text = "Save";
+                    bt.Location = new Point(pnMappings.Width - 90, pnMappings.Height / (y + 1) * i);
+                    bt.Size = new Size(90, 20);
+                    bt.Click += btFillNewMapping_Add_Click;
+                    pnMappings.Controls.Add(bt);
+                }
+            }
+        }
+
+        private void btFillNewMapping_Add_Click(object sender, EventArgs e)
+        {
+            List<List<SimpleFunction>> map = new List<List<SimpleFunction>>();
+            string name = "";
+
+            foreach (var cb_ in pnMappings.Controls)
+            {
+                if (cb_.GetType() == typeof(TextBox))
+                    name = ((TextBox)cb_).Text;
+                if (cb_.GetType() != typeof(ComboBox))
+                    continue;
+
+                ComboBox cb = (ComboBox)cb_;
+
+                if (cb.Text == "")
+                    continue;
+
+                int[] tags = (int[])cb.Tag;
+                int x = tags[0];
+                int y = tags[1];
+
+                while (y > map.Count() - 1)
+                    map.Add(new List<SimpleFunction>());
+                while (x > map[y].Count() - 1)
+                    map[y].Add(new SimpleFunction());
+
+                map[y][x] = functions.FirstOrDefault(f => f.name == cb.Text);
+            }
+
+            SimpleFunction[,] res = new SimpleFunction[map.Count(),map.Max(x => x.Count)];
+            for (int y = 0; y < map.Count; y++)
+            {
+                for (int x = 0; x < map[y].Count; x++)
+                {
+                    if (map[y][x] != null && map[y][x].name != null && map[y][x].name != "")
+                        res[y, x] = map[y][x];
+                    else
+                        res[y, x] = null;
+                }
+            }
+
+            if (mappings.ContainsKey(name))
+            {
+                DialogResult dialogResult = MessageBox.Show("Map-Name already exists. Override?", "Already exist", MessageBoxButtons.YesNo);
+                if (dialogResult != DialogResult.Yes)
+                    return;
+            }
+
+            mappings[name] = res;
+        }
+
+        private void btMapSelectNew_Click(object sender, EventArgs e)
+        {
+            pnMappings.Controls.Clear();
+            pnMappings.Tag = "map";
+            FillNewMapping(1, 10);
+        }
+
+        private void btMapPadNew_Click(object sender, EventArgs e)
+        {
+            pnMappings.Controls.Clear();
+            pnMappings.Tag = "pad";
+            FillNewMapping(10, 10);
+        }
+
+        private void btEspHome_Click(object sender, EventArgs e)
+        {
+            string res = "";
+            var status = RESTful("/bt_home", RESTType.GET, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
+        }
+
+        private void btEspUp_Click(object sender, EventArgs e)
+        {
+            string res = "";
+            var status = RESTful("/bt_up", RESTType.GET, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
+        }
+
+        private void btEspDown_Click(object sender, EventArgs e)
+        {
+            string res = "";
+            var status = RESTful("/bt_down", RESTType.GET, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
+        }
+
+        private void btEspClick_Click(object sender, EventArgs e)
+        {
+            string res = "";
+            var status = RESTful("/bt_click", RESTType.GET, out res);
+            if (status != HttpStatusCode.OK)
+                throw new Exception();
         }
     }
 }

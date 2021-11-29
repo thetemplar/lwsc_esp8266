@@ -14,9 +14,9 @@ uint8_t rssi;
 uint16_t lastSeq;
 uint32_t lastSrc;
 
-struct WifiLog AppBuffer[255];
+struct WifiLog AppBuffer[256];
 uint8_t AppBufferIndex;
-struct WifiLog MachineBuffer[255];
+struct WifiLog MachineBuffer[256];
 uint8_t MachineBufferIndex;
 
 std::vector<MachineData> machines;
@@ -172,12 +172,9 @@ void blink(uint32_t dest)
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   Serial.printf("blink to %08x = %d\n\n", dest, res);  
-  led::setColor(0,0,100);
-  delay(70);
-  led::setColor(0,100,0);
 }
 
-void fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
+uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
 { 
   uint8_t result[sizeof(beacon_raw) + 5];   
   uint8_t data[5] = {0}; 
@@ -186,14 +183,12 @@ void fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   
   Serial.printf("data %02X %02X %02X %02X %02X\n", data[0], data[1], data[2], data[3], data[4]); 
   
-  createPacket(result, data, 5, dest, MSG_Fire);
+  uint16_t seq = createPacket(result, data, 5, dest, MSG_Fire);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   Serial.printf("fired to %08x duration %d relaisBitmask %02X = %d\n\n", dest, duration, relaisBitmask, res);  
-  led::setColor(0,0,100);
-  delay(70);
-  led::setColor(0,100,0);
+  return seq;
 }
 
 void reqRssi(uint32_t dest)
@@ -203,9 +198,6 @@ void reqRssi(uint32_t dest)
   createPacket(result, data, 1, 0xFFFFFFFF, MSG_RequestRssi);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   Serial.printf("reqRssi to %08x = %d\n\n", dest, res);  
-  led::setColor(100,100,100);
-  delay(70);
-  led::setColor(0,100,0);
 }
 
 void setupFreedom()
@@ -321,8 +313,14 @@ void readWifi(char* buf, uint8_t len)
 
 void wifi_setup()
 {
-  memset((uint8_t*)&AppBuffer, 0x00, sizeof(WifiLog) * 255);
-  memset((uint8_t*)&MachineBuffer, 0x00, sizeof(WifiLog) * 255);
+  memset((uint8_t*)&AppBuffer, 0x00, sizeof(WifiLog) * 256);
+  memset((uint8_t*)&MachineBuffer, 0x00, sizeof(WifiLog) * 256);
+
+  for(int i = 0; i < 256; i++)
+  {
+    MachineBuffer[i].Timestamp = 0;
+    AppBuffer[i].Timestamp = 0;
+  }
   
   localAddress = ESP.getChipId();
 

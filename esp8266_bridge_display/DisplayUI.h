@@ -8,10 +8,14 @@
 #include <Wire.h>
 #include "src/esp8266-oled-ssd1306-4.1.0/SH1106Wire.h"
 
-#include "src/SimpleButton/SimpleButton.h"
 #include "src/SimpleList/SimpleList.h"
 
-using namespace simplebutton;
+#ifndef ETH_ENABLE
+ #include "src/SimpleButton/SimpleButton.h"
+ using namespace simplebutton;
+#endif
+
+
 
 struct MenuNode {
     String str; // function used to create the displayed string
@@ -27,6 +31,7 @@ struct Menu {
 };
 
 enum class DISPLAY_MODE { OFF,
+                          SCREEN_SAVER,
                           MENU,
                           LIVE_MACHINE,
                           REQ_RSSI,
@@ -38,10 +43,12 @@ class DisplayUI {
     public:
         DISPLAY_MODE mode = DISPLAY_MODE::MENU;
         bool highlightLED = false;
-
+        
+#ifndef ETH_ENABLE
         Button* up   = NULL;
         Button* down = NULL;
         Button* a    = NULL;
+#endif
 
         // ===== adjustable ===== //
         SH1106Wire display = SH1106Wire(I2C_ADDR, I2C_SDA, I2C_SCL);
@@ -49,10 +56,6 @@ class DisplayUI {
         const uint8_t lineHeight       = 10;
         const uint8_t buttonDelay      = 250;
         const uint8_t drawInterval     = 100; // 100ms = 10 FPS
-        const uint16_t scrollSpeed     = 500; // time interval in ms
-        const uint16_t screenIntroTime = 2500;
-        const uint16_t screenWidth     = 128;
-        const uint16_t sreenHeight     = 64;
 
         void configInit();
         void configOn();
@@ -73,8 +76,11 @@ class DisplayUI {
 #endif // ifdef HIGHLIGHT_LED
 
         void update(bool force = false);
-        void on();
-        void off();
+        
+        void bt_up();
+        void bt_down();
+        void bt_click();
+        void bt_home();
 
     private:
         int16_t selectedID    = 0; // i.e. access point ID to draw the apMenu
@@ -83,13 +89,9 @@ class DisplayUI {
         uint8_t listSelLvl    = 0;
         uint32_t listSelId    = 0;
 
-        uint32_t scrollTime = 0;   // last time a character was moved
         uint32_t drawTime   = 0;   // last time a frame was drawn
         uint32_t startTime  = 0;   // when the screen was enabled
         uint32_t buttonTime = 0;   // last time a button was pressed
-
-        bool enabled = false;      // display enabled
-        bool tempOff = false;
 
         bool showNames = true;
 
@@ -98,30 +100,16 @@ class DisplayUI {
 
         Menu mainMenu;
 
-        Menu scanMenu;
-        Menu showMenu;
-        Menu attackMenu;
-        Menu clockMenu;
-
-        Menu apListMenu;
-        Menu stationListMenu;
-        Menu nameListMenu;
-        Menu ssidListMenu;
-
-        Menu apMenu;
-        Menu stationMenu;
-        Menu nameMenu;
-        Menu ssidMenu;
-
+#ifndef ETH_ENABLE
         void setupButtons();
-
-        String getChannel();
+#endif
 
         // draw functions
         String BufferToString(WifiLog entry);
         void draw(bool force = false);
         void drawButtonTest();
         void drawMenu();
+        void drawScreenSaver();
         void drawLiveApp();
         void drawLiveMachine();
         void drawConnectedApp();
@@ -138,14 +126,6 @@ class DisplayUI {
         void addMenuNode(Menu* menu, String str, Menu* next);
         void addMenuNode(Menu* menu, const char* ptr, std::function<void()>click);
         void addMenuNode(Menu* menu, const char* ptr, Menu* next);
-
-        // fake clock
-        void drawClock();
-        void setTime(int h, int m, int s);
-
-        int clockHour   = 6;
-        int clockMinute = 0;
-        int clockSecond = 0;
 };
 
 // ===== FONT ===== //

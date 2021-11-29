@@ -71,13 +71,18 @@ extern bool showNames;
 
 void DisplayUI::setup() {
     configInit();
+#ifndef ETH_ENABLE
     setupButtons();
+#endif
     buttonTime = millis();
 
     // ===== MENUS ===== //
 
     // MAIN MENU
     createMenu(&mainMenu, NULL, [this]() {
+        addMenuNode(&mainMenu, "ScreenSaver", [this]() {
+          mode = DISPLAY_MODE::SCREEN_SAVER;
+        });
         addMenuNode(&mainMenu, "FROM APP", [this]() {
           mode = DISPLAY_MODE::LIVE_APP;
         });
@@ -117,7 +122,11 @@ void DisplayUI::setup() {
 
     // set current menu to main menu
     changeMenu(&mainMenu);
-    enabled   = true;
+#ifdef ETH_ENABLE
+  mode = DISPLAY_MODE::SCREEN_SAVER;
+#else
+  mode = DISPLAY_MODE::MENU;
+#endif
     startTime = millis();
 }
 
@@ -130,35 +139,64 @@ void DisplayUI::setupLED() {
 void DisplayUI::update(bool force) {
     //if (!enabled) return;
 
+#ifndef ETH_ENABLE
     up->update();
     down->update();
     a->update();
+#endif
 
     draw(force);
-
-/*
-    uint32_t timeout = 600 * 1000;
-    if (millis() > timeout) {
-        if (!tempOff) {
-            if (buttonTime < millis() - timeout) off();
-        } else {
-            if (buttonTime > millis() - timeout) on();
-        }
-    }
-*/
 }
 
-void DisplayUI::on() {
-    configOn();
-    tempOff    = false;
-    buttonTime = millis(); // update a button time to keep display on
+void DisplayUI::bt_up() {
+  if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
+      if (currentMenu->selected > 0) currentMenu->selected--;
+      else currentMenu->selected = currentMenu->list->size() - 1;
+  } else if (mode == DISPLAY_MODE::LIST_RSSI) {
+      if (listSelIndex > 0) listSelIndex--;
+      else listSelIndex = machines.size() - 1;
+  }
+}
+void DisplayUI::bt_down() {
+  if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
+      if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
+      else currentMenu->selected = 0;
+  } else if (mode == DISPLAY_MODE::LIST_RSSI) {           // when in menu, go up or down with cursor
+      if (listSelIndex < machines.size() - 1) listSelIndex++;
+      else listSelIndex = 0;
+  }
+}
+void DisplayUI::bt_click() {
+  switch (mode) {
+      case DISPLAY_MODE::MENU:
+          if (currentMenu->list->get(currentMenu->selected).click) {
+              currentMenu->list->get(currentMenu->selected).click();
+          }
+          break;
+          
+      case DISPLAY_MODE::LIST_RSSI:
+        listSelLvl = listSelLvl == 0 ? 1 : 0;
+        listSelIndex = 0;
+        break;
+        
+      case DISPLAY_MODE::REQ_RSSI:
+      case DISPLAY_MODE::LIVE_MACHINE:
+        setupAP();
+        mode = DISPLAY_MODE::MENU;
+        break;
+        
+      case DISPLAY_MODE::LIST_CONNECTED:
+      case DISPLAY_MODE::LIVE_APP:
+        mode = DISPLAY_MODE::MENU;
+        break;
+  }
+}
+void DisplayUI::bt_home() {
+  mode = DISPLAY_MODE::MENU;
 }
 
-void DisplayUI::off() {
-    configOff();
-    tempOff = true;
-}
 
+#ifndef ETH_ENABLE
 void DisplayUI::setupButtons() {
     up   = new ButtonPullup(BUTTON_UP);
     down = new ButtonPullup(BUTTON_DOWN);
@@ -170,27 +208,15 @@ void DisplayUI::setupButtons() {
         scrollTime    = millis();
         buttonTime    = millis();
 
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected > 0) currentMenu->selected--;
-                else currentMenu->selected = currentMenu->list->size() - 1;
-            } else if (mode == DISPLAY_MODE::LIST_RSSI) {
-                if (listSelIndex > 0) listSelIndex--;
-                else listSelIndex = machines.size() - 1;
-            }
-        }
+        bt_up();
     });
 
     up->setOnHolding([this]() {
         scrollCounter = 0;
         scrollTime    = millis();
         buttonTime    = millis();
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected > 0) currentMenu->selected--;
-                else currentMenu->selected = currentMenu->list->size() - 1;
-            }
-        }
+
+        bt_up();
     }, buttonDelay);
 
     // === BUTTON DOWN === //
@@ -198,27 +224,16 @@ void DisplayUI::setupButtons() {
         scrollCounter = 0;
         scrollTime    = millis();
         buttonTime    = millis();
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
-                else currentMenu->selected = 0;
-            } else if (mode == DISPLAY_MODE::LIST_RSSI) {           // when in menu, go up or down with cursor
-                if (listSelIndex < machines.size() - 1) listSelIndex++;
-                else listSelIndex = 0;
-            }
-        }
+
+        bt_down();
     });
 
     down->setOnHolding([this]() {
         scrollCounter = 0;
         scrollTime    = millis();
         buttonTime    = millis();
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {                 // when in menu, go up or down with cursor
-                if (currentMenu->selected < currentMenu->list->size() - 1) currentMenu->selected++;
-                else currentMenu->selected = 0;
-            } 
-        }
+
+        bt_down();
     }, buttonDelay);
 
     // === BUTTON A === //
@@ -226,48 +241,24 @@ void DisplayUI::setupButtons() {
         scrollCounter = 0;
         scrollTime    = millis();
         buttonTime    = millis();
-        if (!tempOff) {
-            switch (mode) {
-                case DISPLAY_MODE::MENU:
-                    if (currentMenu->list->get(currentMenu->selected).click) {
-                        currentMenu->list->get(currentMenu->selected).click();
-                    }
-                    break;
-                    
-                case DISPLAY_MODE::LIST_RSSI:
-                  listSelLvl = listSelLvl == 0 ? 1 : 0;
-                  listSelIndex = 0;
-                  break;
-                  
-                case DISPLAY_MODE::REQ_RSSI:
-                case DISPLAY_MODE::LIVE_MACHINE:
-                  setupAP();
-                  mode = DISPLAY_MODE::MENU;
-                  break;
-                  
-                case DISPLAY_MODE::LIST_CONNECTED:
-                case DISPLAY_MODE::LIVE_APP:
-                  mode = DISPLAY_MODE::MENU;
-                  break;
-            }
-        }
+
+        bt_click();
     });
 
     a->setOnHolding([this]() {
         scrollCounter = 0;
         scrollTime    = millis();
         buttonTime    = millis();
-        if (!tempOff) {
-            if (mode == DISPLAY_MODE::MENU) {
-                if (currentMenu->list->get(currentMenu->selected).hold) {
-                    currentMenu->list->get(currentMenu->selected).hold();
-                }
-            } else if (mode == DISPLAY_MODE::LIST_RSSI) {
-                mode = DISPLAY_MODE::MENU;
+        if (mode == DISPLAY_MODE::MENU) {
+            if (currentMenu->list->get(currentMenu->selected).hold) {
+                currentMenu->list->get(currentMenu->selected).hold();
             }
+        } else if (mode == DISPLAY_MODE::LIST_RSSI) {
+            mode = DISPLAY_MODE::MENU;
         }
     }, 800);
 }
+#endif
 
 
 void DisplayUI::draw(bool force) {
@@ -280,6 +271,10 @@ void DisplayUI::draw(bool force) {
 
             case DISPLAY_MODE::MENU:
                 drawMenu();
+                break;
+                
+            case DISPLAY_MODE::SCREEN_SAVER:
+                drawScreenSaver();
                 break;
 
             case DISPLAY_MODE::LIVE_APP:
@@ -380,7 +375,7 @@ String DisplayUI::BufferToString(WifiLog entry)
 
   char tmp2[10]  = {0};
   if(entry.Type == MSG_Fire)
-    sprintf(tmp2, "%02X %d", entry.RelaisBitmask, entry.Duration/100);    
+    sprintf(tmp2, "%02X %d", entry.RelaisBitmask, entry.Duration/100);   
   
   if(showNames && machines[machinesIndexCache[entry.Id]].ShortName[0] != '?')
     sprintf(tmp, "%02X %8.8s %-4d %02X %s", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, tmp2);
@@ -389,30 +384,40 @@ String DisplayUI::BufferToString(WifiLog entry)
   return String(tmp);
 }
 
-extern struct WifiLog MachineBuffer[255];
+extern struct WifiLog MachineBuffer[256];
 extern uint8_t MachineBufferIndex;
 void DisplayUI::drawLiveMachine()
 {
     drawString(0, "Sq  ID/Name  db  ty rm du");
     
-    drawString(1, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 1]));
-    drawString(2, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 2]));
-    drawString(3, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 3]));
-    drawString(4, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 4]));
-    drawString(5, BufferToString(MachineBuffer[(MachineBufferIndex % 255) - 5]));
+    drawString(1, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 1) % 256]));
+    drawString(2, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 2) % 256]));
+    drawString(3, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 3) % 256]));
+    drawString(4, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 4) % 256]));
+    drawString(5, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 5) % 256]));
 }
 
-extern struct WifiLog AppBuffer[255];
+extern struct WifiLog AppBuffer[256];
 extern uint8_t AppBufferIndex;
 void DisplayUI::drawLiveApp()
 {
     drawString(0, "Sq  ID/Name  db  ty rm du");
     
-    drawString(1, BufferToString(AppBuffer[(AppBufferIndex % 255) - 1]));
-    drawString(2, BufferToString(AppBuffer[(AppBufferIndex % 255) - 2]));
-    drawString(3, BufferToString(AppBuffer[(AppBufferIndex % 255) - 3]));
-    drawString(4, BufferToString(AppBuffer[(AppBufferIndex % 255) - 4]));
-    drawString(5, BufferToString(AppBuffer[(AppBufferIndex % 255) - 5]));
+    drawString(1, BufferToString(AppBuffer[(AppBufferIndex + 256 - 1) % 256]));
+    drawString(2, BufferToString(AppBuffer[(AppBufferIndex + 256 - 2) % 256]));
+    drawString(3, BufferToString(AppBuffer[(AppBufferIndex + 256 - 3) % 256]));
+    drawString(4, BufferToString(AppBuffer[(AppBufferIndex + 256 - 4) % 256]));
+    drawString(5, BufferToString(AppBuffer[(AppBufferIndex + 256 - 5) % 256]));
+}
+
+extern String eth_ip;
+void DisplayUI::drawScreenSaver() {
+  drawString(0, " - LWSC ETH/WIFI BRIDGE - ");
+  drawString(1, "");
+  drawString(2, "Ethernet IP Address:");
+  drawString(3, eth_ip);
+  drawString(4, "Last Command: ");
+  drawString(5, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 1) % 256]));
 }
 
 void DisplayUI::drawMenu() {

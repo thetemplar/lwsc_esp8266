@@ -3,13 +3,11 @@
    https://github.com/spacehuhntech/esp8266_deauther
    ===================== */
 
-#include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
 
-#include "DisplayUI.h"
 #include "A_config.h"
+#include "DisplayUI.h"
 
 #include "led.h"
 #include "lwsc_wifi.h"
@@ -17,23 +15,45 @@
 #include "src/SimpleTimer/SimpleTimer.h"
 
 
-char packetBuffer[255];       //buffer to hold incoming packet 
+#ifdef ETH_ENABLE
+ #include <ENC28J60lwIP.h>
+ #define CSPIN 16
+  ENC28J60lwIP eth(CSPIN);
+  byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
+  String eth_ip;
+#endif
+
+char packetBuffer[256];       //buffer to hold incoming packet 
 byte ibuffer[100];
 
-simplebutton::Button* resetButton;
 ESP8266WebServer server(80);
 DisplayUI displayUI;
 
 const char* ssid = "lwsc_wifibridge_display";
 const char* password = "lauterbach";
-unsigned int udpPort = 5555;
-
-WiFiUDP wifiUdp;
 
 SimpleTimer timer;
 int timerId;
 int rssiOngoing;
 
+#ifdef ETH_ENABLE
+void wrap_bt_up()
+{
+  displayUI.bt_up();
+}
+void wrap_bt_down()
+{
+  displayUI.bt_down();
+}
+void wrap_bt_click()
+{
+  displayUI.bt_click();
+}
+void wrap_bt_home()
+{
+  displayUI.bt_home();
+}
+#endif
 
 void timer_query_rssi()
 {
@@ -44,7 +64,9 @@ void timer_query_rssi()
   {
     Serial.println("timer.disable(timerId)");
     timer.disable(timerId);
+#ifndef ETH_ENABLE
     setupAP();
+#endif
   } else {
     reqRssi(0xFFFFFFFF);
   }
@@ -55,7 +77,9 @@ void start_query_rssi()
   if(rssiOngoing > 0)
     return;
   Serial.println("start_query_rssi");
+#ifndef ETH_ENABLE
   setupFreedom();
+#endif
   reqRssi(0xFFFFFFFF);
   rssiOngoing = 2;
   timerId = timer.setInterval(7000, timer_query_rssi);
@@ -243,7 +267,6 @@ void setup() {
 
   // start display
   displayUI.setup();
-  displayUI.mode = DISPLAY_MODE::MENU;
 
   // setup LED
   led::setup();
@@ -252,33 +275,45 @@ void setup() {
   pinMode(2, OUTPUT);
 
   wifi_setup();
-  
-  wifi_set_phy_mode(PHY_MODE_11B);
-  WiFi.mode(WIFI_AP); 
-  WiFi.softAP(ssid, password);
-  wifiUdp.begin(udpPort); 
 
-  if (MDNS.begin("gateway")) {
-    Serial.println("MDNS responder started @ gateway.local");
+#ifdef ETH_ENABLE
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setFrequency(4000000);
+
+  eth.config(IPAddress(192, 168, 178, 250), IPAddress(192, 168, 178, 1), IPAddress(255, 255, 255, 0));
+  eth.setDefault(); // use ethernet for default route
+  int present = eth.begin(mac);
+  if (!present) {
+    Serial.println("no ethernet hardware present");
+    while(1);
   }
+  
+  Serial.print("connecting ethernet");
+  while (!eth.connected()) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println();
+  Serial.print("ethernet ip address: ");
+  Serial.println(eth.localIP());
+  eth_ip = String(eth.localIP()[0]) + String(".") + String(eth.localIP()[1]) + String(".") + String(eth.localIP()[2]) + String(".") + String(eth.localIP()[3]);
+  Serial.print("ethernet subnetMask: ");
+  Serial.println(eth.subnetMask());
+  Serial.print("ethernet gateway: ");
+  Serial.println(eth.gatewayIP());
+  setupFreedom();
+#else
+  setupAP();
+#endif
   restServerRouting();
   server.begin();
 }
 
 void loop() {
   timer.run();
-  led::update();   // update LED color
+  led::update();
   displayUI.update();
   server.handleClient();
-
-  /*
-  int cb = wifiUdp.parsePacket();
-  if (cb == 6) {
-    Serial.printf("[wifi] package: %02X %02X %02X %02X %02X %02X \n", packetBuffer[0], packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4], packetBuffer[5]);
-    wifiUdp.read(packetBuffer, cb);   
-    readWifi((char*)&packetBuffer[0], cb);
-  } else if (cb) {    
-    Serial.printf("[wifi] length = %i\n", cb);
-  }
-  delay(1);*/
 }

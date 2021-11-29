@@ -66,9 +66,6 @@ namespace lwsc_admin
                             g.DrawString(r.Value + "db", this.Font, Brushes.White, new Point(mp.X, mp.Y + 8));
                         else
                             g.DrawString(r.Value + "db", this.Font, Brushes.White, new Point(mp.X, mp.Y - 8));
-
-                        if (r.Value == -6)
-                            g = g;
                     }
                 }
             }
@@ -80,13 +77,13 @@ namespace lwsc_admin
                     g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(m.symbolX, m.symbolY, 16, 16));
 
                     g.DrawString("[+]", this.Font, Brushes.Black, new Point((int)m.symbolX, (int)m.symbolY));
-                    g.DrawString(m.GetName(), this.Font, Brushes.White, new Point((int)m.symbolX + 20, (int)m.symbolY));
+                    g.DrawString(m.ToString(), this.Font, Brushes.White, new Point((int)m.symbolX + 20, (int)m.symbolY));
                 } 
                 else
                 {
                     g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(m.symbolX, m.symbolY, 200, 16 + 16 * m.FunctionCount()));
 
-                    g.DrawString("[O] [B] [R]" + m.GetName(), this.Font, Brushes.Black, new Point((int)m.symbolX, (int)m.symbolY));
+                    g.DrawString("[O] [B] [R]" + m.ToString(), this.Font, Brushes.Black, new Point((int)m.symbolX, (int)m.symbolY));
                     g.DrawString("[-]", this.Font, Brushes.Black, new Point((int)m.symbolX + 188, (int)m.symbolY));
 
                     int i1 = 0;

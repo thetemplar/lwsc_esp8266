@@ -9,16 +9,25 @@ File fsUploadFile;
 extern ESP8266WebServer server;
 extern std::vector<MachineData> machines;
 extern std::map<uint32_t, uint8_t> machinesIndexCache;
-extern void fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask);
+extern uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask);
 extern void blink(uint32_t dest);
-extern struct WifiLog AppBuffer[255];
+extern struct WifiLog AppBuffer[256];
 extern uint8_t AppBufferIndex;
+extern struct WifiLog MachineBuffer[256];
+extern uint8_t MachineBufferIndex;
 extern void ReadConfig();
 extern void WriteConfig();
 extern void setupFreedom();
 extern void setupAP();
 extern void reqRssi(uint32_t dest);
 extern void start_query_rssi();
+
+#ifdef ETH_ENABLE
+extern void wrap_bt_up();
+extern void wrap_bt_down();
+extern void wrap_bt_click();
+extern void wrap_bt_home();
+#endif
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
@@ -40,10 +49,19 @@ void restServerRouting() {
     server.on("/upload", HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/query_rssi"), HTTP_POST, rest_post_query_rssi);
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
+
+#ifdef ETH_ENABLE
+    //button via webinterface
+    server.on(F("/bt_up"), HTTP_GET, rest_bt_up);  
+    server.on(F("/bt_down"), HTTP_GET, rest_bt_down);  
+    server.on(F("/bt_click"), HTTP_GET, rest_bt_click);  
+    server.on(F("/bt_home"), HTTP_GET, rest_bt_home); 
+#endif
 }
 
+
 void rest_get_host() {
-    server.send(200, "text/json", "{\"id\": \"0x00" + String(ESP.getChipId(), HEX) + "\"}");
+  server.send(200, "text/json", "{\"id\": \"0x00" + String(ESP.getChipId(), HEX) + "\"}");
 }
 
 void rest_post_save_config() {
@@ -234,7 +252,6 @@ void rest_post_fire() {
     server.send(404, "text/json", "{\"result\": \"not found\"}");
     return;
   }
-  fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
   AppBuffer[AppBufferIndex].Id = id;
   AppBuffer[AppBufferIndex].Duration = machines[machinesIndexCache[id]].Functions[f_id].Duration;
@@ -244,8 +261,38 @@ void rest_post_fire() {
   AppBuffer[AppBufferIndex].Seq = 0x00;
   AppBuffer[AppBufferIndex].Timestamp = millis();
   AppBufferIndex++;
+
+#ifdef ETH_ENABLE
+  uint32_t t1 = millis();
+#endif
+
+  uint16_t seq = fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
-  server.send(200, "text/json", "{\"result\": \"success\"");
+#ifdef ETH_ENABLE
+  bool success = false;
+  while(millis() < t1 + 2000 && !success)
+  {
+    int i = 1;
+    while(true)
+    {
+      if(MachineBuffer[(MachineBufferIndex - i + 256) % 256].Timestamp < t1 || MachineBuffer[(MachineBufferIndex - i + 256) % 256].Timestamp == 0)
+        break;
+        
+      uint16_t ackSeq = MachineBuffer[(MachineBufferIndex - i + 256) % 256].Duration >> 16;
+      if (MachineBuffer[(MachineBufferIndex - i + 256) % 256].Type == 0x02 && seq == ackSeq && MachineBuffer[(MachineBufferIndex - i + 256) % 256].Id == id)
+      {
+        success = true;
+        break;
+      }
+      i++;
+    }
+  }
+  uint32_t t2 = millis();
+  
+  server.send(200, "text/json", "{\"result\": \"" + (success ? String("success") : String("fail")) + "\", \"roundtriptime\": \"" + String (t2 - t1) + "\"}");
+#else
+  server.send(200, "text/json", "{\"result\": \"true\"}");
+#endif
 }
 
 void rest_post_blink() {
@@ -357,3 +404,22 @@ void rest_get_all_functions() {
   serializeJson(doc, message);
   server.send(200, "text/json", message);
 }
+
+#ifdef ETH_ENABLE
+void rest_bt_up() {
+  wrap_bt_up();
+  server.send(200, "");
+}
+void rest_bt_down() {
+  wrap_bt_down();
+  server.send(200, "");
+}
+void rest_bt_click() {
+  wrap_bt_click();
+  server.send(200, "");
+}
+void rest_bt_home() {
+  wrap_bt_home();
+  server.send(200, "");
+}
+#endif
