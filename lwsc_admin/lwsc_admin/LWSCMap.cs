@@ -17,6 +17,7 @@ namespace lwsc_admin
 
         public Action<int> LocationUpdate { get; internal set; }
         public Action<uint> Blink { get; internal set; }
+        public Action<uint> ReqRssi { get; internal set; }
         public Action<uint, uint> Fire { get; internal set; }
 
         public LWSCMap()
@@ -129,6 +130,7 @@ namespace lwsc_admin
                         }
                         if (e.Location.X > m.symbolX + 36 && e.Location.X < m.symbolX + 16 + 36 && e.Location.Y > m.symbolY && e.Location.Y < m.symbolY + 16)
                         {
+                            ReqRssi(m.id);
                             mouseMappedId = m.id;
                             Invalidate();
                             return;
@@ -148,6 +150,7 @@ namespace lwsc_admin
                                 if (e.Location.X > m.symbolX && e.Location.X < m.symbolX + 16 && e.Location.Y > m.symbolY + j * 16 && e.Location.Y < m.symbolY + 16 + j * 16)
                                 {
                                     Fire(f.machineId, f.functionId);
+                                    return;
                                 }
                             }
                         }
@@ -168,7 +171,12 @@ namespace lwsc_admin
                 LocationUpdate(mouseMapped);
                 mouseMapped = -1;
                 Invalidate();
+                return;
             }
+
+            mouseMapped = -1;
+            mouseMappedId = 0;
+            Invalidate();
         }
     }
 }

@@ -195,7 +195,7 @@ void reqRssi(uint32_t dest)
 {   
   uint8_t result[sizeof(beacon_raw) + 1];  
   uint8_t data[1] = {0}; 
-  createPacket(result, data, 1, 0xFFFFFFFF, MSG_RequestRssi);
+  createPacket(result, data, 1, dest, MSG_RequestRssi);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   Serial.printf("reqRssi to %08x = %d\n\n", dest, res);  
 }

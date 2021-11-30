@@ -29,6 +29,7 @@ namespace lwsc_admin
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.tvMachines = new System.Windows.Forms.TreeView();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.pMachine = new System.Windows.Forms.Panel();
@@ -82,7 +83,6 @@ namespace lwsc_admin
             this.btSave = new System.Windows.Forms.Button();
             this.btUploadConfig = new System.Windows.Forms.Button();
             this.btDownloadConfig = new System.Windows.Forms.Button();
-            this.lwscMap1 = new lwsc_admin.LWSCMap();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.pnMappings = new System.Windows.Forms.Panel();
             this.btMapPadDelete = new System.Windows.Forms.Button();
@@ -95,6 +95,8 @@ namespace lwsc_admin
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lwscMap1 = new lwsc_admin.LWSCMap();
+            this.btResetCounter = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -348,9 +350,9 @@ namespace lwsc_admin
             // 
             // tabControl1
             // 
+            this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
-            this.tabControl1.Controls.Add(this.tabPage4);
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
@@ -458,6 +460,7 @@ namespace lwsc_admin
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.btResetCounter);
             this.tabPage4.Controls.Add(this.btEspHome);
             this.tabPage4.Controls.Add(this.btEspClick);
             this.tabPage4.Controls.Add(this.btEspDown);
@@ -654,14 +657,6 @@ namespace lwsc_admin
             this.btDownloadConfig.UseVisualStyleBackColor = true;
             this.btDownloadConfig.Click += new System.EventHandler(this.btDownloadConfig_Click);
             // 
-            // lwscMap1
-            // 
-            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
-            this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(1338, 615);
-            this.lwscMap1.TabIndex = 2;
-            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.pnMappings);
@@ -781,6 +776,24 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
+            // lwscMap1
+            // 
+            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
+            this.lwscMap1.Name = "lwscMap1";
+            this.lwscMap1.Size = new System.Drawing.Size(1338, 615);
+            this.lwscMap1.TabIndex = 2;
+            // 
+            // btResetCounter
+            // 
+            this.btResetCounter.Location = new System.Drawing.Point(528, 74);
+            this.btResetCounter.Name = "btResetCounter";
+            this.btResetCounter.Size = new System.Drawing.Size(121, 31);
+            this.btResetCounter.TabIndex = 16;
+            this.btResetCounter.Text = "Reset Counter";
+            this.btResetCounter.UseVisualStyleBackColor = true;
+            this.btResetCounter.Click += new System.EventHandler(this.btResetCounter_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -788,6 +801,7 @@ namespace lwsc_admin
             this.ClientSize = new System.Drawing.Size(1346, 666);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.statusStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Form1";
             this.splitContainer2.Panel1.ResumeLayout(false);
@@ -883,6 +897,7 @@ namespace lwsc_admin
         private System.Windows.Forms.Button btEspDown;
         private System.Windows.Forms.Button btEspUp;
         private System.Windows.Forms.TextBox tbIpAddress;
+        private System.Windows.Forms.Button btResetCounter;
     }
 }
 

@@ -55,6 +55,8 @@ void wrap_bt_home()
 }
 #endif
 
+
+#ifndef ETH_ENABLE
 void timer_query_rssi()
 {
   Serial.println("timer_query_rssi");
@@ -64,9 +66,7 @@ void timer_query_rssi()
   {
     Serial.println("timer.disable(timerId)");
     timer.disable(timerId);
-#ifndef ETH_ENABLE
     setupAP();
-#endif
   } else {
     reqRssi(0xFFFFFFFF);
   }
@@ -77,13 +77,12 @@ void start_query_rssi()
   if(rssiOngoing > 0)
     return;
   Serial.println("start_query_rssi");
-#ifndef ETH_ENABLE
   setupFreedom();
-#endif
   reqRssi(0xFFFFFFFF);
   rssiOngoing = 2;
   timerId = timer.setInterval(7000, timer_query_rssi);
 }
+#endif
 
 boolean InitalizeFileSystem() {   
   bool initok = false;   

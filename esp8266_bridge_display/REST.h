@@ -19,6 +19,8 @@ void rest_upload_handler();
 void rest_get_config();
 void rest_post_save_config();
 
+void rest_post_set_relaiscounter();
+
 
 #ifdef ETH_ENABLE
 void rest_bt_up();

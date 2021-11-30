@@ -259,27 +259,31 @@ void sendRssi()
 
 void sendRssiToDest(uint32_t dest)
 {
-  uint8_t s = 5 * lastRssi.size() + 1;
-  uint8_t result[sizeof(beacon_raw) + s];    
-  uint8_t data[s] = {0};
-  
-  std::map<uint32_t, int8_t>::iterator it;
-  result[sizeof(beacon_raw)] = lastRssi.size() & 0xFF;
-  uint8_t i = 1;
-  for (it = lastRssi.begin(); it != lastRssi.end(); it++)
+  for (int l = 0; l < lastRssi.size(); l+=5)
   {
-    memcpy((uint8_t*)&data[i], &(it->first), 4);
-    memcpy((uint8_t*)&data[i + 4], &(it->second), 1);
+    uint8_t s = 5 * lastRssi.size() + 1;
+    uint8_t result[sizeof(beacon_raw) + s];    
+    uint8_t data[s] = {0};
     
-    Serial.printf("   id %08X - ", it->first);  
-    Serial.printf("rssi %d\n", it->second);  
+    std::map<uint32_t, int8_t>::iterator it;
+    result[sizeof(beacon_raw)] = lastRssi.size() & 0xFF;
+    uint8_t i = 1;
+    std::advance(it, l);
+    for (it = lastRssi.begin(); it != lastRssi.end(); it++)
+    {
+      memcpy((uint8_t*)&data[i], &(it->first), 4);
+      memcpy((uint8_t*)&data[i + 4], &(it->second), 1);
+      
+      Serial.printf("%d:   id %08X - ", std::distance(lastRssi.begin(), it), it->first);  
+      Serial.printf("rssi %d\n", it->second);  
+      
+      i+=5;
+    }
     
-    i+=5;
+    uint16_t seq = createPacket(result, data, s, dest, MSG_SendRssi);
+    uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+    Serial.printf("sending MSG_SendRssi (seqnum: %d, res: %d)\n", seq, res);
   }
-  
-  uint16_t seq = createPacket(result, data, s, dest, MSG_SendRssi);
-  uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("sending MSG_SendRssi (seqnum: %d, res: %d)\n", seq, res);
 }
 
 void sendKeepAlive()

@@ -17,22 +17,21 @@ extern struct WifiLog MachineBuffer[256];
 extern uint8_t MachineBufferIndex;
 extern void ReadConfig();
 extern void WriteConfig();
-extern void setupFreedom();
-extern void setupAP();
-extern void reqRssi(uint32_t dest);
-extern void start_query_rssi();
 
 #ifdef ETH_ENABLE
+extern void reqRssi(uint32_t dest);
 extern void wrap_bt_up();
 extern void wrap_bt_down();
 extern void wrap_bt_click();
 extern void wrap_bt_home();
+#else
+extern void start_query_rssi();
 #endif
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
         server.send(200, F("text/html"),
-            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX));
+            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap());
     });
     server.on(F("/host"), HTTP_GET, rest_get_host);
     server.on(F("/save_config"), HTTP_POST, rest_post_save_config);
@@ -49,6 +48,7 @@ void restServerRouting() {
     server.on("/upload", HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/query_rssi"), HTTP_POST, rest_post_query_rssi);
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
+    server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
 
 #ifdef ETH_ENABLE
     //button via webinterface
@@ -262,6 +262,9 @@ void rest_post_fire() {
   AppBuffer[AppBufferIndex].Timestamp = millis();
   AppBufferIndex++;
 
+  if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x01 == 0x01) machines[machinesIndexCache[id]].Relais1Counter++;
+  if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[machinesIndexCache[id]].Relais2Counter++;
+
 #ifdef ETH_ENABLE
   uint32_t t1 = millis();
 #endif
@@ -374,10 +377,27 @@ void rest_upload_handler(){ // upload a new file to the SPIFFS
 }
 
 void rest_post_query_rssi()
-{
+{  
+#ifdef ETH_ENABLE
+  if (server.arg("id") == ""){
+    reqRssi(0xFFFFFFFF);
+  } else {
+    uint32_t id = server.arg("id").toInt();
+    if(machinesIndexCache.count(id) == 0)
+    {
+      server.send(404, "text/json", "{\"result\": \"not found\"}");
+      return;
+    }
+    reqRssi(id); 
+  }
   server.send(200, "text/json", "{\"result\": \"success\"}");
-  delay(100);
-  start_query_rssi();
+#else
+  if (server.arg("id") == "")
+  {
+    server.send(200, "text/json", "{\"result\": \"success\"}");
+    start_query_rssi();
+  }
+#endif
 }
 
 void rest_get_all_functions() {
@@ -403,6 +423,35 @@ void rest_get_all_functions() {
   }
   serializeJson(doc, message);
   server.send(200, "text/json", message);
+}
+
+void rest_post_set_relaiscounter()
+{
+  if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+
+  uint32_t id = server.arg("id").toInt();
+  if(machinesIndexCache.count(id) == 0)
+  {
+    server.send(404, "text/json", "{\"result\": \"not found\"}");
+    return;
+  }
+  int i = machinesIndexCache[id];
+  
+  MachineData* md = &machines[i];  
+
+  if(server.arg("relais1Counter") != "")
+  {
+    md->Relais1Counter = server.arg("relais1Counter").toInt();
+  }
+  if(server.arg("relais2Counter") != "")
+  {
+    md->Relais2Counter = server.arg("relais2Counter").toInt();
+  }
+  
+  server.send(200, "text/json", "{\"result\": \"success\"}");
 }
 
 #ifdef ETH_ENABLE

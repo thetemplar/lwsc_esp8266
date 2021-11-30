@@ -103,6 +103,7 @@ namespace lwsc_admin
             lwscMap1.LocationUpdate += LwscMap1_LocationUpdate;
             lwscMap1.Blink += LwscMap1_Blink;
             lwscMap1.Fire += LwscMap1_Fire;
+            lwscMap1.ReqRssi += LwscMap1_ReqRssi;
         }
 
         private void FillTreeView()
@@ -144,7 +145,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/blink?id=" + m_id, RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
         }
 
         private void LwscMap1_Fire(uint m_id, uint f_id)
@@ -152,10 +156,52 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/fire?id=" + m_id + "&f_id=" + f_id, RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
+            {
                 MessageBox.Show("Error: " + status);
-                //throw new Exception();
+                return;
+            }
             else
                 MessageBox.Show(res);
+        }
+
+        private void LwscMap1_ReqRssi(uint m_id)
+        {
+            MachineData m = machines.First(x => x.id == m_id);
+            if (m == null || m.id == 0)
+                throw new Exception();
+
+            string res = "";
+            var status = RESTful("/query_rssi?id=" + m.id, RESTType.POST, out res);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+
+            res = "";
+            status = RESTful("/machine_rssi?id=" + m.id, RESTType.GET, out res);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+
+
+
+            dynamic dJson = JsonConvert.DeserializeObject(res);
+            m.rssi = dJson["rssi"];
+
+            if (dJson["rssiMap"] == null)
+                return;
+
+            foreach (var r in dJson["rssiMap"])
+            {
+                uint id = r["id"];
+                sbyte rssi = r["rssi"];
+                m.rssiMap[id] = rssi;
+                
+            }
+            lwscMap1.Invalidate();
         }
 
         private void LwscMap1_LocationUpdate(int i)
@@ -164,7 +210,7 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+                MessageBox.Show("Error: " + status);
         }
 
         private HttpStatusCode RESTful(string url, RESTType type, out string result)
@@ -202,7 +248,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/save_config", RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
         }
 
         private void btGetData_Click(object sender, EventArgs e)
@@ -228,7 +277,7 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/all_functions", RESTType.GET, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+                MessageBox.Show("Error: " + status);
 
             var fArray = JsonConvert.DeserializeObject<SimpleFunction[]>(res);
             functions.Clear();
@@ -309,7 +358,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
             FillTreeView();
         }
 
@@ -327,7 +379,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
             FillTreeView();
         }
 
@@ -344,7 +399,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/change_id?id=" + old_id + "&new_id=" + m.id, RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
             btGetData_Click(null, null);
         }
 
@@ -378,7 +436,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/query_rssi", RESTType.POST, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
         }
 
         private void btGetRSSI_Click(object sender, EventArgs e)
@@ -388,7 +449,10 @@ namespace lwsc_admin
                 string res = "";
                 var status = RESTful("/machine_rssi?id=" + m.id, RESTType.GET, out res);
                 if (status != HttpStatusCode.OK)
-                    MessageBox.Show("Error @ " + m.id.ToString("X8"));
+                {
+                    MessageBox.Show("Error: " + status);
+                    return;
+                }
 
                 dynamic dJson = JsonConvert.DeserializeObject(res);
                 m.rssi = dJson["rssi"];
@@ -524,7 +588,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/bt_home", RESTType.GET, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
         }
 
         private void btEspUp_Click(object sender, EventArgs e)
@@ -532,7 +599,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/bt_up", RESTType.GET, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
         }
 
         private void btEspDown_Click(object sender, EventArgs e)
@@ -540,7 +610,10 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/bt_down", RESTType.GET, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
         }
 
         private void btEspClick_Click(object sender, EventArgs e)
@@ -548,7 +621,24 @@ namespace lwsc_admin
             string res = "";
             var status = RESTful("/bt_click", RESTType.GET, out res);
             if (status != HttpStatusCode.OK)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+        }
+
+        private void btResetCounter_Click(object sender, EventArgs e)
+        {
+            foreach (var m in machines)
+            {
+                string res = "";
+                var status = RESTful("/set_relaiscounter?id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out res);
+                if (status != HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Error: " + status);
+                    return;
+                }
+            }
         }
     }
 }
