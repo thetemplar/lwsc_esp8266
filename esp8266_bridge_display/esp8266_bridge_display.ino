@@ -17,7 +17,6 @@
  #define CSPIN 16
   ENC28J60lwIP eth(CSPIN);
   byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
-  String eth_ip;
 #endif
 
 char packetBuffer[256];       //buffer to hold incoming packet 
@@ -29,6 +28,7 @@ DisplayUI displayUI;
 
 const char* ssid = "lwsc_wifibridge_display";
 const char* password = "lauterbach";
+String network_ip;
 
 SimpleTimer timer;
 int timerIdRssi;
@@ -296,7 +296,7 @@ void setup() {
   int present = eth.begin(mac);
   if (!present) {
     Serial.println("no ethernet hardware present");
-    while(1);
+    while(1) yield();
   }
   
   Serial.print("connecting ethernet");
@@ -307,7 +307,7 @@ void setup() {
   Serial.println();
   Serial.print("ethernet ip address: ");
   Serial.println(eth.localIP());
-  eth_ip = String(eth.localIP()[0]) + String(".") + String(eth.localIP()[1]) + String(".") + String(eth.localIP()[2]) + String(".") + String(eth.localIP()[3]);
+  network_ip = String(eth.localIP()[0]) + String(".") + String(eth.localIP()[1]) + String(".") + String(eth.localIP()[2]) + String(".") + String(eth.localIP()[3]);
   Serial.print("ethernet subnetMask: ");
   Serial.println(eth.subnetMask());
   Serial.print("ethernet gateway: ");
@@ -318,6 +318,7 @@ void setup() {
   timer.enable(timerIdUDP);
 #else
   setupAP();
+  network_ip = String(WiFi.softAPIP()[0]) + String(".") + String(WiFi.softAPIP()[1]) + String(".") + String(WiFi.softAPIP()[2]) + String(".") + String(WiFi.softAPIP()[3]);
 #endif
   restServerRouting();
   server.begin();

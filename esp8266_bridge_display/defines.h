@@ -86,7 +86,6 @@ enum MsgTypes : uint8_t
   MSG_ERROR = 0xFF
 };
 
-
 struct WifiLog {
   uint32_t Id;
   uint32_t Duration;

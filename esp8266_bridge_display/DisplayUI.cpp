@@ -122,11 +122,7 @@ void DisplayUI::setup() {
 
     // set current menu to main menu
     changeMenu(&mainMenu);
-#ifdef ETH_ENABLE
-  mode = DISPLAY_MODE::SCREEN_SAVER;
-#else
-  mode = DISPLAY_MODE::MENU;
-#endif
+    mode = DISPLAY_MODE::SCREEN_SAVER;
     startTime = millis();
 }
 
@@ -205,7 +201,6 @@ void DisplayUI::setupButtons() {
     // === BUTTON UP === //
     up->setOnClicked([this]() {
         scrollCounter = 0;
-        scrollTime    = millis();
         buttonTime    = millis();
 
         bt_up();
@@ -213,7 +208,6 @@ void DisplayUI::setupButtons() {
 
     up->setOnHolding([this]() {
         scrollCounter = 0;
-        scrollTime    = millis();
         buttonTime    = millis();
 
         bt_up();
@@ -222,7 +216,6 @@ void DisplayUI::setupButtons() {
     // === BUTTON DOWN === //
     down->setOnClicked([this]() {
         scrollCounter = 0;
-        scrollTime    = millis();
         buttonTime    = millis();
 
         bt_down();
@@ -230,7 +223,6 @@ void DisplayUI::setupButtons() {
 
     down->setOnHolding([this]() {
         scrollCounter = 0;
-        scrollTime    = millis();
         buttonTime    = millis();
 
         bt_down();
@@ -239,7 +231,6 @@ void DisplayUI::setupButtons() {
     // === BUTTON A === //
     a->setOnClicked([this]() {
         scrollCounter = 0;
-        scrollTime    = millis();
         buttonTime    = millis();
 
         bt_click();
@@ -247,7 +238,6 @@ void DisplayUI::setupButtons() {
 
     a->setOnHolding([this]() {
         scrollCounter = 0;
-        scrollTime    = millis();
         buttonTime    = millis();
         if (mode == DISPLAY_MODE::MENU) {
             if (currentMenu->list->get(currentMenu->selected).hold) {
@@ -410,12 +400,12 @@ void DisplayUI::drawLiveApp()
     drawString(5, BufferToString(AppBuffer[(AppBufferIndex + 256 - 5) % 256]));
 }
 
-extern String eth_ip;
+extern String network_ip;
 void DisplayUI::drawScreenSaver() {
   drawString(0, " - LWSC ETH/WIFI BRIDGE - ");
   drawString(1, "");
   drawString(2, "Ethernet IP Address:");
-  drawString(3, eth_ip);
+  drawString(3, network_ip);
   drawString(4, "Last Command: ");
   drawString(5, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 1) % 256]));
 }

@@ -17,7 +17,7 @@ void rest_post_reboot();
 void rest_post_change_id();
 void rest_post_query_rssi();
 void rest_upload_handler();
-void rest_get_config();
+void rest_get_file();
 void rest_post_save_config();
 
 void rest_post_set_relaiscounter();

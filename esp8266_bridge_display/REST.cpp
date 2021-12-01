@@ -48,7 +48,7 @@ void restServerRouting() {
     server.on(F("/fire"), HTTP_GET, rest_post_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/change_id"), HTTP_POST, rest_post_change_id);
-    server.on(F("/config"), HTTP_GET, rest_get_config);  
+    server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on("/upload", HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/query_rssi"), HTTP_POST, rest_post_query_rssi);
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
@@ -69,7 +69,7 @@ void rest_get_host() {
   server.send(200, "text/json", "{\"id\": \"0x00" + String(ESP.getChipId(), HEX) + "\"}");
 }
 
-void rest_post_save_config() {
+void rest_post_save_config() {      
   WriteConfig();
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }
@@ -331,28 +331,40 @@ void rest_post_change_id() {
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"change id\", \"id\": 0x00" + String(md->Id, HEX) + ", \"name\": \"" + md->Name + "\", \"shortName\": \"" + md->ShortName + "\"}");
 }
 
-void rest_get_config() {
-  File file = SPIFFS.open("/machines.conf", "r");                    // Open the file
-  size_t sent = server.streamFile(file, "application/octet-stream");    // Send it to the client
+void rest_get_file() {
+  if (server.arg("filename") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  File file = SPIFFS.open("/" + server.arg("filename"), "r");
+  size_t sent = server.streamFile(file, "application/octet-stream");
   file.close();
-  //server.send(200, "application/octet-stream", message);
 }
 
 void rest_upload_handler(){ // upload a new file to the SPIFFS
   HTTPUpload& upload = server.upload();
-  if(upload.status == UPLOAD_FILE_START){Serial.println("UPLOAD_FILE_START");
+  if(upload.status == UPLOAD_FILE_START)
+  {
+    Serial.println("UPLOAD_FILE_START");
     String filename = upload.filename;
-    if(!filename.startsWith("/")) filename = "/"+filename;
-    Serial.print("handleFileUpload Name: "); Serial.println(filename);
+    if(!filename.startsWith("/")) 
+    {
+    filename = "/" + filename;
+    }
+    Serial.print("handleFileUpload Name: "); 
+    Serial.println(filename);
     fsUploadFile = SPIFFS.open(filename, "w");            // Open the file for writing in SPIFFS (create if it doesn't exist)
     filename = String();
-  } else if(upload.status == UPLOAD_FILE_WRITE){Serial.println("UPLOAD_FILE_WRITE");
+  } else if(upload.status == UPLOAD_FILE_WRITE){
+    Serial.println("UPLOAD_FILE_WRITE");
     if(fsUploadFile)
       fsUploadFile.write(upload.buf, upload.currentSize); // Write the received bytes to the file
-  } else if(upload.status == UPLOAD_FILE_END){Serial.println("UPLOAD_FILE_END");
+  } else if(upload.status == UPLOAD_FILE_END){
+    Serial.println("UPLOAD_FILE_END");
     if(fsUploadFile) {                                    // If the file was successfully created
       fsUploadFile.close();                               // Close the file again
-      Serial.print("handleFileUpload Size: "); Serial.println(upload.totalSize);
+      Serial.print("handleFileUpload Size: "); 
+      Serial.println(upload.totalSize);
       server.sendHeader("Location","/success.html");      // Redirect the client to the success page
       server.send(303);
     } else {

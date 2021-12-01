@@ -55,6 +55,7 @@ namespace lwsc_admin
             this.label5 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btReboot = new System.Windows.Forms.Button();
             this.btResetCounter = new System.Windows.Forms.Button();
             this.btEspHome = new System.Windows.Forms.Button();
             this.btEspClick = new System.Windows.Forms.Button();
@@ -92,11 +93,10 @@ namespace lwsc_admin
             this.btMapSelectNew = new System.Windows.Forms.Button();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.listBox2 = new System.Windows.Forms.ListBox();
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.lbMapPad = new System.Windows.Forms.ListBox();
+            this.lbMapSelect = new System.Windows.Forms.ListBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.btReboot = new System.Windows.Forms.Button();
             this.lwscMap1 = new lwsc_admin.LWSCMap();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
@@ -388,6 +388,16 @@ namespace lwsc_admin
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
+            // btReboot
+            // 
+            this.btReboot.Location = new System.Drawing.Point(528, 111);
+            this.btReboot.Name = "btReboot";
+            this.btReboot.Size = new System.Drawing.Size(121, 31);
+            this.btReboot.TabIndex = 17;
+            this.btReboot.Text = "Reboot";
+            this.btReboot.UseVisualStyleBackColor = true;
+            this.btReboot.Click += new System.EventHandler(this.btReboot_Click);
+            // 
             // btResetCounter
             // 
             this.btResetCounter.Location = new System.Drawing.Point(528, 74);
@@ -454,6 +464,7 @@ namespace lwsc_admin
             this.btGetMappings.TabIndex = 10;
             this.btGetMappings.Text = "Get Mappings";
             this.btGetMappings.UseVisualStyleBackColor = true;
+            this.btGetMappings.Click += new System.EventHandler(this.btGetMappings_Click);
             // 
             // btGetFunctions
             // 
@@ -678,8 +689,8 @@ namespace lwsc_admin
             this.tabPage3.Controls.Add(this.btMapSelectNew);
             this.tabPage3.Controls.Add(this.label12);
             this.tabPage3.Controls.Add(this.label11);
-            this.tabPage3.Controls.Add(this.listBox2);
-            this.tabPage3.Controls.Add(this.listBox1);
+            this.tabPage3.Controls.Add(this.lbMapPad);
+            this.tabPage3.Controls.Add(this.lbMapSelect);
             this.tabPage3.Location = new System.Drawing.Point(4, 25);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Size = new System.Drawing.Size(1500, 723);
@@ -754,23 +765,23 @@ namespace lwsc_admin
             this.label11.TabIndex = 2;
             this.label11.Text = "Select";
             // 
-            // listBox2
+            // lbMapPad
             // 
-            this.listBox2.FormattingEnabled = true;
-            this.listBox2.ItemHeight = 16;
-            this.listBox2.Location = new System.Drawing.Point(232, 68);
-            this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size(201, 388);
-            this.listBox2.TabIndex = 1;
+            this.lbMapPad.FormattingEnabled = true;
+            this.lbMapPad.ItemHeight = 16;
+            this.lbMapPad.Location = new System.Drawing.Point(232, 68);
+            this.lbMapPad.Name = "lbMapPad";
+            this.lbMapPad.Size = new System.Drawing.Size(201, 388);
+            this.lbMapPad.TabIndex = 1;
             // 
-            // listBox1
+            // lbMapSelect
             // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 16;
-            this.listBox1.Location = new System.Drawing.Point(11, 68);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(201, 388);
-            this.listBox1.TabIndex = 0;
+            this.lbMapSelect.FormattingEnabled = true;
+            this.lbMapSelect.ItemHeight = 16;
+            this.lbMapSelect.Location = new System.Drawing.Point(11, 68);
+            this.lbMapSelect.Name = "lbMapSelect";
+            this.lbMapSelect.Size = new System.Drawing.Size(201, 388);
+            this.lbMapSelect.TabIndex = 0;
             // 
             // statusStrip1
             // 
@@ -787,16 +798,6 @@ namespace lwsc_admin
             // 
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
-            // 
-            // btReboot
-            // 
-            this.btReboot.Location = new System.Drawing.Point(528, 111);
-            this.btReboot.Name = "btReboot";
-            this.btReboot.Size = new System.Drawing.Size(121, 31);
-            this.btReboot.TabIndex = 17;
-            this.btReboot.Text = "Reboot";
-            this.btReboot.UseVisualStyleBackColor = true;
-            this.btReboot.Click += new System.EventHandler(this.btReboot_Click);
             // 
             // lwscMap1
             // 
@@ -894,8 +895,8 @@ namespace lwsc_admin
         private System.Windows.Forms.DataGridViewTextBoxColumn colFunctionId;
         private System.Windows.Forms.TabPage tabPage4;
         private System.Windows.Forms.TabPage tabPage3;
-        private System.Windows.Forms.ListBox listBox2;
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListBox lbMapPad;
+        private System.Windows.Forms.ListBox lbMapSelect;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Button btMapPadDelete;
