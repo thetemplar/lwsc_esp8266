@@ -54,17 +54,8 @@ namespace lwsc_admin
             this.tbFName = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.dgvFunctions = new System.Windows.Forms.DataGridView();
-            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colRelais1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colRelais2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMachineId = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMachineName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colFunctionId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btResetCounter = new System.Windows.Forms.Button();
             this.btEspHome = new System.Windows.Forms.Button();
             this.btEspClick = new System.Windows.Forms.Button();
             this.btEspDown = new System.Windows.Forms.Button();
@@ -83,6 +74,16 @@ namespace lwsc_admin
             this.btSave = new System.Windows.Forms.Button();
             this.btUploadConfig = new System.Windows.Forms.Button();
             this.btDownloadConfig = new System.Windows.Forms.Button();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.dgvFunctions = new System.Windows.Forms.DataGridView();
+            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colRelais1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colRelais2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMachineId = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMachineName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colFunctionId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.pnMappings = new System.Windows.Forms.Panel();
             this.btMapPadDelete = new System.Windows.Forms.Button();
@@ -95,8 +96,8 @@ namespace lwsc_admin
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.btReboot = new System.Windows.Forms.Button();
             this.lwscMap1 = new lwsc_admin.LWSCMap();
-            this.btResetCounter = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -104,11 +105,11 @@ namespace lwsc_admin
             this.pMachine.SuspendLayout();
             this.pFunction.SuspendLayout();
             this.tabControl1.SuspendLayout();
+            this.tabPage4.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvFunctions)).BeginInit();
-            this.tabPage4.SuspendLayout();
-            this.panel1.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -118,7 +119,7 @@ namespace lwsc_admin
             this.tvMachines.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvMachines.Location = new System.Drawing.Point(0, 0);
             this.tvMachines.Name = "tvMachines";
-            this.tvMachines.Size = new System.Drawing.Size(1332, 400);
+            this.tvMachines.Size = new System.Drawing.Size(1494, 508);
             this.tvMachines.TabIndex = 0;
             this.tvMachines.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvMachines_AfterSelect);
             // 
@@ -138,8 +139,8 @@ namespace lwsc_admin
             // 
             this.splitContainer2.Panel2.Controls.Add(this.pMachine);
             this.splitContainer2.Panel2.Controls.Add(this.pFunction);
-            this.splitContainer2.Size = new System.Drawing.Size(1332, 609);
-            this.splitContainer2.SplitterDistance = 400;
+            this.splitContainer2.Size = new System.Drawing.Size(1494, 717);
+            this.splitContainer2.SplitterDistance = 508;
             this.splitContainer2.TabIndex = 1;
             // 
             // pMachine
@@ -158,7 +159,7 @@ namespace lwsc_admin
             this.pMachine.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pMachine.Location = new System.Drawing.Point(0, 0);
             this.pMachine.Name = "pMachine";
-            this.pMachine.Size = new System.Drawing.Size(1332, 205);
+            this.pMachine.Size = new System.Drawing.Size(1494, 205);
             this.pMachine.TabIndex = 3;
             this.pMachine.Visible = false;
             // 
@@ -272,7 +273,7 @@ namespace lwsc_admin
             this.pFunction.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pFunction.Location = new System.Drawing.Point(0, 0);
             this.pFunction.Name = "pFunction";
-            this.pFunction.Size = new System.Drawing.Size(1332, 205);
+            this.pFunction.Size = new System.Drawing.Size(1494, 205);
             this.pFunction.TabIndex = 7;
             this.pFunction.Visible = false;
             // 
@@ -358,108 +359,12 @@ namespace lwsc_admin
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1346, 644);
+            this.tabControl1.Size = new System.Drawing.Size(1508, 752);
             this.tabControl1.TabIndex = 0;
-            // 
-            // tabPage1
-            // 
-            this.tabPage1.Controls.Add(this.splitContainer2);
-            this.tabPage1.Location = new System.Drawing.Point(4, 25);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1338, 615);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Machines";
-            this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.Controls.Add(this.dgvFunctions);
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1338, 615);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Functions";
-            this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // dgvFunctions
-            // 
-            this.dgvFunctions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvFunctions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colName,
-            this.colDuration,
-            this.colRelais1,
-            this.colRelais2,
-            this.colMachineId,
-            this.colMachineName,
-            this.colFunctionId});
-            this.dgvFunctions.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvFunctions.Location = new System.Drawing.Point(3, 3);
-            this.dgvFunctions.Name = "dgvFunctions";
-            this.dgvFunctions.RowHeadersWidth = 51;
-            this.dgvFunctions.RowTemplate.Height = 24;
-            this.dgvFunctions.Size = new System.Drawing.Size(1332, 609);
-            this.dgvFunctions.TabIndex = 0;
-            this.dgvFunctions.DoubleClick += new System.EventHandler(this.dgvFunctions_DoubleClick);
-            // 
-            // colName
-            // 
-            this.colName.HeaderText = "Name";
-            this.colName.MinimumWidth = 6;
-            this.colName.Name = "colName";
-            this.colName.ReadOnly = true;
-            this.colName.Width = 150;
-            // 
-            // colDuration
-            // 
-            this.colDuration.HeaderText = "Duration";
-            this.colDuration.MinimumWidth = 6;
-            this.colDuration.Name = "colDuration";
-            this.colDuration.ReadOnly = true;
-            this.colDuration.Width = 80;
-            // 
-            // colRelais1
-            // 
-            this.colRelais1.HeaderText = "Relais1";
-            this.colRelais1.MinimumWidth = 6;
-            this.colRelais1.Name = "colRelais1";
-            this.colRelais1.ReadOnly = true;
-            this.colRelais1.Width = 60;
-            // 
-            // colRelais2
-            // 
-            this.colRelais2.HeaderText = "Relais2";
-            this.colRelais2.MinimumWidth = 6;
-            this.colRelais2.Name = "colRelais2";
-            this.colRelais2.ReadOnly = true;
-            this.colRelais2.Width = 60;
-            // 
-            // colMachineId
-            // 
-            this.colMachineId.HeaderText = "Machine Id";
-            this.colMachineId.MinimumWidth = 6;
-            this.colMachineId.Name = "colMachineId";
-            this.colMachineId.ReadOnly = true;
-            this.colMachineId.Width = 120;
-            // 
-            // colMachineName
-            // 
-            this.colMachineName.HeaderText = "Machine Name";
-            this.colMachineName.MinimumWidth = 6;
-            this.colMachineName.Name = "colMachineName";
-            this.colMachineName.Width = 125;
-            // 
-            // colFunctionId
-            // 
-            this.colFunctionId.HeaderText = "Function Id";
-            this.colFunctionId.MinimumWidth = 6;
-            this.colFunctionId.Name = "colFunctionId";
-            this.colFunctionId.ReadOnly = true;
-            this.colFunctionId.Width = 80;
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.btReboot);
             this.tabPage4.Controls.Add(this.btResetCounter);
             this.tabPage4.Controls.Add(this.btEspHome);
             this.tabPage4.Controls.Add(this.btEspClick);
@@ -478,10 +383,20 @@ namespace lwsc_admin
             this.tabPage4.Controls.Add(this.lwscMap1);
             this.tabPage4.Location = new System.Drawing.Point(4, 25);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(1338, 615);
+            this.tabPage4.Size = new System.Drawing.Size(1500, 723);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // btResetCounter
+            // 
+            this.btResetCounter.Location = new System.Drawing.Point(528, 74);
+            this.btResetCounter.Name = "btResetCounter";
+            this.btResetCounter.Size = new System.Drawing.Size(121, 31);
+            this.btResetCounter.TabIndex = 16;
+            this.btResetCounter.Text = "Reset Counter";
+            this.btResetCounter.UseVisualStyleBackColor = true;
+            this.btResetCounter.Click += new System.EventHandler(this.btResetCounter_Click);
             // 
             // btEspHome
             // 
@@ -529,7 +444,7 @@ namespace lwsc_admin
             this.tbIpAddress.Name = "tbIpAddress";
             this.tbIpAddress.Size = new System.Drawing.Size(128, 22);
             this.tbIpAddress.TabIndex = 11;
-            this.tbIpAddress.Text = "192.168.4.1";
+            this.tbIpAddress.Text = ".. searching ..";
             // 
             // btGetMappings
             // 
@@ -657,6 +572,103 @@ namespace lwsc_admin
             this.btDownloadConfig.UseVisualStyleBackColor = true;
             this.btDownloadConfig.Click += new System.EventHandler(this.btDownloadConfig_Click);
             // 
+            // tabPage1
+            // 
+            this.tabPage1.Controls.Add(this.splitContainer2);
+            this.tabPage1.Location = new System.Drawing.Point(4, 25);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage1.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "Machines";
+            this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.dgvFunctions);
+            this.tabPage2.Location = new System.Drawing.Point(4, 25);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "Functions";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // dgvFunctions
+            // 
+            this.dgvFunctions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvFunctions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colName,
+            this.colDuration,
+            this.colRelais1,
+            this.colRelais2,
+            this.colMachineId,
+            this.colMachineName,
+            this.colFunctionId});
+            this.dgvFunctions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvFunctions.Location = new System.Drawing.Point(3, 3);
+            this.dgvFunctions.Name = "dgvFunctions";
+            this.dgvFunctions.RowHeadersWidth = 51;
+            this.dgvFunctions.RowTemplate.Height = 24;
+            this.dgvFunctions.Size = new System.Drawing.Size(1494, 717);
+            this.dgvFunctions.TabIndex = 0;
+            this.dgvFunctions.DoubleClick += new System.EventHandler(this.dgvFunctions_DoubleClick);
+            // 
+            // colName
+            // 
+            this.colName.HeaderText = "Name";
+            this.colName.MinimumWidth = 6;
+            this.colName.Name = "colName";
+            this.colName.ReadOnly = true;
+            this.colName.Width = 150;
+            // 
+            // colDuration
+            // 
+            this.colDuration.HeaderText = "Duration";
+            this.colDuration.MinimumWidth = 6;
+            this.colDuration.Name = "colDuration";
+            this.colDuration.ReadOnly = true;
+            this.colDuration.Width = 80;
+            // 
+            // colRelais1
+            // 
+            this.colRelais1.HeaderText = "Relais1";
+            this.colRelais1.MinimumWidth = 6;
+            this.colRelais1.Name = "colRelais1";
+            this.colRelais1.ReadOnly = true;
+            this.colRelais1.Width = 60;
+            // 
+            // colRelais2
+            // 
+            this.colRelais2.HeaderText = "Relais2";
+            this.colRelais2.MinimumWidth = 6;
+            this.colRelais2.Name = "colRelais2";
+            this.colRelais2.ReadOnly = true;
+            this.colRelais2.Width = 60;
+            // 
+            // colMachineId
+            // 
+            this.colMachineId.HeaderText = "Machine Id";
+            this.colMachineId.MinimumWidth = 6;
+            this.colMachineId.Name = "colMachineId";
+            this.colMachineId.ReadOnly = true;
+            this.colMachineId.Width = 120;
+            // 
+            // colMachineName
+            // 
+            this.colMachineName.HeaderText = "Machine Name";
+            this.colMachineName.MinimumWidth = 6;
+            this.colMachineName.Name = "colMachineName";
+            this.colMachineName.Width = 125;
+            // 
+            // colFunctionId
+            // 
+            this.colFunctionId.HeaderText = "Function Id";
+            this.colFunctionId.MinimumWidth = 6;
+            this.colFunctionId.Name = "colFunctionId";
+            this.colFunctionId.ReadOnly = true;
+            this.colFunctionId.Width = 80;
+            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.pnMappings);
@@ -670,7 +682,7 @@ namespace lwsc_admin
             this.tabPage3.Controls.Add(this.listBox1);
             this.tabPage3.Location = new System.Drawing.Point(4, 25);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1338, 615);
+            this.tabPage3.Size = new System.Drawing.Size(1500, 723);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Mappings";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -765,9 +777,9 @@ namespace lwsc_admin
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 644);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 752);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1346, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1508, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -776,29 +788,29 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
+            // btReboot
+            // 
+            this.btReboot.Location = new System.Drawing.Point(528, 111);
+            this.btReboot.Name = "btReboot";
+            this.btReboot.Size = new System.Drawing.Size(121, 31);
+            this.btReboot.TabIndex = 17;
+            this.btReboot.Text = "Reboot";
+            this.btReboot.UseVisualStyleBackColor = true;
+            this.btReboot.Click += new System.EventHandler(this.btReboot_Click);
+            // 
             // lwscMap1
             // 
             this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lwscMap1.Location = new System.Drawing.Point(0, 0);
             this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(1338, 615);
+            this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
             this.lwscMap1.TabIndex = 2;
-            // 
-            // btResetCounter
-            // 
-            this.btResetCounter.Location = new System.Drawing.Point(528, 74);
-            this.btResetCounter.Name = "btResetCounter";
-            this.btResetCounter.Size = new System.Drawing.Size(121, 31);
-            this.btResetCounter.TabIndex = 16;
-            this.btResetCounter.Text = "Reset Counter";
-            this.btResetCounter.UseVisualStyleBackColor = true;
-            this.btResetCounter.Click += new System.EventHandler(this.btResetCounter_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1346, 666);
+            this.ClientSize = new System.Drawing.Size(1508, 774);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.statusStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -813,13 +825,13 @@ namespace lwsc_admin
             this.pFunction.ResumeLayout(false);
             this.pFunction.PerformLayout();
             this.tabControl1.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvFunctions)).EndInit();
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.tabPage1.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvFunctions)).EndInit();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
@@ -898,6 +910,7 @@ namespace lwsc_admin
         private System.Windows.Forms.Button btEspUp;
         private System.Windows.Forms.TextBox tbIpAddress;
         private System.Windows.Forms.Button btResetCounter;
+        private System.Windows.Forms.Button btReboot;
     }
 }
 

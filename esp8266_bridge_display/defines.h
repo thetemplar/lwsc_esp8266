@@ -74,16 +74,18 @@ enum MsgTypes : uint8_t
 {
   MSG_Unknown = 0x00,
   //0x0...  Data
-	MSG_Fire = 0x01,
-  MSG_Fire_Ack = 0x02,
+  MSG_Fire = 0x01,
+  MSG_Ack = 0x02,
+  MSG_Blink = 0x03,
+  MSG_Reboot = 0x04,
   //0x2... Network
   MSG_RequestRssi = 0x20,
   MSG_SendRssi = 0x21,
   //0xF... System
   MSG_KeepAlive = 0xFA,
-  MSG_Blink = 0xFB,
   MSG_ERROR = 0xFF
 };
+
 
 struct WifiLog {
   uint32_t Id;

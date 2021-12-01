@@ -2,6 +2,7 @@
 
 #include "REST.h"
 #include "defines.h"
+#include "lwsc_wifi.h"
 #include <ArduinoJson.h> //3rd Party Lib! Version 6.x.x
 
 File fsUploadFile;
@@ -9,8 +10,6 @@ File fsUploadFile;
 extern ESP8266WebServer server;
 extern std::vector<MachineData> machines;
 extern std::map<uint32_t, uint8_t> machinesIndexCache;
-extern uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask);
-extern void blink(uint32_t dest);
 extern struct WifiLog AppBuffer[256];
 extern uint8_t AppBufferIndex;
 extern struct WifiLog MachineBuffer[256];
@@ -27,6 +26,11 @@ extern void wrap_bt_home();
 #else
 extern void start_query_rssi();
 #endif
+
+uint64_t ackStart;
+uint32_t ackTimeout;
+uint16_t ackSeq;
+uint32_t ackId;
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
@@ -49,6 +53,7 @@ void restServerRouting() {
     server.on(F("/query_rssi"), HTTP_POST, rest_post_query_rssi);
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
+    server.on(F("/reboot"), HTTP_POST, rest_post_reboot);
 
 #ifdef ETH_ENABLE
     //button via webinterface
@@ -256,7 +261,7 @@ void rest_post_fire() {
   AppBuffer[AppBufferIndex].Id = id;
   AppBuffer[AppBufferIndex].Duration = machines[machinesIndexCache[id]].Functions[f_id].Duration;
   AppBuffer[AppBufferIndex].RelaisBitmask = machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask;
-  AppBuffer[AppBufferIndex].Type = 0x01;
+  AppBuffer[AppBufferIndex].Type = MSG_Fire;
   AppBuffer[AppBufferIndex].Rssi = 0x00;
   AppBuffer[AppBufferIndex].Seq = 0x00;
   AppBuffer[AppBufferIndex].Timestamp = millis();
@@ -264,35 +269,15 @@ void rest_post_fire() {
 
   if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x01 == 0x01) machines[machinesIndexCache[id]].Relais1Counter++;
   if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[machinesIndexCache[id]].Relais2Counter++;
-
-#ifdef ETH_ENABLE
-  uint32_t t1 = millis();
-#endif
-
   uint16_t seq = fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
 #ifdef ETH_ENABLE
-  bool success = false;
-  while(millis() < t1 + 2000 && !success)
-  {
-    int i = 1;
-    while(true)
-    {
-      if(MachineBuffer[(MachineBufferIndex - i + 256) % 256].Timestamp < t1 || MachineBuffer[(MachineBufferIndex - i + 256) % 256].Timestamp == 0)
-        break;
-        
-      uint16_t ackSeq = MachineBuffer[(MachineBufferIndex - i + 256) % 256].Duration >> 16;
-      if (MachineBuffer[(MachineBufferIndex - i + 256) % 256].Type == 0x02 && seq == ackSeq && MachineBuffer[(MachineBufferIndex - i + 256) % 256].Id == id)
-      {
-        success = true;
-        break;
-      }
-      i++;
-    }
-  }
-  uint32_t t2 = millis();
-  
-  server.send(200, "text/json", "{\"result\": \"" + (success ? String("success") : String("fail")) + "\", \"roundtriptime\": \"" + String (t2 - t1) + "\"}");
+  ackStart = millis();
+  ackTimeout = 1000;
+  ackSeq = seq;
+  ackId = id;
+
+  //no server.send -> in processdata()->ack!
 #else
   server.send(200, "text/json", "{\"result\": \"true\"}");
 #endif
@@ -313,7 +298,7 @@ void rest_post_blink() {
   AppBuffer[AppBufferIndex].Id = id;
   AppBuffer[AppBufferIndex].Duration = 0;
   AppBuffer[AppBufferIndex].RelaisBitmask = 0;
-  AppBuffer[AppBufferIndex].Type = 0xFB;
+  AppBuffer[AppBufferIndex].Type = MSG_Blink;
   AppBuffer[AppBufferIndex].Rssi = 0x00;
   AppBuffer[AppBufferIndex].Seq = 0x00;
   AppBuffer[AppBufferIndex].Timestamp = millis();
@@ -450,6 +435,36 @@ void rest_post_set_relaiscounter()
   {
     md->Relais2Counter = server.arg("relais2Counter").toInt();
   }
+  
+  server.send(200, "text/json", "{\"result\": \"success\"}");
+}
+
+void rest_post_reboot() {
+   if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  uint32_t id = server.arg("id").toInt();
+  if(id == 0)
+  {
+    ESP.restart();
+    return;
+  }
+  
+  if(machinesIndexCache.count(id) == 0 ){
+    server.send(404, "text/json", "{\"result\": \"not found\"}");
+    return;
+  }
+  reboot(id);
+  
+  AppBuffer[AppBufferIndex].Id = id;
+  AppBuffer[AppBufferIndex].Duration = 0;
+  AppBuffer[AppBufferIndex].RelaisBitmask = 0;
+  AppBuffer[AppBufferIndex].Type = MSG_Reboot;
+  AppBuffer[AppBufferIndex].Rssi = 0x00;
+  AppBuffer[AppBufferIndex].Seq = 0x00;
+  AppBuffer[AppBufferIndex].Timestamp = millis();
+  AppBufferIndex++;
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }

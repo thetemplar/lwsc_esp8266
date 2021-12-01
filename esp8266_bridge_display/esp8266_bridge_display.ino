@@ -1,7 +1,4 @@
-/* =====================
-   This software is licensed under the MIT License:
-   https://github.com/spacehuhntech/esp8266_deauther
-   ===================== */
+//#define DEBUG_ESP_HTTP_SERVER
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -29,14 +26,18 @@ byte ibuffer[100];
 ESP8266WebServer server(80);
 DisplayUI displayUI;
 
+
 const char* ssid = "lwsc_wifibridge_display";
 const char* password = "lauterbach";
 
 SimpleTimer timer;
-int timerId;
+int timerIdRssi;
 int rssiOngoing;
 
 #ifdef ETH_ENABLE
+WiFiUDP Udp;
+int timerIdUDP;
+
 void wrap_bt_up()
 {
   displayUI.bt_up();
@@ -64,8 +65,8 @@ void timer_query_rssi()
   Serial.println("rssiOngoing" + String(rssiOngoing));
   if (rssiOngoing == 0)
   {
-    Serial.println("timer.disable(timerId)");
-    timer.disable(timerId);
+    Serial.println("timer.disable(timerIdRssi)");
+    timer.disable(timerIdRssi);
     setupAP();
   } else {
     reqRssi(0xFFFFFFFF);
@@ -80,7 +81,7 @@ void start_query_rssi()
   setupFreedom();
   reqRssi(0xFFFFFFFF);
   rssiOngoing = 2;
-  timerId = timer.setInterval(7000, timer_query_rssi);
+  timerIdRssi = timer.setInterval(7000, timer_query_rssi);
 }
 #endif
 
@@ -255,6 +256,15 @@ void WriteConfig()
   configFile.close();
 }
 
+#ifdef ETH_ENABLE
+void udpBroadcast() {
+  IPAddress broadcastIP(255, 255, 255, 255);
+  Udp.beginPacket(broadcastIP, 5556);
+  Udp.printf("WIFIBRIDGE %d.%d.%d.%d", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
+  Udp.endPacket();
+}
+#endif
+
 void setup() {
   // start serial
   Serial.begin(115200);
@@ -303,6 +313,9 @@ void setup() {
   Serial.print("ethernet gateway: ");
   Serial.println(eth.gatewayIP());
   setupFreedom();
+  
+  timerIdUDP = timer.setInterval(5000, udpBroadcast);
+  timer.enable(timerIdUDP);
 #else
   setupAP();
 #endif
@@ -315,4 +328,5 @@ void loop() {
   led::update();
   displayUI.update();
   server.handleClient();
+  processData();
 }

@@ -6,7 +6,7 @@ extern "C" {
 }
 #endif
 
-#define VERSION 0x03
+#define VERSION 0x04
 //uint8_t VERSION;
 #define START_TTL 0x05
 #define MSG_TYPE 0x00
@@ -21,26 +21,21 @@ extern "C" {
 #define RELAIS2 13
 
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include "SimpleTimer.h"
 #include <map>
 #include "defines.h"
 #include <stack>          // std::stack
 
-WiFiClient client;
-WiFiServer server(9900);
-
-time_t timestamp = 0;
-
 uint8_t* sendBuffer;
-size_t sendBufferLength;
 char packetBuffer[255]; //buffer to hold incoming packet
 int localAddress = 0x00;      // address of this device
 
-bool LoRaEnabled = false;
 
 SimpleTimer timer;
-int timerId;
+int timerIdFA;
+
+int timerIdRelais;
+uint8_t relaisBitmask;
 
 uint16_t ledState;
 
@@ -61,6 +56,196 @@ static inline void intEnable(uint32_t state)
 {
     xt_wsr_ps(state);
 }
+
+void stopRelais()
+{  
+  Serial.println("releaseRelais off");
+  digitalWrite(2, HIGH);
+  if(relaisBitmask & 0b00000001 == 0b00000001)
+    digitalWrite(RELAIS1, LOW);
+  if(relaisBitmask & 0b00000010 == 0b00000010)
+    digitalWrite(RELAIS2, LOW);
+
+  relaisBitmask = 0x00;
+}
+
+void releaseRelais(int32_t duration, uint8_t bitmask)
+{
+  ledState != ledState;
+
+  Serial.println("releaseRelais on " + String(duration));
+  digitalWrite(2, LOW);
+  if(bitmask & 0b00000001 == 0b00000001)
+    digitalWrite(RELAIS1, HIGH);
+  if(bitmask & 0b00000010 == 0b00000010)
+    digitalWrite(RELAIS2, HIGH);
+
+
+  if(duration >= 0)
+  {
+    timerIdRelais = timer.setTimeout(duration, stopRelais);
+    relaisBitmask = bitmask;
+  }
+}
+
+
+void releaseRelais_LegacyVersion(byte lwscType, byte lwscPort)
+{
+  if(lwscType == 0xfa)
+  {
+    //1s
+    if(lwscPort == 0x01)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      Serial.println("1st Release");
+      
+      timerIdRelais = timer.setTimeout(1000, stopRelais);
+      relaisBitmask = 0x01;
+    }
+    
+    if(lwscPort == 0x11)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS2, HIGH);
+      Serial.println("2nd Release");
+      
+      timerIdRelais = timer.setTimeout(1000, stopRelais);
+      relaisBitmask = 0x02;
+    }
+    
+    if(lwscPort == 0x21)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      digitalWrite(RELAIS2, HIGH);
+      Serial.println("Both Release");
+      
+      timerIdRelais = timer.setTimeout(1000, stopRelais);
+      relaisBitmask = 0x03;
+    }
+
+    //3s
+    if(lwscPort == 0x03)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      Serial.println("1st Release");
+      
+      timerIdRelais = timer.setTimeout(3000, stopRelais);
+      relaisBitmask = 0x01;
+    }
+    
+    if(lwscPort == 0x13)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS2, HIGH);
+      Serial.println("2nd Release");
+      
+      timerIdRelais = timer.setTimeout(3000, stopRelais);
+      relaisBitmask = 0x02;
+    }
+    
+    if(lwscPort == 0x23)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      digitalWrite(RELAIS2, HIGH);
+      Serial.println("Both Release");
+      
+      timerIdRelais = timer.setTimeout(3000, stopRelais);
+      relaisBitmask = 0x03;
+    }
+
+    //0.4s
+    if(lwscPort == 0x04)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      Serial.println("1st Release");
+      
+      timerIdRelais = timer.setTimeout(400, stopRelais);
+      relaisBitmask = 0x01;
+    }
+    
+    if(lwscPort == 0x14)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS2, HIGH);
+      Serial.println("2nd Release");
+      
+      timerIdRelais = timer.setTimeout(400, stopRelais);
+      relaisBitmask = 0x02;
+    }
+    
+    if(lwscPort == 0x24)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      digitalWrite(RELAIS2, HIGH);
+      Serial.println("Both Release");
+      
+      timerIdRelais = timer.setTimeout(400, stopRelais);
+      relaisBitmask = 0x03;
+    }
+    
+    //dauer an
+    if(lwscPort == 0x0a)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+    }
+    
+    if(lwscPort == 0x1a)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS2, HIGH);
+    }
+    
+    if(lwscPort == 0x2a)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, HIGH);
+      digitalWrite(RELAIS2, HIGH); 
+    }
+    
+    //dauer aus
+    if(lwscPort == 0x0b)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, LOW);
+    }
+    
+    if(lwscPort == 0x1b)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS2, LOW);
+    }
+    
+    if(lwscPort == 0x2b)
+    {
+      ledState != ledState;
+      digitalWrite(2, ledState);
+      digitalWrite(RELAIS1, LOW);
+      digitalWrite(RELAIS2, LOW); 
+    }
+  }
+}
+
 
 uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst, uint8_t type)
 {
@@ -143,7 +328,10 @@ void processData()
   Serial.printf("Data (dst: 0x%06X, src: 0x%06X, trs: 0x%06X, rssi: %d, ttl: %d, type: %02X, seq: %d:, len: %d: ", msg.dst, msg.src, msg.trs, rssi, msg.ttl, msg.type, msg.seq, msg.dataLength);
   //for(uint16_t i = 0; i < msg.dataLength; i++)
   //  Serial.printf("%02x ", msg.data[i]);
-  Serial.printf("\n"); 
+  Serial.printf("\r\n"); 
+
+  if(msg.src == ESP.getChipId())
+    return;
 
   //RSSI
   if(lastRssi.count(msg.trs) > 0)
@@ -160,29 +348,43 @@ void processData()
   //SEQNUM
   if(lastSeqNum[msg.src] == msg.seq)
   {
-    Serial.printf("No new seq num :(\n");    
+    Serial.printf("No new seq num :(\r\n");    
     return;
   }
   lastSeqNum[msg.src] = msg.seq;
 
   if(msg.dst != ESP.getChipId() && msg.ttl > 0 && msg.ttl < START_TTL+1)
   {
-    delayMicroseconds(1000+random(20000)); //1-30ms delay to avoid parallel-fwd of multiple nodes
+    delayMicroseconds(1000+random(20000)); //1-21ms delay to avoid parallel-fwd of multiple nodes
     //forward!
-    Serial.printf("Forward to dst(0x%08x) from me(0x%08x) with new ttl:%d!\n", msg.dst, ESP.getChipId(), (msg.ttl-1));
+    Serial.printf("Forward to dst(0x%08x) from me(0x%08x) with new ttl:%d!\r\n", msg.dst, ESP.getChipId(), (msg.ttl-1));
     forwardPacket(sniffer->buf);
     uint16_t res = wifi_send_pkt_freedom(sniffer->buf, sizeof(beacon_raw)+ msg.dataLength, 0);      
   }
   else
   {
-    Serial.printf("No Forward: TTL Death or I'm the dst\n");  
+    Serial.printf("No Forward: TTL Death or I'm the dst\r\n");  
   }
   
   if(msg.dst == ESP.getChipId() || msg.dst == 0xffffffff)
   {      
-    //i am the reciever! yaaaaaay
-    Serial.printf("I am the dst (dst(0x%08x) == chipid(0x%08x))! Sending ack...\n", msg.dst, ESP.getChipId());   
     
+    if(msg.dst != 0xffffffff)
+    {
+      delay(10);      
+      //i am the reciever! yaaaaaay
+      Serial.printf("I am the dst (dst(0x%08x) == chipid(0x%08x))! Sending ack...\r\n", msg.dst, ESP.getChipId()); 
+      //send reply
+      uint8_t result[sizeof(beacon_raw) + 2];    
+      uint8_t data[2] = {(msg.seq >> 8) & 0xFF, msg.seq & 0xFF}; //ack with msg.src & msg.seq
+      createPacket(result, data, 2, msg.src, MSG_Ack);
+      uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+    }
+    
+    if(msg.type == MSG_Reboot)
+    {
+      ESP.restart();
+    }
     if(msg.type == MSG_Blink)
     {
       Serial.println("MSG_Blink");  
@@ -191,20 +393,10 @@ void processData()
       digitalWrite(2, HIGH);
     }
     if(msg.type == MSG_Fire)
-    {      
-      if(msg.dst != 0xffffffff)
-      {
-        //send reply
-        uint8_t result[sizeof(beacon_raw) + 2];    
-        uint8_t data[2] = {(msg.seq >> 8) & 0xFF, msg.seq & 0xFF}; //ack with msg.src & msg.seq
-        createPacket(result, data, 2, msg.src, MSG_Fire_Ack);
-        uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-        Serial.printf("Send MSG_Fire_Ack");  
-        /*for(uint16_t i = 0; i < sizeof(result); i++)
-          Serial.printf("%02x ", result[i]); 
-        Serial.printf("\n"); */
-      }
-      
+    {
+      if(relaisBitmask != 0x00) //still ongoing
+        return;
+        
       if (msg.dataLength == 5)
       {
         int32_t duration = (msg.data[3] << 24) | (msg.data[2]  << 16) | (msg.data[1] << 8) | msg.data[0];
@@ -218,11 +410,11 @@ void processData()
         releaseRelais_LegacyVersion(msg.data[0], msg.data[1]);
       }
     } else if(msg.type == MSG_RequestRssi) {
-      Serial.printf("MSG_RequestRssi \n"); 
+      Serial.printf("MSG_RequestRssi \r\n"); 
       digitalWrite(2, LOW);
       if(msg.dst == 0xffffffff)
       {
-        timer.disable(timerId);
+        timer.disable(timerIdFA);
         uint32_t randNumber = random(5000);
         delay(randNumber);
       }
@@ -231,9 +423,9 @@ void processData()
       if(msg.dst == 0xffffffff)
       {
         delay(5000); //so the "air" stays free for others!
-        timer.enable(timerId);
+        timer.enable(timerIdFA);
       }
-      Serial.printf("MSG_RequestRssi Done \n"); 
+      Serial.printf("MSG_RequestRssi Done \r\n"); 
     }
   }
  
@@ -275,14 +467,14 @@ void sendRssiToDest(uint32_t dest)
       memcpy((uint8_t*)&data[i + 4], &(it->second), 1);
       
       Serial.printf("%d:   id %08X - ", std::distance(lastRssi.begin(), it), it->first);  
-      Serial.printf("rssi %d\n", it->second);  
+      Serial.printf("rssi %d\r\n", it->second);  
       
       i+=5;
     }
     
     uint16_t seq = createPacket(result, data, s, dest, MSG_SendRssi);
     uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-    Serial.printf("sending MSG_SendRssi (seqnum: %d, res: %d)\n", seq, res);
+    Serial.printf("sending MSG_SendRssi (seqnum: %d, res: %d)\r\n", seq, res);
   }
 }
 
@@ -291,7 +483,7 @@ void sendKeepAlive()
   uint8_t result[sizeof(beacon_raw)];
   uint16_t seq = createPacket(result, {}, 0, 0xffffffff, MSG_KeepAlive);
   uint16_t res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("sending MSG_KeepAlive (seqnum: %d, res: %d)\n", seq, res);
+  Serial.printf("sending MSG_KeepAlive (seqnum: %d, res: %d)\r\n", seq, res);
 }
 
 
@@ -323,7 +515,7 @@ void setup() {
   setupFreedom();
 
   sendKeepAlive();
-  timerId = timer.setInterval(KEEPALIVE_INTERVAL * 1000 + (ESP.getChipId() & 0xffff) * 10, sendKeepAlive);
+  timerIdFA = timer.setInterval(KEEPALIVE_INTERVAL * 1000 + (ESP.getChipId() & 0xffff) * 10, sendKeepAlive);
 
   localAddress = ESP.getChipId();
 }
@@ -335,188 +527,8 @@ void loop() {
   timer.run();
   if(!dataStack.empty())
   {
-    Serial.printf("<"); 
+    Serial.println("---"); 
+    Serial.println(String(millis()/1000.0)); 
     processData();
-    Serial.println(">"); 
-  }
-}
-
-
-void releaseRelais(int32_t duration, uint8_t bitmask)
-{
-  uint32_t currentMillis = millis();
-  ledState != ledState;
-
-  Serial.println("releaseRelais on " + String(duration));
-  digitalWrite(2, LOW);
-  if(bitmask & 0b00000001)
-    digitalWrite(RELAIS1, HIGH);
-  if(bitmask & 0b00000010)
-    digitalWrite(RELAIS2, HIGH);
-
-  if(duration >= 0)
-  {
-    Serial.println("releaseRelais delay");
-    while (millis() < duration + currentMillis) delay(1);
-  
-    Serial.println("releaseRelais off");
-    digitalWrite(2, HIGH);
-    if(bitmask & 0b00000001)
-      digitalWrite(RELAIS1, LOW);
-    if(bitmask & 0b00000010)
-      digitalWrite(RELAIS2, LOW);
-  }
-}
-
-
-void releaseRelais_LegacyVersion(byte lwscType, byte lwscPort)
-{
-  uint32_t currentMillis = millis();
-  if(lwscType == 0xfa)
-  {
-    //1s
-    if(lwscPort == 0x01)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      Serial.println("1st Release");
-      while (millis() < currentMillis + 1000) delay(1);
-      digitalWrite(RELAIS1, LOW); 
-    }
-    
-    if(lwscPort == 0x11)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS2, HIGH);
-      Serial.println("2nd Release");
-      while (millis() < currentMillis + 1000) delay(1);
-      digitalWrite(RELAIS2, LOW); 
-    }
-    
-    if(lwscPort == 0x21)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      digitalWrite(RELAIS2, HIGH);
-      Serial.println("Both Release");
-      while (millis() < currentMillis + 1000) delay(1);
-      digitalWrite(RELAIS1, LOW); 
-      digitalWrite(RELAIS2, LOW); 
-    }
-
-    //3s
-    if(lwscPort == 0x03)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      Serial.println("1st Release");
-      while (millis() < currentMillis + 3000) delay(1);
-      digitalWrite(RELAIS1, LOW); 
-    }
-    
-    if(lwscPort == 0x13)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS2, HIGH);
-      Serial.println("2nd Release");
-      while (millis() < currentMillis + 3000) delay(1);
-      digitalWrite(RELAIS2, LOW); 
-    }
-    
-    if(lwscPort == 0x23)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      digitalWrite(RELAIS2, HIGH);
-      Serial.println("Both Release");
-      while (millis() < currentMillis + 3000) delay(1);
-      digitalWrite(RELAIS1, LOW); 
-      digitalWrite(RELAIS2, LOW); 
-    }
-
-    //0.4s
-    if(lwscPort == 0x04)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      Serial.println("1st Release");
-      while (millis() < currentMillis + 400) delay(1);
-      digitalWrite(RELAIS1, LOW); 
-    }
-    
-    if(lwscPort == 0x14)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS2, HIGH);
-      Serial.println("2nd Release");
-      while (millis() < currentMillis + 400) delay(1);
-      digitalWrite(RELAIS2, LOW); 
-    }
-    
-    if(lwscPort == 0x24)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      digitalWrite(RELAIS2, HIGH);
-      Serial.println("Both Release");
-      while (millis() < currentMillis + 400) delay(1);
-      digitalWrite(RELAIS1, LOW); 
-      digitalWrite(RELAIS2, LOW); 
-    }
-    
-    //dauer an
-    if(lwscPort == 0x0a)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-    }
-    
-    if(lwscPort == 0x1a)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS2, HIGH);
-    }
-    
-    if(lwscPort == 0x2a)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, HIGH);
-      digitalWrite(RELAIS2, HIGH); 
-    }
-    
-    //dauer aus
-    if(lwscPort == 0x0b)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, LOW);
-    }
-    
-    if(lwscPort == 0x1b)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS2, LOW);
-    }
-    
-    if(lwscPort == 0x2b)
-    {
-      ledState != ledState;
-      digitalWrite(2, ledState);
-      digitalWrite(RELAIS1, LOW);
-      digitalWrite(RELAIS2, LOW); 
-    }
   }
 }

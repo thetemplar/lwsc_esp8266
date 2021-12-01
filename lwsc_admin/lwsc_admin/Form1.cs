@@ -7,7 +7,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -97,6 +99,8 @@ namespace lwsc_admin
         static public List<SimpleFunction> functions = new List<SimpleFunction>();
         static public Dictionary<string, SimpleFunction[,]> mappings = new Dictionary<string, SimpleFunction[,]>();
 
+        UdpClient udpClient = new UdpClient();
+
         public Form1()
         {
             InitializeComponent();
@@ -104,6 +108,25 @@ namespace lwsc_admin
             lwscMap1.Blink += LwscMap1_Blink;
             lwscMap1.Fire += LwscMap1_Fire;
             lwscMap1.ReqRssi += LwscMap1_ReqRssi;
+
+            udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 5556));
+            var from = new IPEndPoint(0, 0);
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    var recvBuffer = udpClient.Receive(ref from);
+                    var val = Encoding.UTF8.GetString(recvBuffer);
+                    var m = Regex.Match(val, @"WIFIBRIDGE ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.|$)){4})");
+                    if(m.Success)
+                    {
+                        this.tbIpAddress.Invoke((MethodInvoker)delegate {
+                            tbIpAddress.Text = m.Groups[1].Value;
+                        });
+                    }
+
+                }
+            });
         }
 
         private void FillTreeView()
@@ -216,6 +239,12 @@ namespace lwsc_admin
         private HttpStatusCode RESTful(string url, RESTType type, out string result)
         {
             result = "";
+            if (tbIpAddress.Text.Contains("searching"))
+            {
+                MessageBox.Show("Searching for Gateway..... Please wait!");
+                return HttpStatusCode.BadGateway;
+            }
+
             var request = (HttpWebRequest)WebRequest.Create("http://" + tbIpAddress.Text + url);
             request.Timeout = 3000;
 
@@ -633,6 +662,20 @@ namespace lwsc_admin
             {
                 string res = "";
                 var status = RESTful("/set_relaiscounter?id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out res);
+                if (status != HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Error: " + status);
+                    return;
+                }
+            }
+        }
+
+        private void btReboot_Click(object sender, EventArgs e)
+        {
+            foreach (var m in machines)
+            {
+                string res = "";
+                var status = RESTful("/reboot?id=" + m.id, RESTType.POST, out res);
                 if (status != HttpStatusCode.OK)
                 {
                     MessageBox.Show("Error: " + status);
