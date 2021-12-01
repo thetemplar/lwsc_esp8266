@@ -181,6 +181,7 @@ void DisplayUI::bt_click() {
         mode = DISPLAY_MODE::MENU;
         break;
         
+      case DISPLAY_MODE::SCREEN_SAVER:
       case DISPLAY_MODE::LIST_CONNECTED:
       case DISPLAY_MODE::LIVE_APP:
         mode = DISPLAY_MODE::MENU;
