@@ -708,6 +708,14 @@ namespace lwsc_admin
 
             var fArray = JsonConvert.DeserializeObject<Dictionary<string, MachineFunction[,]>>(res);
             mappings = fArray;
+
+            foreach(var m in mappings)
+            {
+                if (m.Key.StartsWith("map_"))
+                    lbMapSelect.Items.Add(m.Key.ToString().Substring(4));
+               else if (m.Key.StartsWith("pad_"))
+                    lbMapPad.Items.Add(m.Key.ToString().Substring(4));
+            }
         }
     }
 }

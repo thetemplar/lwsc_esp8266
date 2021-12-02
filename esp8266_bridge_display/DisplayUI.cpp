@@ -327,6 +327,8 @@ void DisplayUI::drawRSSIList() {
     }
   } 
   else {
+    if(machinesIndexCache.count(listSelId) == 0)
+      return;
     std::map<uint32_t, int8_t>::iterator it;
     int i = 0;
     for (it = machines[machinesIndexCache[listSelId]].RssiMap.begin(); it != machines[machinesIndexCache[listSelId]].RssiMap.end(); it++)
@@ -362,6 +364,9 @@ void DisplayUI::drawConnectedApp() {
 
 String DisplayUI::BufferToString(WifiLog entry)
 {
+  if(machinesIndexCache.count(entry.Id) == 0)
+    return "";
+    
   char tmp[30] = {0};
 
   char tmp2[10]  = {0};

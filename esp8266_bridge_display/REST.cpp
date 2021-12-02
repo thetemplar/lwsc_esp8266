@@ -104,6 +104,12 @@ void rest_get_machine()
     }
   }
   
+  if(machines.size() == 0 || machinesIndexCache.size() == 0)
+  {
+    server.send(404, "text/json", "{\"result\": \"no data\"}");
+    return;
+  }
+  
   MachineData* md = &machines[i];  
   
   String message = "";

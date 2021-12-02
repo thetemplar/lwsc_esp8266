@@ -75,6 +75,7 @@ namespace lwsc_admin
             this.btSave = new System.Windows.Forms.Button();
             this.btUploadConfig = new System.Windows.Forms.Button();
             this.btDownloadConfig = new System.Windows.Forms.Button();
+            this.lwscMap1 = new lwsc_admin.LWSCMap();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.dgvFunctions = new System.Windows.Forms.DataGridView();
@@ -97,7 +98,7 @@ namespace lwsc_admin
             this.lbMapSelect = new System.Windows.Forms.ListBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lwscMap1 = new lwsc_admin.LWSCMap();
+            this.label13 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -583,6 +584,14 @@ namespace lwsc_admin
             this.btDownloadConfig.UseVisualStyleBackColor = true;
             this.btDownloadConfig.Click += new System.EventHandler(this.btDownloadConfig_Click);
             // 
+            // lwscMap1
+            // 
+            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
+            this.lwscMap1.Name = "lwscMap1";
+            this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
+            this.lwscMap1.TabIndex = 2;
+            // 
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.splitContainer2);
@@ -682,6 +691,7 @@ namespace lwsc_admin
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.label13);
             this.tabPage3.Controls.Add(this.pnMappings);
             this.tabPage3.Controls.Add(this.btMapPadDelete);
             this.tabPage3.Controls.Add(this.btMapPadNew);
@@ -799,13 +809,16 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
-            // lwscMap1
+            // label13
             // 
-            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
-            this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
-            this.lwscMap1.TabIndex = 2;
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.ForeColor = System.Drawing.Color.DarkRed;
+            this.label13.Location = new System.Drawing.Point(77, 468);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(297, 32);
+            this.label13.TabIndex = 9;
+            this.label13.Text = "NOT FINISHED YET!";
             // 
             // Form1
             // 
@@ -912,6 +925,7 @@ namespace lwsc_admin
         private System.Windows.Forms.TextBox tbIpAddress;
         private System.Windows.Forms.Button btResetCounter;
         private System.Windows.Forms.Button btReboot;
+        private System.Windows.Forms.Label label13;
     }
 }
 

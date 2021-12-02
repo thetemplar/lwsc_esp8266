@@ -34,9 +34,10 @@ SimpleTimer timer;
 int timerIdRssi;
 int rssiOngoing;
 
-#ifdef ETH_ENABLE
 WiFiUDP Udp;
 int timerIdUDP;
+
+#ifdef ETH_ENABLE
 
 void wrap_bt_up()
 {
@@ -256,14 +257,26 @@ void WriteConfig()
   configFile.close();
 }
 
-#ifdef ETH_ENABLE
 void udpBroadcast() {
+#ifdef ETH_ENABLE
   IPAddress broadcastIP(255, 255, 255, 255);
   Udp.beginPacket(broadcastIP, 5556);
   Udp.printf("WIFIBRIDGE %d.%d.%d.%d", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
   Udp.endPacket();
-}
+#else
+  struct station_info *stat_info;
+  struct ip4_addr *IPaddress;
+  stat_info = wifi_softap_get_station_info();
+  while (stat_info != NULL)
+  {
+    IPaddress = &stat_info->ip;    
+    Udp.beginPacket(IPaddress, 5556);
+    Udp.printf("WIFIBRIDGE %d.%d.%d.%d", WiFi.softAPIP()[0], WiFi.softAPIP()[1], WiFi.softAPIP()[2], WiFi.softAPIP()[3]);
+    Udp.endPacket();
+    stat_info = STAILQ_NEXT(stat_info, next);
+  } 
 #endif
+}
 
 void setup() {
   // start serial
@@ -313,13 +326,14 @@ void setup() {
   Serial.print("ethernet gateway: ");
   Serial.println(eth.gatewayIP());
   setupFreedom();
-  
-  timerIdUDP = timer.setInterval(5000, udpBroadcast);
-  timer.enable(timerIdUDP);
 #else
   setupAP();
   network_ip = String(WiFi.softAPIP()[0]) + String(".") + String(WiFi.softAPIP()[1]) + String(".") + String(WiFi.softAPIP()[2]) + String(".") + String(WiFi.softAPIP()[3]);
 #endif
+  
+  timerIdUDP = timer.setInterval(5000, udpBroadcast);
+  timer.enable(timerIdUDP);
+  
   restServerRouting();
   server.begin();
 }
