@@ -369,8 +369,13 @@ namespace lwsc_admin
                     client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=mappings.json", "mappings.json");
                 }
                 string res = File.ReadAllText("mappings.json");
+                if (res == "")
+                    return;
 
                 var fArray = JsonConvert.DeserializeObject<Dictionary<string, MachineFunction[,]>>(res);
+
+                if (mappings == null)
+                    return;
                 mappings = fArray;
 
                 foreach (var m in mappings)
