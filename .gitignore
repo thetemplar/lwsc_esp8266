@@ -1,8 +1,8 @@
 
-lwsc_admin/.vs/
+windows_lwsc_admin/.vs/
 
-lwsc_admin/packages/
+windows_lwsc_admin/packages/
 
-lwsc_admin/lwsc_admin/obj/
+windows_lwsc_admin/lwsc_admin/obj/
 
-lwsc_admin/lwsc_admin/bin/Debug/
+windows_lwsc_admin/lwsc_admin/bin/Debug/
