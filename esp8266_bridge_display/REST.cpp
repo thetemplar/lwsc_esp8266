@@ -347,7 +347,7 @@ void rest_get_file() {
   file.close();
 }
 
-void rest_upload_handler(){ // upload a new file to the SPIFFS
+void rest_upload_handler(){ // upload a new file to the SPIFFS  
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START)
   {
@@ -371,8 +371,7 @@ void rest_upload_handler(){ // upload a new file to the SPIFFS
       fsUploadFile.close();                               // Close the file again
       Serial.print("handleFileUpload Size: "); 
       Serial.println(upload.totalSize);
-      server.sendHeader("Location","/success.html");      // Redirect the client to the success page
-      server.send(303);
+      server.send(200);
     } else {
       server.send(500, "text/plain", "500: couldn't create file");
     }

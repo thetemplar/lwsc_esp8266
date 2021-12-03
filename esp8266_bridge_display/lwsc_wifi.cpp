@@ -141,6 +141,7 @@ void processData()
           MachineData* md = new MachineData();
           md->Id = id_tmp;
           md->ShortName[0] = '?';
+          md->Name[0] = '?';
           machines.push_back(*md);
 
           machinesIndexCache[id_tmp] = machines.size() - 1;

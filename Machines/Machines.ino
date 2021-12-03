@@ -61,9 +61,9 @@ void stopRelais()
 {  
   Serial.println("releaseRelais off");
   digitalWrite(2, HIGH);
-  if(relaisBitmask & 0b00000001 == 0b00000001)
+  if((relaisBitmask & 0b00000001) == 0b00000001)
     digitalWrite(RELAIS1, LOW);
-  if(relaisBitmask & 0b00000010 == 0b00000010)
+  if((relaisBitmask & 0b00000010) == 0b00000010)
     digitalWrite(RELAIS2, LOW);
 
   relaisBitmask = 0x00;
@@ -75,9 +75,9 @@ void releaseRelais(int32_t duration, uint8_t bitmask)
 
   Serial.println("releaseRelais on " + String(duration));
   digitalWrite(2, LOW);
-  if(bitmask & 0b00000001 == 0b00000001)
+  if((bitmask & 0b00000001) == 0b00000001)
     digitalWrite(RELAIS1, HIGH);
-  if(bitmask & 0b00000010 == 0b00000010)
+  if((bitmask & 0b00000010) == 0b00000010)
     digitalWrite(RELAIS2, HIGH);
 
 

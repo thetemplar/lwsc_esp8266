@@ -62,20 +62,16 @@ namespace lwsc_admin
             this.btEspDown = new System.Windows.Forms.Button();
             this.btEspUp = new System.Windows.Forms.Button();
             this.tbIpAddress = new System.Windows.Forms.TextBox();
-            this.btGetMappings = new System.Windows.Forms.Button();
-            this.btGetFunctions = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.label10 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.btGetRSSI = new System.Windows.Forms.Button();
-            this.btGetData = new System.Windows.Forms.Button();
             this.btQueryRSSI = new System.Windows.Forms.Button();
             this.btSave = new System.Windows.Forms.Button();
             this.btUploadConfig = new System.Windows.Forms.Button();
             this.btDownloadConfig = new System.Windows.Forms.Button();
-            this.lwscMap1 = new lwsc_admin.LWSCMap();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.dgvFunctions = new System.Windows.Forms.DataGridView();
@@ -98,7 +94,10 @@ namespace lwsc_admin
             this.lbMapSelect = new System.Windows.Forms.ListBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.label13 = new System.Windows.Forms.Label();
+            this.lwscMap1 = new lwsc_admin.LWSCMap();
+            this.pnRSSIButtons = new System.Windows.Forms.Panel();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.rtbLog = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -113,6 +112,8 @@ namespace lwsc_admin
             ((System.ComponentModel.ISupportInitialize)(this.dgvFunctions)).BeginInit();
             this.tabPage3.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.pnRSSIButtons.SuspendLayout();
+            this.tabPage5.SuspendLayout();
             this.SuspendLayout();
             // 
             // tvMachines
@@ -356,6 +357,7 @@ namespace lwsc_admin
             this.tabControl1.Controls.Add(this.tabPage1);
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
+            this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -365,22 +367,13 @@ namespace lwsc_admin
             // 
             // tabPage4
             // 
-            this.tabPage4.Controls.Add(this.btReboot);
-            this.tabPage4.Controls.Add(this.btResetCounter);
+            this.tabPage4.Controls.Add(this.pnRSSIButtons);
             this.tabPage4.Controls.Add(this.btEspHome);
             this.tabPage4.Controls.Add(this.btEspClick);
             this.tabPage4.Controls.Add(this.btEspDown);
             this.tabPage4.Controls.Add(this.btEspUp);
             this.tabPage4.Controls.Add(this.tbIpAddress);
-            this.tabPage4.Controls.Add(this.btGetMappings);
-            this.tabPage4.Controls.Add(this.btGetFunctions);
             this.tabPage4.Controls.Add(this.panel1);
-            this.tabPage4.Controls.Add(this.btGetRSSI);
-            this.tabPage4.Controls.Add(this.btGetData);
-            this.tabPage4.Controls.Add(this.btQueryRSSI);
-            this.tabPage4.Controls.Add(this.btSave);
-            this.tabPage4.Controls.Add(this.btUploadConfig);
-            this.tabPage4.Controls.Add(this.btDownloadConfig);
             this.tabPage4.Controls.Add(this.lwscMap1);
             this.tabPage4.Location = new System.Drawing.Point(4, 25);
             this.tabPage4.Name = "tabPage4";
@@ -391,7 +384,7 @@ namespace lwsc_admin
             // 
             // btReboot
             // 
-            this.btReboot.Location = new System.Drawing.Point(528, 111);
+            this.btReboot.Location = new System.Drawing.Point(788, 3);
             this.btReboot.Name = "btReboot";
             this.btReboot.Size = new System.Drawing.Size(121, 31);
             this.btReboot.TabIndex = 17;
@@ -401,9 +394,9 @@ namespace lwsc_admin
             // 
             // btResetCounter
             // 
-            this.btResetCounter.Location = new System.Drawing.Point(528, 74);
+            this.btResetCounter.Location = new System.Drawing.Point(915, 4);
             this.btResetCounter.Name = "btResetCounter";
-            this.btResetCounter.Size = new System.Drawing.Size(121, 31);
+            this.btResetCounter.Size = new System.Drawing.Size(123, 30);
             this.btResetCounter.TabIndex = 16;
             this.btResetCounter.Text = "Reset Counter";
             this.btResetCounter.UseVisualStyleBackColor = true;
@@ -411,7 +404,7 @@ namespace lwsc_admin
             // 
             // btEspHome
             // 
-            this.btEspHome.Location = new System.Drawing.Point(26, 44);
+            this.btEspHome.Location = new System.Drawing.Point(126, 47);
             this.btEspHome.Name = "btEspHome";
             this.btEspHome.Size = new System.Drawing.Size(28, 25);
             this.btEspHome.TabIndex = 15;
@@ -421,7 +414,7 @@ namespace lwsc_admin
             // 
             // btEspClick
             // 
-            this.btEspClick.Location = new System.Drawing.Point(94, 44);
+            this.btEspClick.Location = new System.Drawing.Point(194, 47);
             this.btEspClick.Name = "btEspClick";
             this.btEspClick.Size = new System.Drawing.Size(28, 25);
             this.btEspClick.TabIndex = 14;
@@ -431,7 +424,7 @@ namespace lwsc_admin
             // 
             // btEspDown
             // 
-            this.btEspDown.Location = new System.Drawing.Point(60, 60);
+            this.btEspDown.Location = new System.Drawing.Point(160, 63);
             this.btEspDown.Name = "btEspDown";
             this.btEspDown.Size = new System.Drawing.Size(28, 25);
             this.btEspDown.TabIndex = 13;
@@ -441,7 +434,7 @@ namespace lwsc_admin
             // 
             // btEspUp
             // 
-            this.btEspUp.Location = new System.Drawing.Point(60, 29);
+            this.btEspUp.Location = new System.Drawing.Point(160, 32);
             this.btEspUp.Name = "btEspUp";
             this.btEspUp.Size = new System.Drawing.Size(28, 25);
             this.btEspUp.TabIndex = 12;
@@ -451,31 +444,12 @@ namespace lwsc_admin
             // 
             // tbIpAddress
             // 
-            this.tbIpAddress.Location = new System.Drawing.Point(8, 4);
+            this.tbIpAddress.Location = new System.Drawing.Point(108, 7);
             this.tbIpAddress.Name = "tbIpAddress";
+            this.tbIpAddress.ReadOnly = true;
             this.tbIpAddress.Size = new System.Drawing.Size(128, 22);
             this.tbIpAddress.TabIndex = 11;
             this.tbIpAddress.Text = ".. searching ..";
-            // 
-            // btGetMappings
-            // 
-            this.btGetMappings.Location = new System.Drawing.Point(528, 0);
-            this.btGetMappings.Name = "btGetMappings";
-            this.btGetMappings.Size = new System.Drawing.Size(121, 31);
-            this.btGetMappings.TabIndex = 10;
-            this.btGetMappings.Text = "Get Mappings";
-            this.btGetMappings.UseVisualStyleBackColor = true;
-            this.btGetMappings.Click += new System.EventHandler(this.btGetMappings_Click);
-            // 
-            // btGetFunctions
-            // 
-            this.btGetFunctions.Location = new System.Drawing.Point(401, 0);
-            this.btGetFunctions.Name = "btGetFunctions";
-            this.btGetFunctions.Size = new System.Drawing.Size(121, 31);
-            this.btGetFunctions.TabIndex = 9;
-            this.btGetFunctions.Text = "Get Functions";
-            this.btGetFunctions.UseVisualStyleBackColor = true;
-            this.btGetFunctions.Click += new System.EventHandler(this.btGetFunctions_Click);
             // 
             // panel1
             // 
@@ -483,7 +457,7 @@ namespace lwsc_admin
             this.panel1.Controls.Add(this.label9);
             this.panel1.Controls.Add(this.label8);
             this.panel1.Controls.Add(this.label7);
-            this.panel1.Location = new System.Drawing.Point(197, 0);
+            this.panel1.Location = new System.Drawing.Point(265, 12);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(71, 76);
             this.panel1.TabIndex = 8;
@@ -526,7 +500,7 @@ namespace lwsc_admin
             // 
             // btGetRSSI
             // 
-            this.btGetRSSI.Location = new System.Drawing.Point(401, 74);
+            this.btGetRSSI.Location = new System.Drawing.Point(584, 3);
             this.btGetRSSI.Name = "btGetRSSI";
             this.btGetRSSI.Size = new System.Drawing.Size(121, 31);
             this.btGetRSSI.TabIndex = 7;
@@ -534,19 +508,9 @@ namespace lwsc_admin
             this.btGetRSSI.UseVisualStyleBackColor = true;
             this.btGetRSSI.Click += new System.EventHandler(this.btGetRSSI_Click);
             // 
-            // btGetData
-            // 
-            this.btGetData.Location = new System.Drawing.Point(274, 0);
-            this.btGetData.Name = "btGetData";
-            this.btGetData.Size = new System.Drawing.Size(121, 31);
-            this.btGetData.TabIndex = 1;
-            this.btGetData.Text = "Get Data";
-            this.btGetData.UseVisualStyleBackColor = true;
-            this.btGetData.Click += new System.EventHandler(this.btGetData_Click);
-            // 
             // btQueryRSSI
             // 
-            this.btQueryRSSI.Location = new System.Drawing.Point(274, 74);
+            this.btQueryRSSI.Location = new System.Drawing.Point(457, 3);
             this.btQueryRSSI.Name = "btQueryRSSI";
             this.btQueryRSSI.Size = new System.Drawing.Size(121, 31);
             this.btQueryRSSI.TabIndex = 6;
@@ -556,7 +520,7 @@ namespace lwsc_admin
             // 
             // btSave
             // 
-            this.btSave.Location = new System.Drawing.Point(401, 111);
+            this.btSave.Location = new System.Drawing.Point(3, 4);
             this.btSave.Name = "btSave";
             this.btSave.Size = new System.Drawing.Size(121, 31);
             this.btSave.TabIndex = 3;
@@ -566,7 +530,7 @@ namespace lwsc_admin
             // 
             // btUploadConfig
             // 
-            this.btUploadConfig.Location = new System.Drawing.Point(401, 37);
+            this.btUploadConfig.Location = new System.Drawing.Point(257, 4);
             this.btUploadConfig.Name = "btUploadConfig";
             this.btUploadConfig.Size = new System.Drawing.Size(121, 31);
             this.btUploadConfig.TabIndex = 5;
@@ -576,21 +540,13 @@ namespace lwsc_admin
             // 
             // btDownloadConfig
             // 
-            this.btDownloadConfig.Location = new System.Drawing.Point(274, 37);
+            this.btDownloadConfig.Location = new System.Drawing.Point(130, 4);
             this.btDownloadConfig.Name = "btDownloadConfig";
             this.btDownloadConfig.Size = new System.Drawing.Size(121, 31);
             this.btDownloadConfig.TabIndex = 4;
             this.btDownloadConfig.Text = "Download Cfg";
             this.btDownloadConfig.UseVisualStyleBackColor = true;
             this.btDownloadConfig.Click += new System.EventHandler(this.btDownloadConfig_Click);
-            // 
-            // lwscMap1
-            // 
-            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
-            this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
-            this.lwscMap1.TabIndex = 2;
             // 
             // tabPage1
             // 
@@ -691,7 +647,6 @@ namespace lwsc_admin
             // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.label13);
             this.tabPage3.Controls.Add(this.pnMappings);
             this.tabPage3.Controls.Add(this.btMapPadDelete);
             this.tabPage3.Controls.Add(this.btMapPadNew);
@@ -717,13 +672,13 @@ namespace lwsc_admin
             // 
             // btMapPadDelete
             // 
-            this.btMapPadDelete.Enabled = false;
             this.btMapPadDelete.Location = new System.Drawing.Point(352, 32);
             this.btMapPadDelete.Name = "btMapPadDelete";
             this.btMapPadDelete.Size = new System.Drawing.Size(81, 30);
             this.btMapPadDelete.TabIndex = 7;
             this.btMapPadDelete.Text = "Delete";
             this.btMapPadDelete.UseVisualStyleBackColor = true;
+            this.btMapPadDelete.Click += new System.EventHandler(this.btMapPadDelete_Click);
             // 
             // btMapPadNew
             // 
@@ -737,13 +692,13 @@ namespace lwsc_admin
             // 
             // btMapSelectDelete
             // 
-            this.btMapSelectDelete.Enabled = false;
             this.btMapSelectDelete.Location = new System.Drawing.Point(131, 32);
             this.btMapSelectDelete.Name = "btMapSelectDelete";
             this.btMapSelectDelete.Size = new System.Drawing.Size(81, 30);
             this.btMapSelectDelete.TabIndex = 5;
             this.btMapSelectDelete.Text = "Delete";
             this.btMapSelectDelete.UseVisualStyleBackColor = true;
+            this.btMapSelectDelete.Click += new System.EventHandler(this.btMapSelectDelete_Click);
             // 
             // btMapSelectNew
             // 
@@ -783,6 +738,7 @@ namespace lwsc_admin
             this.lbMapPad.Name = "lbMapPad";
             this.lbMapPad.Size = new System.Drawing.Size(201, 388);
             this.lbMapPad.TabIndex = 1;
+            this.lbMapPad.SelectedIndexChanged += new System.EventHandler(this.lbMapPad_SelectedIndexChanged);
             // 
             // lbMapSelect
             // 
@@ -792,6 +748,7 @@ namespace lwsc_admin
             this.lbMapSelect.Name = "lbMapSelect";
             this.lbMapSelect.Size = new System.Drawing.Size(201, 388);
             this.lbMapSelect.TabIndex = 0;
+            this.lbMapSelect.SelectedIndexChanged += new System.EventHandler(this.lbMapSelect_SelectedIndexChanged);
             // 
             // statusStrip1
             // 
@@ -809,16 +766,48 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
-            // label13
+            // lwscMap1
             // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.ForeColor = System.Drawing.Color.DarkRed;
-            this.label13.Location = new System.Drawing.Point(77, 468);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(297, 32);
-            this.label13.TabIndex = 9;
-            this.label13.Text = "NOT FINISHED YET!";
+            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
+            this.lwscMap1.Name = "lwscMap1";
+            this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
+            this.lwscMap1.TabIndex = 2;
+            // 
+            // pnRSSIButtons
+            // 
+            this.pnRSSIButtons.Controls.Add(this.btSave);
+            this.pnRSSIButtons.Controls.Add(this.btReboot);
+            this.pnRSSIButtons.Controls.Add(this.btDownloadConfig);
+            this.pnRSSIButtons.Controls.Add(this.btResetCounter);
+            this.pnRSSIButtons.Controls.Add(this.btUploadConfig);
+            this.pnRSSIButtons.Controls.Add(this.btQueryRSSI);
+            this.pnRSSIButtons.Controls.Add(this.btGetRSSI);
+            this.pnRSSIButtons.Enabled = false;
+            this.pnRSSIButtons.Location = new System.Drawing.Point(401, 4);
+            this.pnRSSIButtons.Name = "pnRSSIButtons";
+            this.pnRSSIButtons.Size = new System.Drawing.Size(1042, 39);
+            this.pnRSSIButtons.TabIndex = 18;
+            // 
+            // tabPage5
+            // 
+            this.tabPage5.Controls.Add(this.rtbLog);
+            this.tabPage5.Location = new System.Drawing.Point(4, 25);
+            this.tabPage5.Name = "tabPage5";
+            this.tabPage5.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage5.TabIndex = 4;
+            this.tabPage5.Text = "Log";
+            this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // rtbLog
+            // 
+            this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbLog.Location = new System.Drawing.Point(0, 0);
+            this.rtbLog.Name = "rtbLog";
+            this.rtbLog.ReadOnly = true;
+            this.rtbLog.Size = new System.Drawing.Size(1500, 723);
+            this.rtbLog.TabIndex = 0;
+            this.rtbLog.Text = "";
             // 
             // Form1
             // 
@@ -850,6 +839,8 @@ namespace lwsc_admin
             this.tabPage3.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.pnRSSIButtons.ResumeLayout(false);
+            this.tabPage5.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -858,7 +849,6 @@ namespace lwsc_admin
         #endregion
 
         private System.Windows.Forms.TreeView tvMachines;
-        private System.Windows.Forms.Button btGetData;
         private LWSCMap lwscMap1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
@@ -894,7 +884,6 @@ namespace lwsc_admin
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.Button btGetFunctions;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
@@ -917,7 +906,6 @@ namespace lwsc_admin
         private System.Windows.Forms.Button btMapSelectDelete;
         private System.Windows.Forms.Button btMapSelectNew;
         private System.Windows.Forms.Panel pnMappings;
-        private System.Windows.Forms.Button btGetMappings;
         private System.Windows.Forms.Button btEspHome;
         private System.Windows.Forms.Button btEspClick;
         private System.Windows.Forms.Button btEspDown;
@@ -925,7 +913,9 @@ namespace lwsc_admin
         private System.Windows.Forms.TextBox tbIpAddress;
         private System.Windows.Forms.Button btResetCounter;
         private System.Windows.Forms.Button btReboot;
-        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Panel pnRSSIButtons;
+        private System.Windows.Forms.TabPage tabPage5;
+        private System.Windows.Forms.RichTextBox rtbLog;
     }
 }
 

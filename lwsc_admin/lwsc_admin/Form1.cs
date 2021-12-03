@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -13,7 +12,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
+#pragma warning disable IDE1006 // Benennungsstile
 
 namespace lwsc_admin
 {
@@ -98,57 +98,81 @@ namespace lwsc_admin
             var from = new IPEndPoint(0, 0);
             Task.Run(() =>
             {
-                while (true)
+                bool waiting = true;
+                while (waiting)
                 {
                     var recvBuffer = udpClient.Receive(ref from);
                     var val = Encoding.UTF8.GetString(recvBuffer);
-                    var m = Regex.Match(val, @"WIFIBRIDGE ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.|$)){4})");
+                    var m = Regex.Match(val, @"WIFIBRIDGE ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.|$)){4}) ?((?:ETH)|(?:WIFI))?");
                     if(m.Success)
                     {
+
                         this.tbIpAddress.Invoke((MethodInvoker)delegate {
                             tbIpAddress.Text = m.Groups[1].Value;
+                            AddToLog(val);
+
+
+                            GetData();
+                            GetFunctions();
+                            GetMappings();
+
+                            pnRSSIButtons.Enabled = true;
+                            waiting = false;
+                            AddToLog("Setup done");
                         });
+
                     }
 
                 }
             });
         }
 
+        private void AddToLog(string txt, bool italic = false)
+        {
+            this.rtbLog.Invoke((MethodInvoker)delegate
+            {
+                string str = DateTime.Now.ToString("HH:mm:ss") + ": ";
+                rtbLog.Text = str + txt + Environment.NewLine + Environment.NewLine + rtbLog.Text;
+            });
+        }
+
         private void FillTreeView()
         {
-            tvMachines.Nodes.Clear();
-            for (int i1 = 0; i1 < machines.Count; i1++)
+            this.tvMachines.Invoke((MethodInvoker)delegate
             {
-                MachineData m = machines[i1];
-                TreeNode node = new TreeNode(m.ToString())
+                tvMachines.Nodes.Clear();
+                for (int i1 = 0; i1 < machines.Count; i1++)
                 {
-                    Tag = i1
-                };
-                node.Nodes.Add("Id: " + "0x" + m.id.ToString("X8"));
-                node.Nodes.Add("Name: " + m.name);
-                node.Nodes.Add("ShortName: " + m.shortName);
-                node.Nodes.Add("Disabled: " + m.disabled);
-                node.Nodes.Add("SymbolY: " + m.symbolX);
-                node.Nodes.Add("SymbolY: " + m.symbolY);
-                node.Nodes.Add("Relais1Counter: " + m.relais1Counter);
-                node.Nodes.Add("Relais2Counter: " + m.relais2Counter);
-                tvMachines.Nodes.Add(node);
-                TreeNode nodeF = new TreeNode("Functions");
-                node.Nodes.Add(nodeF);
-
-                foreach (MachineFunction f in m.functions)
-                {
-                    TreeNode nodeFF = new TreeNode(f.functionId.ToString() + (f.name.Length > 0 ? ": " + f.name : ""))
+                    MachineData m = machines[i1];
+                    TreeNode node = new TreeNode(m.ToString())
                     {
-                        Tag = (int)f.functionId
+                        Tag = i1
                     };
-                    nodeF.Nodes.Add(nodeFF);
-                    nodeFF.Nodes.Add("Name: " + f.name);
-                    nodeFF.Nodes.Add("Duration: " + f.duration);
-                    nodeFF.Nodes.Add("RelaisBitmask: 0b" + Convert.ToString(f.relaisBitmask, 2));
-                }
-            }
+                    node.Nodes.Add("Id: " + "0x" + m.id.ToString("X8"));
+                    node.Nodes.Add("Name: " + m.name);
+                    node.Nodes.Add("ShortName: " + m.shortName);
+                    node.Nodes.Add("Disabled: " + m.disabled);
+                    node.Nodes.Add("SymbolY: " + m.symbolX);
+                    node.Nodes.Add("SymbolY: " + m.symbolY);
+                    node.Nodes.Add("Relais1Counter: " + m.relais1Counter);
+                    node.Nodes.Add("Relais2Counter: " + m.relais2Counter);
+                    tvMachines.Nodes.Add(node);
+                    TreeNode nodeF = new TreeNode("Functions");
+                    node.Nodes.Add(nodeF);
 
+                    foreach (MachineFunction f in m.functions)
+                    {
+                        TreeNode nodeFF = new TreeNode(f.functionId.ToString() + (f.name.Length > 0 ? ": " + f.name : ""))
+                        {
+                            Tag = (int)f.functionId
+                        };
+                        nodeF.Nodes.Add(nodeFF);
+                        nodeFF.Nodes.Add("Name: " + f.name);
+                        nodeFF.Nodes.Add("Duration: " + f.duration);
+                        nodeFF.Nodes.Add("RelaisBitmask: 0b" + Convert.ToString(f.relaisBitmask, 2));
+                    }
+                }
+            });
             lwscMap1.Invalidate();
         }
 
@@ -227,6 +251,7 @@ namespace lwsc_admin
             if (tbIpAddress.Text.Contains("searching"))
             {
                 MessageBox.Show("Searching for Gateway..... Please wait!");
+                AddToLog("Searching for Gateway..... Please wait!");
                 return HttpStatusCode.BadGateway;
             }
 
@@ -238,7 +263,8 @@ namespace lwsc_admin
             toolStripStatusLabel.Text = request.Method + ": " + url.Replace("&", "&&");
 
             var content = string.Empty;
-
+            AddToLog(type.ToString() + ": " + url);
+            HttpWebResponse response = null;
             try
             {
                 if (type == RESTType.POST && post_content.Length > 0)
@@ -249,7 +275,7 @@ namespace lwsc_admin
                     }
                 }
 
-                var response = (HttpWebResponse)request.GetResponse();
+                response = (HttpWebResponse)request.GetResponse();
                 using (var stream = response.GetResponseStream())
                 {
                     using (var sr = new StreamReader(stream))
@@ -259,10 +285,21 @@ namespace lwsc_admin
                 }
 
                 result = content;
-            } catch
+            } catch (WebException e)
             {
-                return HttpStatusCode.NotFound;
+                if (e.Status == WebExceptionStatus.ProtocolError)
+                {
+                    response = (HttpWebResponse)e.Response;
+                    AddToLog(" << " + "Error: " + response.StatusCode);
+                    return response.StatusCode;
+                }
+                else
+                {
+                    AddToLog(" << " + "Error: " + e.Status);
+                    return HttpStatusCode.Conflict;
+                }
             }
+            AddToLog(" << " + result, true);
             return HttpStatusCode.OK;
         }
 
@@ -276,7 +313,7 @@ namespace lwsc_admin
             }
         }
 
-        private void btGetData_Click(object sender, EventArgs e)
+        private void GetData()
         {
             int i = 0;
             machines.Clear();
@@ -292,13 +329,15 @@ namespace lwsc_admin
             FillTreeView();
         }
 
-        private void btGetFunctions_Click(object sender, EventArgs e)
+        private void GetFunctions()
         {
             dgvFunctions.Rows.Clear();
             var status = RESTful("/all_functions", RESTType.GET, out string res);
             if (status != HttpStatusCode.OK)
                 MessageBox.Show("Error: " + status);
 
+            if (res == null || res == "null")
+                return;
             var fArray = JsonConvert.DeserializeObject<MachineFunction[]>(res);
             functions.Clear();
             functions.AddRange(fArray);
@@ -311,8 +350,37 @@ namespace lwsc_admin
 
                 var mach = machines.FirstOrDefault(x => x.id == f.machineId);
                 var func = mach?.functions.FirstOrDefault(x => x.functionId == f.functionId);
-                dgvFunctions.Rows.Add(f.name, func?.duration + " ms", ((func?.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((func?.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), mach?.ToString(), f.functionId);
+
+                this.dgvFunctions.Invoke((MethodInvoker)delegate
+                {
+                    dgvFunctions.Rows.Add(f.name, func?.duration + " ms", ((func?.relaisBitmask & 0x01) == 0x01) ? "x" : "", ((func?.relaisBitmask & 0x02) == 0x02) ? "x" : "", "0x" + f.machineId.ToString("X8"), mach?.ToString(), f.functionId);
+                });
             }
+        }
+        private void GetMappings()
+        {
+            this.lbMapPad.Invoke((MethodInvoker)delegate
+            {
+                lbMapPad.Items.Clear();
+                lbMapSelect.Items.Clear();
+
+                using (var client = new WebClient())
+                {
+                    client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=mappings.json", "mappings.json");
+                }
+                string res = File.ReadAllText("mappings.json");
+
+                var fArray = JsonConvert.DeserializeObject<Dictionary<string, MachineFunction[,]>>(res);
+                mappings = fArray;
+
+                foreach (var m in mappings)
+                {
+                    if (m.Key.StartsWith("map_"))
+                        lbMapSelect.Items.Add(m.Key.ToString().Substring(4));
+                    else if (m.Key.StartsWith("pad_"))
+                        lbMapPad.Items.Add(m.Key.ToString().Substring(4));
+                }
+            });
         }
 
         int mSelected = -1;
@@ -425,7 +493,7 @@ namespace lwsc_admin
                 MessageBox.Show("Error: " + status);
                 return;
             }
-            btGetData_Click(null, null);
+            GetData();
         }
 
         private void btDownloadConfig_Click(object sender, EventArgs e)
@@ -440,10 +508,17 @@ namespace lwsc_admin
 
         private void btUploadConfig_Click(object sender, EventArgs e)
         {
+            if (!File.Exists("machines.conf"))
+            {
+                MessageBox.Show("No 'machines.conf' found.");
+                FileInfo f = new FileInfo(Application.ExecutablePath);
+                Process.Start(f.DirectoryName);
+                return;
+            }
             DialogResult dialogResult = MessageBox.Show("Are you sure?", "Override Config", MessageBoxButtons.YesNo);
             if (dialogResult != DialogResult.Yes)
                 return;
-            using(WebClient client = new WebClient())
+            using (WebClient client = new WebClient())
             {
                 client.UploadFile("http://" + tbIpAddress.Text + "/upload", "machines.conf");
             }
@@ -451,10 +526,10 @@ namespace lwsc_admin
 
         private void btQueryRSSI_Click(object sender, EventArgs e)
         {
-            DialogResult dialogResult = MessageBox.Show("WIFI will be disconnected, sure?", "Query RSSI", MessageBoxButtons.YesNo);
-            if (dialogResult != DialogResult.Yes)
-                return;
-
+            //DialogResult dialogResult = MessageBox.Show("WIFI will be disconnected, sure?", "Query RSSI", MessageBoxButtons.YesNo);
+            //if (dialogResult != DialogResult.Yes)
+            //    return;
+            //
             var status = RESTful("/query_rssi", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
@@ -498,7 +573,7 @@ namespace lwsc_admin
             LwscMap1_Fire(m_id, f_id);
         }
 
-        private void FillNewMapping(int x, int y)
+        private void FillNewMapping(int x, int y, string loadMapping = "")
         {
             for (int i = 0; i < y + 1; i++)
             {
@@ -514,6 +589,15 @@ namespace lwsc_admin
                         };
                         cb.Items.Add("");
                         cb.Items.AddRange(functions.Select(f => f.name).ToArray());
+                        if(loadMapping != "" && i < mappings[loadMapping].GetLength(0) && j < mappings[loadMapping].GetLength(1))
+                        {
+                            var m = mappings[loadMapping];
+                            if (m[i, j] != null)
+                            {
+                                var t = m[i, j].name;
+                                cb.Text = t;
+                            }
+                        }
                         pnMappings.Controls.Add(cb);
                     }
                 }
@@ -532,6 +616,8 @@ namespace lwsc_admin
                         Location = new Point(40, pnMappings.Height / (y + 1) * i),
                         Size = new Size(pnMappings.Width - 140, 20)
                     };
+                    if (loadMapping != "")
+                        tb.Text = loadMapping.Substring(4);
                     pnMappings.Controls.Add(tb);
 
                     var bt = new Button
@@ -611,7 +697,7 @@ namespace lwsc_admin
                 client.UploadFile("http://" + tbIpAddress.Text + "/upload", "mappings.json");
             }
 
-            btGetMappings_Click(null, null);
+            GetMappings();
 
         }
 
@@ -695,27 +781,74 @@ namespace lwsc_admin
             }
         }
 
-        private void btGetMappings_Click(object sender, EventArgs e)
+
+        bool automatic = false;
+        private void lbMapSelect_SelectedIndexChanged(object sender, EventArgs e)
         {
-            lbMapPad.Items.Clear();
-            lbMapSelect.Items.Clear();
+            if (automatic)
+                return;
+            automatic = true;
+            lbMapPad.ClearSelected();
+            automatic = false;
+            if (lbMapSelect.SelectedItem == null)
+                return;
+            pnMappings.Controls.Clear();
+            pnMappings.Tag = "map";
+            FillNewMapping(1, 10, "map_" + lbMapSelect.SelectedItem.ToString());
+        }
 
-            using (var client = new WebClient())
+        private void lbMapPad_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (automatic)
+                return;
+            automatic = true;
+            lbMapSelect.ClearSelected();
+            automatic = false;
+            if (lbMapPad.SelectedItem == null)
+                return;
+            pnMappings.Controls.Clear();
+            pnMappings.Tag = "pad";
+            FillNewMapping(10, 10, "pad_" + lbMapPad.SelectedItem.ToString());
+        }
+
+        private void btMapPadDelete_Click(object sender, EventArgs e)
+        {
+            if (lbMapPad.SelectedItem == null)
+                return;
+            DialogResult dialogResult = MessageBox.Show("Are you sure?", "Delete " + lbMapPad.SelectedItem.ToString(), MessageBoxButtons.YesNo);
+            if (dialogResult != DialogResult.Yes)
+                return;
+
+            mappings.Remove("pad_" + lbMapPad.SelectedItem.ToString());
+
+            File.WriteAllText("mappings.json", JsonConvert.SerializeObject(mappings));
+
+            using (WebClient client = new WebClient())
             {
-                client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=mappings.json", "mappings.json");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "mappings.json");
             }
-            string res = File.ReadAllText("mappings.json");
 
-            var fArray = JsonConvert.DeserializeObject<Dictionary<string, MachineFunction[,]>>(res);
-            mappings = fArray;
+            GetMappings();
+        }
 
-            foreach(var m in mappings)
+        private void btMapSelectDelete_Click(object sender, EventArgs e)
+        {
+            if (lbMapSelect.SelectedItem == null)
+                return;
+            DialogResult dialogResult = MessageBox.Show("Are you sure?", "Delete " + lbMapSelect.SelectedItem.ToString(), MessageBoxButtons.YesNo);
+            if (dialogResult != DialogResult.Yes)
+                return;
+
+            mappings.Remove("map_" + lbMapSelect.SelectedItem.ToString());
+
+            File.WriteAllText("mappings.json", JsonConvert.SerializeObject(mappings));
+
+            using (WebClient client = new WebClient())
             {
-                if (m.Key.StartsWith("map_"))
-                    lbMapSelect.Items.Add(m.Key.ToString().Substring(4));
-               else if (m.Key.StartsWith("pad_"))
-                    lbMapPad.Items.Add(m.Key.ToString().Substring(4));
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "mappings.json");
             }
+
+            GetMappings();
         }
     }
 }
