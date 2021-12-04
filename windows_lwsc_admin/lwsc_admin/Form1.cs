@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 #pragma warning disable IDE1006 // Benennungsstile
 
@@ -85,6 +86,7 @@ namespace lwsc_admin
         static public List<MachineFunction> functions = new List<MachineFunction>();
         static public Dictionary<string, MachineFunction[,]> mappings = new Dictionary<string, MachineFunction[,]>();
         readonly UdpClient udpClient = new UdpClient();
+        bool isEthernet = false;
 
         public Form1()
         {
@@ -103,7 +105,7 @@ namespace lwsc_admin
                 {
                     var recvBuffer = udpClient.Receive(ref from);
                     var val = Encoding.UTF8.GetString(recvBuffer);
-                    var m = Regex.Match(val, @"WIFIBRIDGE ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(?:\.|$)){4}) ?((?:ETH)|(?:WIFI))?");
+                    var m = Regex.Match(val, @"WIFIBRIDGE ((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)) (ETH|WIFI)");
                     if(m.Success)
                     {
 
@@ -119,12 +121,34 @@ namespace lwsc_admin
                             pnRSSIButtons.Enabled = true;
                             waiting = false;
                             AddToLog("Setup done");
+
+                            if(m.Groups[2].Value == "ETH")
+                            {
+                                btEspClick.Visible = true;
+                                btEspHome.Visible = true;
+                                btEspUp.Visible = true;
+                                btEspDown.Visible = true;
+                                isEthernet = true;
+                            } else
+                            {
+                                btEspClick.Visible = false;
+                                btEspHome.Visible = false;
+                                btEspUp.Visible = false;
+                                btEspDown.Visible = false;
+                                isEthernet = false;
+                            }
                         });
 
                     }
 
                 }
             });
+        }
+
+        private static string FormatJson(string json)
+        {
+            dynamic parsedJson = JsonConvert.DeserializeObject(json);
+            return JsonConvert.SerializeObject(parsedJson, Formatting.Indented);
         }
 
         private void AddToLog(string txt, bool italic = false)
@@ -202,7 +226,10 @@ namespace lwsc_admin
         {
             MachineData m = machines.First(x => x.id == m_id);
             if (m == null || m.id == 0)
-                throw new Exception();
+            {
+                MessageBox.Show("Error: Machine not found");
+                return;
+            }
 
             var status = RESTful("/query_rssi?id=" + m.id, RESTType.POST, out string res);
             if (status != HttpStatusCode.OK)
@@ -264,7 +291,7 @@ namespace lwsc_admin
 
             var content = string.Empty;
             AddToLog(type.ToString() + ": " + url);
-            HttpWebResponse response = null;
+            HttpWebResponse response;
             try
             {
                 if (type == RESTType.POST && post_content.Length > 0)
@@ -293,11 +320,21 @@ namespace lwsc_admin
                     AddToLog(" << " + "Error: " + response.StatusCode);
                     return response.StatusCode;
                 }
+                else if (e.Status == WebExceptionStatus.Timeout)
+                {
+                    AddToLog(" << " + "Error: " + e.Status + Environment.NewLine + e.Message);
+                    return HttpStatusCode.GatewayTimeout;
+                }
                 else
                 {
-                    AddToLog(" << " + "Error: " + e.Status);
+                    AddToLog(" << " + "Error: " + e.Status + Environment.NewLine + e.Message);
                     return HttpStatusCode.Conflict;
                 }
+            }
+            catch (Exception ex)
+            {
+                AddToLog(" << " + ex.Message, true);
+                return HttpStatusCode.GatewayTimeout;
             }
             AddToLog(" << " + result, true);
             return HttpStatusCode.OK;
@@ -315,15 +352,21 @@ namespace lwsc_admin
 
         private void GetData()
         {
-            int i = 0;
             machines.Clear();
-            while (true)
+
+            var status = RESTful("/machine_count", RESTType.GET, out string res);
+            if (status != HttpStatusCode.OK)
+                MessageBox.Show("Error: " + status);
+
+            var o = JObject.Parse(res);
+            int c = (int)o["count"];
+
+            for(int i = 0; i < c; i++)
             {
-                var status = RESTful("/machine?it=" + i + "&force=1", RESTType.GET, out string res);
+                status = RESTful("/machine?it=" + i + "&force=1", RESTType.GET, out res);
                 if (status != HttpStatusCode.OK)
                     break;
                 machines.Add(JsonConvert.DeserializeObject<MachineData>(res));
-                i++;
             }
             machines = machines.OrderBy(x => x.name).ToList();
             FillTreeView();
@@ -505,7 +548,7 @@ namespace lwsc_admin
         {
             using (var client = new WebClient())
             {
-                client.DownloadFile("http://" + tbIpAddress.Text + "/config", "machines.conf");
+                client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=machines.conf", "machines.conf");
             }
             FileInfo f = new FileInfo(Application.ExecutablePath);
             Process.Start(f.DirectoryName);
@@ -527,14 +570,20 @@ namespace lwsc_admin
             {
                 client.UploadFile("http://" + tbIpAddress.Text + "/upload", "machines.conf");
             }
+            MessageBox.Show("Please restart Gateway manually, click ok when restarted!", "Restart Gateway", MessageBoxButtons.OK);
+
+            GetData();
+            GetFunctions();
         }
 
         private void btQueryRSSI_Click(object sender, EventArgs e)
         {
-            //DialogResult dialogResult = MessageBox.Show("WIFI will be disconnected, sure?", "Query RSSI", MessageBoxButtons.YesNo);
-            //if (dialogResult != DialogResult.Yes)
-            //    return;
-            //
+            if (!isEthernet)
+            {
+                DialogResult dialogResult = MessageBox.Show("WIFI will be disconnected for ~10secs, sure? (Maybe you need to manually reconnect to the wifi in Windows)", "Query RSSI", MessageBoxButtons.YesNo);
+                if (dialogResult != DialogResult.Yes)
+                    return;
+            }
             var status = RESTful("/query_rssi", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
@@ -854,6 +903,19 @@ namespace lwsc_admin
             }
 
             GetMappings();
+        }
+
+        private void btResetCounterMachine_Click(object sender, EventArgs e)
+        {
+            var m = machines[mSelected];
+            var status = RESTful("/set_relaiscounter?id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+
+            GetData();
         }
     }
 }

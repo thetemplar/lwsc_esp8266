@@ -142,7 +142,7 @@ void rest_get_machine()
 }
 
 void rest_post_machine() {
-  if (server.arg("id") == "" || server.arg("name") == "" || server.arg("shortName") == "" || server.arg("disabled") == "" || server.arg("symbolX") == "" || server.arg("symbolY") == "" ){
+  if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
@@ -159,25 +159,35 @@ void rest_post_machine() {
   }
   
   md = &machines[machinesIndexCache[id]];
-  for(int i = 0; i < 38; i++)
+
+  if(server.arg("name") != "")
   {
-    if(i < server.arg("name").length())
-      md->Name[i] = server.arg("name")[i];
-    else
-      md->Name[i] = 0x00;
+    for(int i = 0; i < 38; i++)
+    {
+      if(i < server.arg("name").length())
+        md->Name[i] = server.arg("name")[i];
+      else
+        md->Name[i] = 0x00;
+    }
   }
     
-  for(int i = 0; i < 9; i++)
+  if(server.arg("shortName") != "")
   {
-    if(i < server.arg("shortName").length())
-      md->ShortName[i] = server.arg("shortName")[i];
-    else
-      md->ShortName[i] = 0x00;
+    for(int i = 0; i < 9; i++)
+    {
+      if(i < server.arg("shortName").length())
+        md->ShortName[i] = server.arg("shortName")[i];
+      else
+        md->ShortName[i] = 0x00;
+    }
   }
-    
-  md->Disabled = server.arg("disabled").toInt();
-  md->SymbolX = server.arg("symbolX").toInt();
-  md->SymbolY = server.arg("symbolY").toInt();
+
+  if(server.arg("disabled") != "")
+    md->Disabled = server.arg("disabled").toInt();
+  if(server.arg("symbolX") != "")
+    md->SymbolX = server.arg("symbolX").toInt();
+  if(server.arg("symbolY") != "")
+    md->SymbolY = server.arg("symbolY").toInt();
   
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\"}");
 }

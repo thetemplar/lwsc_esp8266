@@ -33,6 +33,7 @@ namespace lwsc_admin
             this.tvMachines = new System.Windows.Forms.TreeView();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.pMachine = new System.Windows.Forms.Panel();
+            this.btResetCounterMachine = new System.Windows.Forms.Button();
             this.tbMNewId = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.btMReassign = new System.Windows.Forms.Button();
@@ -55,8 +56,14 @@ namespace lwsc_admin
             this.label5 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.pnRSSIButtons = new System.Windows.Forms.Panel();
+            this.btSave = new System.Windows.Forms.Button();
             this.btReboot = new System.Windows.Forms.Button();
+            this.btDownloadConfig = new System.Windows.Forms.Button();
             this.btResetCounter = new System.Windows.Forms.Button();
+            this.btUploadConfig = new System.Windows.Forms.Button();
+            this.btQueryRSSI = new System.Windows.Forms.Button();
+            this.btGetRSSI = new System.Windows.Forms.Button();
             this.btEspHome = new System.Windows.Forms.Button();
             this.btEspClick = new System.Windows.Forms.Button();
             this.btEspDown = new System.Windows.Forms.Button();
@@ -67,11 +74,6 @@ namespace lwsc_admin
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
-            this.btGetRSSI = new System.Windows.Forms.Button();
-            this.btQueryRSSI = new System.Windows.Forms.Button();
-            this.btSave = new System.Windows.Forms.Button();
-            this.btUploadConfig = new System.Windows.Forms.Button();
-            this.btDownloadConfig = new System.Windows.Forms.Button();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.dgvFunctions = new System.Windows.Forms.DataGridView();
@@ -92,12 +94,12 @@ namespace lwsc_admin
             this.label11 = new System.Windows.Forms.Label();
             this.lbMapPad = new System.Windows.Forms.ListBox();
             this.lbMapSelect = new System.Windows.Forms.ListBox();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.lwscMap1 = new lwsc_admin.LWSCMap();
-            this.pnRSSIButtons = new System.Windows.Forms.Panel();
-            this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.rtbLog = new System.Windows.Forms.RichTextBox();
+            this.label13 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -106,14 +108,14 @@ namespace lwsc_admin
             this.pFunction.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage4.SuspendLayout();
+            this.pnRSSIButtons.SuspendLayout();
             this.panel1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvFunctions)).BeginInit();
             this.tabPage3.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
-            this.pnRSSIButtons.SuspendLayout();
             this.tabPage5.SuspendLayout();
+            this.statusStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tvMachines
@@ -147,6 +149,7 @@ namespace lwsc_admin
             // 
             // pMachine
             // 
+            this.pMachine.Controls.Add(this.btResetCounterMachine);
             this.pMachine.Controls.Add(this.tbMNewId);
             this.pMachine.Controls.Add(this.label6);
             this.pMachine.Controls.Add(this.btMReassign);
@@ -164,6 +167,16 @@ namespace lwsc_admin
             this.pMachine.Size = new System.Drawing.Size(1494, 205);
             this.pMachine.TabIndex = 3;
             this.pMachine.Visible = false;
+            // 
+            // btResetCounterMachine
+            // 
+            this.btResetCounterMachine.Location = new System.Drawing.Point(493, 39);
+            this.btResetCounterMachine.Name = "btResetCounterMachine";
+            this.btResetCounterMachine.Size = new System.Drawing.Size(210, 26);
+            this.btResetCounterMachine.TabIndex = 16;
+            this.btResetCounterMachine.Text = "Reset Release Counter";
+            this.btResetCounterMachine.UseVisualStyleBackColor = true;
+            this.btResetCounterMachine.Click += new System.EventHandler(this.btResetCounterMachine_Click);
             // 
             // tbMNewId
             // 
@@ -382,15 +395,50 @@ namespace lwsc_admin
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
+            // pnRSSIButtons
+            // 
+            this.pnRSSIButtons.Controls.Add(this.btSave);
+            this.pnRSSIButtons.Controls.Add(this.btReboot);
+            this.pnRSSIButtons.Controls.Add(this.btDownloadConfig);
+            this.pnRSSIButtons.Controls.Add(this.btResetCounter);
+            this.pnRSSIButtons.Controls.Add(this.btUploadConfig);
+            this.pnRSSIButtons.Controls.Add(this.btQueryRSSI);
+            this.pnRSSIButtons.Controls.Add(this.btGetRSSI);
+            this.pnRSSIButtons.Enabled = false;
+            this.pnRSSIButtons.Location = new System.Drawing.Point(401, 4);
+            this.pnRSSIButtons.Name = "pnRSSIButtons";
+            this.pnRSSIButtons.Size = new System.Drawing.Size(1042, 39);
+            this.pnRSSIButtons.TabIndex = 18;
+            // 
+            // btSave
+            // 
+            this.btSave.Location = new System.Drawing.Point(3, 4);
+            this.btSave.Name = "btSave";
+            this.btSave.Size = new System.Drawing.Size(121, 31);
+            this.btSave.TabIndex = 3;
+            this.btSave.Text = "Save Config";
+            this.btSave.UseVisualStyleBackColor = true;
+            this.btSave.Click += new System.EventHandler(this.btSave_Click);
+            // 
             // btReboot
             // 
-            this.btReboot.Location = new System.Drawing.Point(788, 3);
+            this.btReboot.Location = new System.Drawing.Point(771, 4);
             this.btReboot.Name = "btReboot";
-            this.btReboot.Size = new System.Drawing.Size(121, 31);
+            this.btReboot.Size = new System.Drawing.Size(138, 31);
             this.btReboot.TabIndex = 17;
-            this.btReboot.Text = "Reboot";
+            this.btReboot.Text = "Reboot Machines";
             this.btReboot.UseVisualStyleBackColor = true;
             this.btReboot.Click += new System.EventHandler(this.btReboot_Click);
+            // 
+            // btDownloadConfig
+            // 
+            this.btDownloadConfig.Location = new System.Drawing.Point(130, 4);
+            this.btDownloadConfig.Name = "btDownloadConfig";
+            this.btDownloadConfig.Size = new System.Drawing.Size(121, 31);
+            this.btDownloadConfig.TabIndex = 4;
+            this.btDownloadConfig.Text = "Download Cfg";
+            this.btDownloadConfig.UseVisualStyleBackColor = true;
+            this.btDownloadConfig.Click += new System.EventHandler(this.btDownloadConfig_Click);
             // 
             // btResetCounter
             // 
@@ -401,6 +449,36 @@ namespace lwsc_admin
             this.btResetCounter.Text = "Reset Counter";
             this.btResetCounter.UseVisualStyleBackColor = true;
             this.btResetCounter.Click += new System.EventHandler(this.btResetCounter_Click);
+            // 
+            // btUploadConfig
+            // 
+            this.btUploadConfig.Location = new System.Drawing.Point(257, 4);
+            this.btUploadConfig.Name = "btUploadConfig";
+            this.btUploadConfig.Size = new System.Drawing.Size(121, 31);
+            this.btUploadConfig.TabIndex = 5;
+            this.btUploadConfig.Text = "Upload Cfg";
+            this.btUploadConfig.UseVisualStyleBackColor = true;
+            this.btUploadConfig.Click += new System.EventHandler(this.btUploadConfig_Click);
+            // 
+            // btQueryRSSI
+            // 
+            this.btQueryRSSI.Location = new System.Drawing.Point(457, 4);
+            this.btQueryRSSI.Name = "btQueryRSSI";
+            this.btQueryRSSI.Size = new System.Drawing.Size(121, 31);
+            this.btQueryRSSI.TabIndex = 6;
+            this.btQueryRSSI.Text = "Query RSSI";
+            this.btQueryRSSI.UseVisualStyleBackColor = true;
+            this.btQueryRSSI.Click += new System.EventHandler(this.btQueryRSSI_Click);
+            // 
+            // btGetRSSI
+            // 
+            this.btGetRSSI.Location = new System.Drawing.Point(584, 4);
+            this.btGetRSSI.Name = "btGetRSSI";
+            this.btGetRSSI.Size = new System.Drawing.Size(121, 31);
+            this.btGetRSSI.TabIndex = 7;
+            this.btGetRSSI.Text = "Get RSSI";
+            this.btGetRSSI.UseVisualStyleBackColor = true;
+            this.btGetRSSI.Click += new System.EventHandler(this.btGetRSSI_Click);
             // 
             // btEspHome
             // 
@@ -498,56 +576,6 @@ namespace lwsc_admin
             this.label7.TabIndex = 0;
             this.label7.Text = "O = Move";
             // 
-            // btGetRSSI
-            // 
-            this.btGetRSSI.Location = new System.Drawing.Point(584, 3);
-            this.btGetRSSI.Name = "btGetRSSI";
-            this.btGetRSSI.Size = new System.Drawing.Size(121, 31);
-            this.btGetRSSI.TabIndex = 7;
-            this.btGetRSSI.Text = "Get RSSI";
-            this.btGetRSSI.UseVisualStyleBackColor = true;
-            this.btGetRSSI.Click += new System.EventHandler(this.btGetRSSI_Click);
-            // 
-            // btQueryRSSI
-            // 
-            this.btQueryRSSI.Location = new System.Drawing.Point(457, 3);
-            this.btQueryRSSI.Name = "btQueryRSSI";
-            this.btQueryRSSI.Size = new System.Drawing.Size(121, 31);
-            this.btQueryRSSI.TabIndex = 6;
-            this.btQueryRSSI.Text = "Query RSSI";
-            this.btQueryRSSI.UseVisualStyleBackColor = true;
-            this.btQueryRSSI.Click += new System.EventHandler(this.btQueryRSSI_Click);
-            // 
-            // btSave
-            // 
-            this.btSave.Location = new System.Drawing.Point(3, 4);
-            this.btSave.Name = "btSave";
-            this.btSave.Size = new System.Drawing.Size(121, 31);
-            this.btSave.TabIndex = 3;
-            this.btSave.Text = "Save Config";
-            this.btSave.UseVisualStyleBackColor = true;
-            this.btSave.Click += new System.EventHandler(this.btSave_Click);
-            // 
-            // btUploadConfig
-            // 
-            this.btUploadConfig.Location = new System.Drawing.Point(257, 4);
-            this.btUploadConfig.Name = "btUploadConfig";
-            this.btUploadConfig.Size = new System.Drawing.Size(121, 31);
-            this.btUploadConfig.TabIndex = 5;
-            this.btUploadConfig.Text = "Upload Cfg";
-            this.btUploadConfig.UseVisualStyleBackColor = true;
-            this.btUploadConfig.Click += new System.EventHandler(this.btUploadConfig_Click);
-            // 
-            // btDownloadConfig
-            // 
-            this.btDownloadConfig.Location = new System.Drawing.Point(130, 4);
-            this.btDownloadConfig.Name = "btDownloadConfig";
-            this.btDownloadConfig.Size = new System.Drawing.Size(121, 31);
-            this.btDownloadConfig.TabIndex = 4;
-            this.btDownloadConfig.Text = "Download Cfg";
-            this.btDownloadConfig.UseVisualStyleBackColor = true;
-            this.btDownloadConfig.Click += new System.EventHandler(this.btDownloadConfig_Click);
-            // 
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.splitContainer2);
@@ -561,6 +589,7 @@ namespace lwsc_admin
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.label13);
             this.tabPage2.Controls.Add(this.dgvFunctions);
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
             this.tabPage2.Name = "tabPage2";
@@ -750,6 +779,26 @@ namespace lwsc_admin
             this.lbMapSelect.TabIndex = 0;
             this.lbMapSelect.SelectedIndexChanged += new System.EventHandler(this.lbMapSelect_SelectedIndexChanged);
             // 
+            // tabPage5
+            // 
+            this.tabPage5.Controls.Add(this.rtbLog);
+            this.tabPage5.Location = new System.Drawing.Point(4, 25);
+            this.tabPage5.Name = "tabPage5";
+            this.tabPage5.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage5.TabIndex = 4;
+            this.tabPage5.Text = "Log";
+            this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // rtbLog
+            // 
+            this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rtbLog.Location = new System.Drawing.Point(0, 0);
+            this.rtbLog.Name = "rtbLog";
+            this.rtbLog.ReadOnly = true;
+            this.rtbLog.Size = new System.Drawing.Size(1500, 723);
+            this.rtbLog.TabIndex = 0;
+            this.rtbLog.Text = "";
+            // 
             // statusStrip1
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
@@ -774,40 +823,16 @@ namespace lwsc_admin
             this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
             this.lwscMap1.TabIndex = 2;
             // 
-            // pnRSSIButtons
+            // label13
             // 
-            this.pnRSSIButtons.Controls.Add(this.btSave);
-            this.pnRSSIButtons.Controls.Add(this.btReboot);
-            this.pnRSSIButtons.Controls.Add(this.btDownloadConfig);
-            this.pnRSSIButtons.Controls.Add(this.btResetCounter);
-            this.pnRSSIButtons.Controls.Add(this.btUploadConfig);
-            this.pnRSSIButtons.Controls.Add(this.btQueryRSSI);
-            this.pnRSSIButtons.Controls.Add(this.btGetRSSI);
-            this.pnRSSIButtons.Enabled = false;
-            this.pnRSSIButtons.Location = new System.Drawing.Point(401, 4);
-            this.pnRSSIButtons.Name = "pnRSSIButtons";
-            this.pnRSSIButtons.Size = new System.Drawing.Size(1042, 39);
-            this.pnRSSIButtons.TabIndex = 18;
-            // 
-            // tabPage5
-            // 
-            this.tabPage5.Controls.Add(this.rtbLog);
-            this.tabPage5.Location = new System.Drawing.Point(4, 25);
-            this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Size = new System.Drawing.Size(1500, 723);
-            this.tabPage5.TabIndex = 4;
-            this.tabPage5.Text = "Log";
-            this.tabPage5.UseVisualStyleBackColor = true;
-            // 
-            // rtbLog
-            // 
-            this.rtbLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbLog.Location = new System.Drawing.Point(0, 0);
-            this.rtbLog.Name = "rtbLog";
-            this.rtbLog.ReadOnly = true;
-            this.rtbLog.Size = new System.Drawing.Size(1500, 723);
-            this.rtbLog.TabIndex = 0;
-            this.rtbLog.Text = "";
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.label13.Location = new System.Drawing.Point(2, -2);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(438, 17);
+            this.label13.TabIndex = 1;
+            this.label13.Text = "This is read-only. Doubleclick will \"Fire\" the Machine/Relais";
             // 
             // Form1
             // 
@@ -830,17 +855,18 @@ namespace lwsc_admin
             this.tabControl1.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
+            this.pnRSSIButtons.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.tabPage1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvFunctions)).EndInit();
             this.tabPage3.ResumeLayout(false);
             this.tabPage3.PerformLayout();
+            this.tabPage5.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            this.pnRSSIButtons.ResumeLayout(false);
-            this.tabPage5.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -916,6 +942,8 @@ namespace lwsc_admin
         private System.Windows.Forms.Panel pnRSSIButtons;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.RichTextBox rtbLog;
+        private System.Windows.Forms.Button btResetCounterMachine;
+        private System.Windows.Forms.Label label13;
     }
 }
 

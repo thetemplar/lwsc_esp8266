@@ -261,7 +261,7 @@ void udpBroadcast() {
 #ifdef ETH_ENABLE
   IPAddress broadcastIP(255, 255, 255, 255);
   Udp.beginPacket(broadcastIP, 5556);
-  Udp.printf("WIFIBRIDGE %d.%d.%d.%d", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
+  Udp.printf("WIFIBRIDGE %d.%d.%d.%d ETH", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
   Udp.endPacket();
 #else
   struct station_info *stat_info;
@@ -271,7 +271,7 @@ void udpBroadcast() {
   {
     IPaddress = &stat_info->ip;    
     Udp.beginPacket(IPaddress, 5556);
-    Udp.printf("WIFIBRIDGE %d.%d.%d.%d", WiFi.softAPIP()[0], WiFi.softAPIP()[1], WiFi.softAPIP()[2], WiFi.softAPIP()[3]);
+    Udp.printf("WIFIBRIDGE %d.%d.%d.%d WIFI", WiFi.softAPIP()[0], WiFi.softAPIP()[1], WiFi.softAPIP()[2], WiFi.softAPIP()[3]);
     Udp.endPacket();
     stat_info = STAILQ_NEXT(stat_info, next);
   } 
