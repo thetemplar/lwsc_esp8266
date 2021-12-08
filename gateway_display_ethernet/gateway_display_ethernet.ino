@@ -327,11 +327,12 @@ void setup() {
   Serial.println(eth.gatewayIP());
   setupFreedom();
 #else
+  WiFi.softAPConfig(IPAddress(192, 168, 178, 250), IPAddress(192, 168, 178, 1), IPAddress(255, 255, 255, 0));
   setupAP();
   network_ip = String(WiFi.softAPIP()[0]) + String(".") + String(WiFi.softAPIP()[1]) + String(".") + String(WiFi.softAPIP()[2]) + String(".") + String(WiFi.softAPIP()[3]);
 #endif
   
-  timerIdUDP = timer.setInterval(5000, udpBroadcast);
+  timerIdUDP = timer.setInterval(2500, udpBroadcast);
   timer.enable(timerIdUDP);
   
   restServerRouting();

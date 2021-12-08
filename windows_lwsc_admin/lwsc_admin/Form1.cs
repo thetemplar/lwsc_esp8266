@@ -23,7 +23,8 @@ namespace lwsc_admin
     {
         enum RESTType {
             GET,
-            POST
+            POST,
+            DELETE
         }
 
         public class MachineFunction
@@ -88,6 +89,12 @@ namespace lwsc_admin
         readonly UdpClient udpClient = new UdpClient();
         bool isEthernet = false;
 
+        sealed class tmpM
+        {
+            public uint m_id = 0;
+            public string name;
+            public string cmd;
+        };
         public Form1()
         {
             InitializeComponent();
@@ -98,6 +105,8 @@ namespace lwsc_admin
 
             udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 5556));
             var from = new IPEndPoint(0, 0);
+
+
             Task.Run(() =>
             {
                 bool waiting = true;
@@ -143,6 +152,7 @@ namespace lwsc_admin
 
                 }
             });
+
         }
 
         private static string FormatJson(string json)
@@ -285,7 +295,20 @@ namespace lwsc_admin
             var request = (HttpWebRequest)WebRequest.Create("http://" + tbIpAddress.Text + url);
             request.Timeout = 3000;
 
-            request.Method = (type == RESTType.GET) ? "GET" : "POST";
+            switch(type)
+            {
+                case RESTType.GET:
+                    request.Method = "GET";
+                    break;
+                case RESTType.POST:
+                    request.Method = "POST";
+                    break;
+                case RESTType.DELETE:
+                    request.Method = "DELETE";
+                    break;
+                default:
+                    throw new Exception();
+            }
 
             toolStripStatusLabel.Text = request.Method + ": " + url.Replace("&", "&&");
 
@@ -374,6 +397,7 @@ namespace lwsc_admin
 
         private void GetFunctions()
         {
+            return;
             dgvFunctions.Rows.Clear();
             var status = RESTful("/all_functions", RESTType.GET, out string res);
             if (status != HttpStatusCode.OK)
@@ -432,40 +456,26 @@ namespace lwsc_admin
         }
 
         int mSelected = -1;
-        int fSelected = -1;
         private void tvMachines_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (e.Node.Parent == null)
             {
-                pMachine.Visible = true;
-                pFunction.Visible = false;
                 mSelected = (int)e.Node.Tag;
-                fSelected = -1;
             }
             else if (e.Node.Parent.Parent == null)
             {
-                pMachine.Visible = true;
-                pFunction.Visible = false;
                 mSelected = (int)e.Node.Parent.Tag;
-                fSelected = -1;
             }
             else if (e.Node.Parent.Parent.Parent == null)
             {
-                pMachine.Visible = false;
-                pFunction.Visible = true;
                 mSelected = (int)e.Node.Parent.Parent.Tag;
-                fSelected = (int)e.Node.Tag;
             }
             else if (e.Node.Parent.Parent.Parent.Parent == null)
             {
-                pMachine.Visible = false;
-                pFunction.Visible = true;
                 mSelected = (int)e.Node.Parent.Parent.Parent.Tag;
-                fSelected = (int)e.Node.Parent.Tag;
             } else
             {
                 mSelected = -1;
-                fSelected = -1;
             }
 
             if (mSelected >= 0)
@@ -475,16 +485,41 @@ namespace lwsc_admin
                 tbMName.Text = machines[mSelected].name;
                 tbMShortName.Text = machines[mSelected].shortName;
                 cbMDisabled.Checked = machines[mSelected].disabled;
-            }
-            if (fSelected >= 0)
-            {
-                lbFName.Text = machines[mSelected].ToString() + "[" + fSelected + "]";
-                tbFName.Text = machines[mSelected].functions[fSelected].name;
-                tbFDuration.Text = machines[mSelected].functions[fSelected].duration.ToString();
-                var x = machines[mSelected].functions[fSelected].relaisBitmask & 0x01;
-                var y = machines[mSelected].functions[fSelected].relaisBitmask & 0x02;
-                cbFRelais1.Checked = x == 0x01;
-                cbFRelais2.Checked = y == 0x02;
+
+                tbFName1.Text = machines[mSelected].functions[0].name;
+                tbFDuration1.Text = machines[mSelected].functions[0].duration.ToString();
+                var x1 = machines[mSelected].functions[0].relaisBitmask & 0x01;
+                var y1 = machines[mSelected].functions[0].relaisBitmask & 0x02;
+                cbFRelais1_1.Checked = x1 == 0x01;
+                cbFRelais2_1.Checked = y1 == 0x02;
+
+                tbFName2.Text = machines[mSelected].functions[1].name;
+                tbFDuration2.Text = machines[mSelected].functions[1].duration.ToString();
+                var x2 = machines[mSelected].functions[1].relaisBitmask & 0x01;
+                var y2 = machines[mSelected].functions[1].relaisBitmask & 0x02;
+                cbFRelais1_2.Checked = x2 == 0x01;
+                cbFRelais2_2.Checked = y2 == 0x02;
+
+                tbFName3.Text = machines[mSelected].functions[2].name;
+                tbFDuration3.Text = machines[mSelected].functions[2].duration.ToString();
+                var x3 = machines[mSelected].functions[2].relaisBitmask & 0x01;
+                var y3 = machines[mSelected].functions[2].relaisBitmask & 0x02;
+                cbFRelais1_3.Checked = x3 == 0x01;
+                cbFRelais2_3.Checked = y3 == 0x02;
+
+                tbFName4.Text = machines[mSelected].functions[3].name;
+                tbFDuration4.Text = machines[mSelected].functions[3].duration.ToString();
+                var x4 = machines[mSelected].functions[3].relaisBitmask & 0x01;
+                var y4 = machines[mSelected].functions[3].relaisBitmask & 0x02;
+                cbFRelais1_4.Checked = x4 == 0x01;
+                cbFRelais2_4.Checked = y4 == 0x02;
+
+                tbFName5.Text = machines[mSelected].functions[4].name;
+                tbFDuration5.Text = machines[mSelected].functions[4].duration.ToString();
+                var x5 = machines[mSelected].functions[4].relaisBitmask & 0x01;
+                var y5 = machines[mSelected].functions[4].relaisBitmask & 0x02;
+                cbFRelais1_5.Checked = x5 == 0x01;
+                cbFRelais2_5.Checked = y5 == 0x02;
             }
         }
 
@@ -497,26 +532,6 @@ namespace lwsc_admin
             m.disabled = cbMDisabled.Checked;
 
             var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
-            if (status != HttpStatusCode.OK)
-            {
-                MessageBox.Show("Error: " + status);
-                return;
-            }
-            FillTreeView();
-        }
-
-        private void btFSave_Click(object sender, EventArgs e)
-        {
-            var m = machines[mSelected];
-            var f = machines[mSelected].functions[fSelected];
-
-            f.name = tbFName.Text;
-            f.duration = int.Parse(tbFDuration.Text);
-            f.relaisBitmask = 0x00;
-            if (cbFRelais1.Checked) f.relaisBitmask += 0x01;
-            if (cbFRelais2.Checked) f.relaisBitmask += 0x02;
-
-            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -546,9 +561,19 @@ namespace lwsc_admin
 
         private void btDownloadConfig_Click(object sender, EventArgs e)
         {
+            SaveFileDialog sfd = new SaveFileDialog
+            {
+                CheckPathExists = true,
+                DefaultExt = "conf",
+                Filter = "conf files (*.conf)|*.conf|All files (*.*)|*.*",
+                InitialDirectory = Application.StartupPath
+            };
+            DialogResult dialogResult = sfd.ShowDialog();
+            if (dialogResult != DialogResult.OK)
+                return;
             using (var client = new WebClient())
             {
-                client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=machines.conf", "machines.conf");
+                client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=machines.conf", sfd.FileName);
             }
             FileInfo f = new FileInfo(Application.ExecutablePath);
             Process.Start(f.DirectoryName);
@@ -556,21 +581,48 @@ namespace lwsc_admin
 
         private void btUploadConfig_Click(object sender, EventArgs e)
         {
-            if (!File.Exists("machines.conf"))
+            OpenFileDialog sfd = new OpenFileDialog
             {
-                MessageBox.Show("No 'machines.conf' found.");
-                FileInfo f = new FileInfo(Application.ExecutablePath);
-                Process.Start(f.DirectoryName);
+                CheckPathExists = true,
+                DefaultExt = "conf",
+                Filter = "conf files (*.conf)|*.conf|All files (*.*)|*.*",
+                InitialDirectory = Application.StartupPath
+            };
+            DialogResult dialogResult = sfd.ShowDialog();
+            if (dialogResult != DialogResult.OK)
+                return;
+
+            if (!File.Exists(sfd.FileName))
+            {
+                MessageBox.Show("Not found.");
                 return;
             }
-            DialogResult dialogResult = MessageBox.Show("Are you sure?", "Override Config", MessageBoxButtons.YesNo);
+            dialogResult = MessageBox.Show("Are you sure?", "Override Config", MessageBoxButtons.YesNo);
             if (dialogResult != DialogResult.Yes)
                 return;
+
+            if (!Directory.Exists("tmp"))
+                Directory.CreateDirectory("tmp");
+
+            if (File.Exists("tmp/machines.conf"))
+                File.Delete("tmp/machines.conf");
+
+            File.Copy(sfd.FileName, "tmp/machines.conf");
+
             using (WebClient client = new WebClient())
             {
-                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "machines.conf");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "tmp/machines.conf");
             }
-            MessageBox.Show("Please restart Gateway manually, click ok when restarted!", "Restart Gateway", MessageBoxButtons.OK);
+
+
+            var status = RESTful("/reboot?id=0", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+
+            MessageBox.Show("Restarting Gateway....", "Restart Gateway", MessageBoxButtons.OK);
 
             GetData();
             GetFunctions();
@@ -916,6 +968,246 @@ namespace lwsc_admin
             }
 
             GetData();
+        }
+
+        private void btDebug_Click(object sender, EventArgs e)
+        {
+            machines.Clear();
+            mappings.Clear();
+            functions.Clear();
+
+            string all = File.ReadAllText(@"C:\Users\Graul\Desktop\tmp.json");
+
+            tmpM[] old = JsonConvert.DeserializeObject<tmpM[]>(all);
+
+
+            foreach (tmpM o in old)
+            {
+                if (machines.Count(x => x.id == o.m_id) == 0)
+                    machines.Add(new MachineData() { id = o.m_id, name = o.name, shortName = o.name, symbolY = (uint)(machines.Count * 20 + 30), functions = new List<MachineFunction>() });
+
+                var m = machines.FirstOrDefault(x => x.id == o.m_id);
+
+                for (uint i = 0; i < 5; i++)
+                {
+                    if (m.functions.Count - 1 < i)
+                        m.functions.Add(new MachineFunction());
+
+                    var f = m.functions[(int)i];
+                    if (f == null || f.name == null)
+                    {
+                        f = new MachineFunction()
+                        {
+                            name = o.name,
+                            machineId = o.m_id,
+                            functionId = i
+                        };
+                        switch (o.cmd)
+                        {
+                            case "0x01":
+                            case "0x11":
+                            case "0x21":
+                                f.duration = 1000;
+                                break;
+                            case "0x03":
+                            case "0x13":
+                            case "0x23":
+                                f.duration = 3000;
+                                break;
+                            case "0x04":
+                            case "0x14":
+                            case "0x24":
+                                f.duration = 400;
+                                break;
+                            case "0x0a":
+                            case "0x1a":
+                            case "0x2a":
+                                f.duration = -1;
+                                break;
+                            case "0x0b":
+                            case "0x1b":
+                            case "0x2b":
+                                f.duration = 1;
+                                break;
+                        }
+                        switch (o.cmd)
+                        {
+                            case "0x01":
+                            case "0x03":
+                            case "0x04":
+                            case "0x0a":
+                            case "0x0b":
+                                f.relaisBitmask = 0x01;
+                                break;
+                            case "0x11":
+                            case "0x13":
+                            case "0x14":
+                            case "0x1a":
+                            case "0x1b":
+                                f.relaisBitmask = 0x02;
+                                break;
+                            case "0x21":
+                            case "0x23":
+                            case "0x24":
+                            case "0x2a":
+                            case "0x2b":
+                                f.relaisBitmask = 0x03;
+                                break;
+                        }
+                        m.functions[(int)i] = f;
+                        break;
+                    }
+                }
+            }
+
+            foreach (var m in machines)
+            {
+                var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
+                if (status != HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Error: " + status);
+                    return;
+                }
+                foreach(var f in m.functions)
+                {
+                    status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+                    if (status != HttpStatusCode.OK)
+                    {
+                        MessageBox.Show("Error: " + status);
+                        return;
+                    }
+                }
+            }
+
+
+            GetData();
+            GetFunctions();
+        }
+
+        private void btDelete_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Are you sure?", "Delete", MessageBoxButtons.YesNo);
+            if (dialogResult != DialogResult.Yes)
+                return;
+
+            var m = machines[mSelected];
+            var status = RESTful("/machine?id=" + m.id + "", RESTType.DELETE, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+
+            GetData();
+            GetFunctions();
+        }
+
+
+        private void btFSave1_Click(object sender, EventArgs e)
+        {
+            var m = machines[mSelected];
+            var f = machines[mSelected].functions[0];
+
+            f.name = tbFName1.Text;
+            f.duration = int.Parse(tbFDuration1.Text);
+            f.relaisBitmask = 0x00;
+            if (cbFRelais1_1.Checked) f.relaisBitmask += 0x01;
+            if (cbFRelais2_1.Checked) f.relaisBitmask += 0x02;
+
+            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+            FillTreeView();
+        }
+
+        private void btFSave2_Click(object sender, EventArgs e)
+        {
+            var m = machines[mSelected];
+            var f = machines[mSelected].functions[1];
+
+            f.name = tbFName2.Text;
+            f.duration = int.Parse(tbFDuration2.Text);
+            f.relaisBitmask = 0x00;
+            if (cbFRelais1_2.Checked) f.relaisBitmask += 0x01;
+            if (cbFRelais2_2.Checked) f.relaisBitmask += 0x02;
+
+            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+            FillTreeView();
+        }
+
+        private void btFSave3_Click(object sender, EventArgs e)
+        {
+            var m = machines[mSelected];
+            var f = machines[mSelected].functions[2];
+
+            f.name = tbFName3.Text;
+            f.duration = int.Parse(tbFDuration3.Text);
+            f.relaisBitmask = 0x00;
+            if (cbFRelais1_3.Checked) f.relaisBitmask += 0x01;
+            if (cbFRelais2_3.Checked) f.relaisBitmask += 0x02;
+
+            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+            FillTreeView();
+        }
+
+        private void btFSave4_Click(object sender, EventArgs e)
+        {
+            var m = machines[mSelected];
+            var f = machines[mSelected].functions[3];
+
+            f.name = tbFName4.Text;
+            f.duration = int.Parse(tbFDuration4.Text);
+            f.relaisBitmask = 0x00;
+            if (cbFRelais1_4.Checked) f.relaisBitmask += 0x01;
+            if (cbFRelais2_4.Checked) f.relaisBitmask += 0x02;
+
+            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+            FillTreeView();
+        }
+
+        private void btFSave5_Click(object sender, EventArgs e)
+        {
+            var m = machines[mSelected];
+            var f = machines[mSelected].functions[4];
+
+            f.name = tbFName5.Text;
+            f.duration = int.Parse(tbFDuration5.Text);
+            f.relaisBitmask = 0x00;
+            if (cbFRelais1_5.Checked) f.relaisBitmask += 0x01;
+            if (cbFRelais2_5.Checked) f.relaisBitmask += 0x02;
+
+            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            if (status != HttpStatusCode.OK)
+            {
+                MessageBox.Show("Error: " + status);
+                return;
+            }
+            FillTreeView();
+        }
+
+        private void btRefresh_Click(object sender, EventArgs e)
+        {
+            GetData();
+            GetFunctions();
+            GetMappings();
         }
     }
 }

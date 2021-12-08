@@ -23,6 +23,7 @@ namespace lwsc_admin
         public LWSCMap()
         {
             InitializeComponent();
+            this.DoubleBuffered = true;
         }
 
         public Point Midpoint(Point a, Point b) {
@@ -77,17 +78,17 @@ namespace lwsc_admin
                 Form1.MachineData m = Form1.machines[i];
                 if (m.minimized)
                 {
-                    g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(m.symbolX, m.symbolY, 16, 16));
+                    g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY, 16, 16));
 
-                    g.DrawString("[+]", this.Font, Brushes.Black, new Point((int)m.symbolX, (int)m.symbolY));
-                    g.DrawString(m.ToString(), this.Font, Brushes.White, new Point((int)m.symbolX + 20, (int)m.symbolY));
+                    g.DrawString("[+]", this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY));
+                    g.DrawString(m.ToString(), this.Font, Brushes.White, new PointF(mouseMapped == i ? _mouse.X + 20: m.symbolX + 20, mouseMapped == i ? _mouse.Y : m.symbolY));
                 } 
                 else
                 {
-                    g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(m.symbolX, m.symbolY, 200, 16 + 16 * m.FunctionCount()));
+                    g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY, 200, 16 + 16 * m.FunctionCount()));
 
-                    g.DrawString("[O] [B] [R]" + m.ToString(), this.Font, Brushes.Black, new Point((int)m.symbolX, (int)m.symbolY));
-                    g.DrawString("[-]", this.Font, Brushes.Black, new Point((int)m.symbolX + 188, (int)m.symbolY));
+                    g.DrawString("[O] [B] [R]" + m.ToString(), this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY));
+                    g.DrawString("[-]", this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X + 188 : m.symbolX + 188, mouseMapped == i ? _mouse.Y : m.symbolY));
 
                     int i1 = 0;
                     foreach (var f in m.functions)
@@ -95,10 +96,31 @@ namespace lwsc_admin
                         if (f.relaisBitmask != 0)
                         {
                             i1++;
-                            g.DrawString("[X] " + f.name, this.Font, Brushes.Black, new Point((int)m.symbolX, (int)m.symbolY + 16 * i1));
+                            g.DrawString("[X] " + f.name, this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y + 16 * i1 : m.symbolY + 16 * i1));
                         }
                     }
                 }
+            }
+        }
+
+        PointF _mouse = new PointF();
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            if (mouseMapped != -1)
+                Invalidate();
+            _mouse = new PointF(e.X, e.Y);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (mouseMapped != -1)
+            {
+                Form1.machines[mouseMapped].symbolX = (uint)e.Location.X;
+                Form1.machines[mouseMapped].symbolY = (uint)e.Location.Y;
+                LocationUpdate(mouseMapped);
+                mouseMapped = -1;
+                Invalidate();
+                return;
             }
         }
 
@@ -122,7 +144,6 @@ namespace lwsc_admin
                         if (e.Location.X > m.symbolX && e.Location.X < m.symbolX + 16 && e.Location.Y > m.symbolY && e.Location.Y < m.symbolY + 16)
                         {
                             mouseMapped = i;
-                            Invalidate();
                             return;
                         }
                         if (e.Location.X > m.symbolX + 18 && e.Location.X < m.symbolX + 16 + 18 && e.Location.Y > m.symbolY && e.Location.Y < m.symbolY + 16)
@@ -166,14 +187,6 @@ namespace lwsc_admin
                         }
                     }
                 }
-            } else
-            {
-                Form1.machines[mouseMapped].symbolX = (uint)e.Location.X;
-                Form1.machines[mouseMapped].symbolY = (uint)e.Location.Y;
-                LocationUpdate(mouseMapped);
-                mouseMapped = -1;
-                Invalidate();
-                return;
             }
 
             mouseMapped = -1;

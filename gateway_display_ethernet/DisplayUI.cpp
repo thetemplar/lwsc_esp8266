@@ -1,5 +1,3 @@
-/* This software is licensed under the MIT License: https://github.com/spacehuhntech/esp8266_deauther */
-
 #include <WiFiClient.h>
 #include <WiFiServer.h>
 #include <ESP8266WebServer.h>
@@ -408,8 +406,12 @@ void DisplayUI::drawLiveApp()
 
 extern String network_ip;
 void DisplayUI::drawScreenSaver() {
-  drawString(0, " - LWSC ETH/WIFI BRIDGE - ");
-  drawString(1, "");
+#ifdef ETH_ENABLE
+  drawString(0, " -  LWSC ETH BRIDGE  - ");
+#else
+  drawString(0, " -  LWSC WIFI BRIDGE  - ");
+#endif
+  drawString(1, "Heap " + String(ESP.getFreeHeap()/1024) + "k, Uptime " + String(millis()/60000) + " min");
   drawString(2, "Ethernet IP Address:");
   drawString(3, network_ip);
   drawString(4, "Last Command: ");

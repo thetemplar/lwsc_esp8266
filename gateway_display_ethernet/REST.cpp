@@ -35,13 +35,15 @@ uint32_t ackId;
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
         server.send(200, F("text/html"),
-            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap());
+            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap() + F("<br><a href='\web'>Web Fernbedienung</a>"));
     });
+    server.on(F("/web"), HTTP_GET, web_interface);
     server.on(F("/host"), HTTP_GET, rest_get_host);
     server.on(F("/save_config"), HTTP_POST, rest_post_save_config);
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
     server.on(F("/machine"), HTTP_POST, rest_post_machine);
+    server.on(F("/machine"), HTTP_DELETE, rest_delete_machine);
     server.on(F("/machine_rssi"), HTTP_GET, rest_get_machine_rssi);
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
@@ -63,24 +65,57 @@ void restServerRouting() {
     server.on(F("/bt_home"), HTTP_GET, rest_bt_home); 
 #endif
 }
+void setCrossOrigin(){
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.sendHeader(F("Access-Control-Max-Age"), F("600"));
+    server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET"));
+    server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
+};
 
+void web_interface() {
+  setCrossOrigin();
+  String head = F("<!DOCTYPE html> <html> <head> <title>LWSC</title>  <script> function clearAll() { document.getElementById('lastFire').innerHTML = ''; } function fire(j, mid, fid) { if (j) { var last = document.getElementById(j); var copyOfLast = last.cloneNode(true); copyOfLast.setAttribute( 'onClick', 'fire(null, ' + mid + ', ' + fid + ')' ); document.getElementById('lastFire').appendChild(copyOfLast); } const request = new XMLHttpRequest(); const url = '/fire?id='+mid+'&f_id='+fid; request.open('GET', url); request.send();}</script> <style type='text/css'> html, body { overflow-x: hidden; } body { position: relative; } .myButton { box-shadow:inset 0px 10px 40px 10px #91b8b3; background-color:#768d87; border-radius:20px; border:6px solid #566963; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:5em; font-weight:bold; padding:7px 50px; text-decoration:none; width: 80%; text-align:center; margin: 15px; } .myButton:hover { background-color:#6c7c7c; } .myButton:active { position:relative; top:1px; } </style> </head> <body><div id=\"lastFire\" style='width:100%;'></div><div style='width:100%'><a class=\"myButton\" style='background-color: #211cb9; border: 6px solid #1d1b66;' onclick=\"clearAll()\">Clear</a><br>");
+  String message = "";
+  std::vector<MachineData>::iterator it;
+  int j = 0;
+  for (it = machines.begin(); it != machines.end(); it++)
+  {
+    if (it->Disabled == 1)
+      continue;
+      
+    for (int i = 0; i < 5; i++)
+    {
+      if(it->Functions[i].RelaisBitmask > 0x00)
+      { 
+        message += String("<a id=\"machine_") + String(j) + "\" class=\"myButton\" onclick=\"fire('machine_" + String(j) + "', " + String(it->Id) + ", " + String(i) + String(")\">") + String(it->Functions[i].Name) + String("</a><br>");
+        j++;
+      }
+    }
+  }  
+  message += "</div></body></html>";
+  server.send(200, "text/html", head + message);
+}
 
 void rest_get_host() {
+  setCrossOrigin();
   server.send(200, "text/json", "{\"id\": \"0x00" + String(ESP.getChipId(), HEX) + "\"}");
 }
 
-void rest_post_save_config() {      
+void rest_post_save_config() {     
+  setCrossOrigin();
   WriteConfig();
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }
 
 void rest_get_machine_count()
 {
-    server.send(200, "text/json", "{\"count\": \"" + String(machines.size()) + "\"}");
+  setCrossOrigin();
+  server.send(200, "text/json", "{\"count\": \"" + String(machines.size()) + "\"}");
 }
 
 void rest_get_machine()
 {  
+  setCrossOrigin();
   if (server.arg("id") == "" && server.arg("it") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -89,7 +124,7 @@ void rest_get_machine()
   int i = 0;
   if(server.arg("it") == "")
   {
-    uint32_t id = server.arg("id").toInt();
+    uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
     if(machinesIndexCache.count(id) == 0)
     {
       server.send(404, "text/json", "{\"result\": \"not found\"}");
@@ -142,17 +177,31 @@ void rest_get_machine()
 }
 
 void rest_post_machine() {
+  setCrossOrigin();
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  
   String s = "changed";
   MachineData* md;
   if(machinesIndexCache.count(id) == 0)
   {
     s = "added";
-    md = new MachineData;    
+    md = new MachineData;
+    memset(&md->Name, 0x00, 38);
+    memset(&md->ShortName, 0x00, 9);
+    for(int i = 0; i < 5; i++)
+    {
+      memset(&md->Functions[i].Name, 0x00, 38);
+      md->Functions[i].Duration = 0;
+      md->Functions[i].RelaisBitmask = 0;
+      md->Functions[i].SymbolX = 0;
+      md->Functions[i].SymbolY = 0;
+      md->Functions[i].Rotation = 0;
+    }
+    md->Id = id;
     machines.push_back(*md);  
     machinesIndexCache[id] = machines.size() - 1;
     Serial.println("New Machine: 0x00" + String(id, HEX));
@@ -162,7 +211,7 @@ void rest_post_machine() {
 
   if(server.arg("name") != "")
   {
-    for(int i = 0; i < 38; i++)
+    for(int i = 0; i < 37; i++)
     {
       if(i < server.arg("name").length())
         md->Name[i] = server.arg("name")[i];
@@ -173,7 +222,7 @@ void rest_post_machine() {
     
   if(server.arg("shortName") != "")
   {
-    for(int i = 0; i < 9; i++)
+    for(int i = 0; i < 8; i++)
     {
       if(i < server.arg("shortName").length())
         md->ShortName[i] = server.arg("shortName")[i];
@@ -192,12 +241,38 @@ void rest_post_machine() {
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\"}");
 }
 
-void rest_get_machine_rssi() {
+void rest_delete_machine() {
+  setCrossOrigin();
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  
+  std::vector<MachineData>::iterator it;
+  int i = 0;
+  for (it = machines.begin(); it != machines.end(); it++)
+  {
+    if(it->Id == id)
+    {
+      machines.erase(it);
+      machinesIndexCache.erase(id);
+      server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"delete\"}");
+      return;
+    }
+    i++;
+  }
+  
+  server.send(200, "text/json", "{\"result\": \"fail\"}");
+}
+
+void rest_get_machine_rssi() {
+  setCrossOrigin();
+  if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   if(machinesIndexCache.count(id) == 0)
   {
     server.send(404, "text/json", "{\"result\": \"not existing\"}");
@@ -223,12 +298,13 @@ void rest_get_machine_rssi() {
 }
 
 void rest_post_function() {
+  setCrossOrigin();
   if (server.arg("id") == "" || server.arg("f_id") == "" || server.arg("name") == "" || server.arg("duration") == "" || server.arg("relaisBitmask") == "" || server.arg("symbolX") == "" || server.arg("symbolY") == "" || server.arg("rotation") == ""){
     server.send(200, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
-  uint32_t f_id = server.arg("f_id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  uint32_t f_id = strtoul(server.arg("f_id").c_str(), NULL, 10);
   if(machinesIndexCache.count(id) == 0 || f_id >= 5){
     server.send(404, "text/json", "{\"result\": \"not found\"}");
     return;
@@ -244,7 +320,7 @@ void rest_post_function() {
     s = "removed";
   }
     
-  for(int i = 0; i < 38; i++)
+  for(int i = 0; i < 37; i++)
   {
     if(i < server.arg("name").length())
       md->Functions[f_id].Name[i] = server.arg("name")[i];
@@ -258,17 +334,18 @@ void rest_post_function() {
   md->Functions[f_id].SymbolY = server.arg("symbolY").toInt();
   md->Functions[f_id].Rotation = server.arg("rotation").toInt();
   
-  server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\"");
+  server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\", \"id\": \"" + String(id) + "\", \"f_id\": \"" + String(f_id) + "\"}");
 }
 
 
 void rest_post_fire() {
+  setCrossOrigin();
   if (server.arg("id") == "" || server.arg("f_id") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
-  uint32_t f_id = server.arg("f_id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  uint32_t f_id = strtoul(server.arg("f_id").c_str(), NULL, 10);
   if(machinesIndexCache.count(id) == 0 || f_id >= 5 || machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask == 0x00){
     server.send(404, "text/json", "{\"result\": \"not found\"}");
     return;
@@ -300,11 +377,12 @@ void rest_post_fire() {
 }
 
 void rest_post_blink() {
+  setCrossOrigin();
    if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   if(machinesIndexCache.count(id) == 0 ){
     server.send(404, "text/json", "{\"result\": \"not found\"}");
     return;
@@ -324,12 +402,13 @@ void rest_post_blink() {
 }
 
 void rest_post_change_id() {
+  setCrossOrigin();
   if (server.arg("id") == "" || server.arg("new_id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
-  uint32_t new_id = server.arg("new_id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  uint32_t new_id = strtoul(server.arg("new_id").c_str(), NULL, 10);
   if(machinesIndexCache.count(id) == 0)
   {
     server.send(404, "text/json", "{\"result\": \"not existing\"}");
@@ -348,6 +427,7 @@ void rest_post_change_id() {
 }
 
 void rest_get_file() {
+  setCrossOrigin();
   if (server.arg("filename") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -358,6 +438,7 @@ void rest_get_file() {
 }
 
 void rest_upload_handler(){ // upload a new file to the SPIFFS  
+  setCrossOrigin();
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START)
   {
@@ -388,13 +469,13 @@ void rest_upload_handler(){ // upload a new file to the SPIFFS
   }
 }
 
-void rest_post_query_rssi()
-{  
+void rest_post_query_rssi() {  
+  setCrossOrigin();  
 #ifdef ETH_ENABLE
   if (server.arg("id") == ""){
     reqRssi(0xFFFFFFFF);
   } else {
-    uint32_t id = server.arg("id").toInt();
+    uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
     if(machinesIndexCache.count(id) == 0)
     {
       server.send(404, "text/json", "{\"result\": \"not found\"}");
@@ -413,6 +494,7 @@ void rest_post_query_rssi()
 }
 
 void rest_get_all_functions() {
+  setCrossOrigin();
   String message = "";
   DynamicJsonDocument doc(8192);
   std::vector<MachineData>::iterator it;
@@ -437,14 +519,14 @@ void rest_get_all_functions() {
   server.send(200, "text/json", message);
 }
 
-void rest_post_set_relaiscounter()
-{
+void rest_post_set_relaiscounter() {
+  setCrossOrigin();
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
 
-  uint32_t id = server.arg("id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   if(machinesIndexCache.count(id) == 0)
   {
     server.send(404, "text/json", "{\"result\": \"not found\"}");
@@ -467,13 +549,16 @@ void rest_post_set_relaiscounter()
 }
 
 void rest_post_reboot() {
+  setCrossOrigin();
    if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  uint32_t id = server.arg("id").toInt();
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   if(id == 0)
   {
+    server.send(200, "text/json", "{\"result\": \"success\"}");
+    delay(10);
     ESP.restart();
     return;
   }
@@ -498,18 +583,22 @@ void rest_post_reboot() {
 
 #ifdef ETH_ENABLE
 void rest_bt_up() {
+  setCrossOrigin();
   wrap_bt_up();
   server.send(200, "");
 }
 void rest_bt_down() {
+  setCrossOrigin();
   wrap_bt_down();
   server.send(200, "");
 }
 void rest_bt_click() {
+  setCrossOrigin();
   wrap_bt_click();
   server.send(200, "");
 }
 void rest_bt_home() {
+  setCrossOrigin();
   wrap_bt_home();
   server.send(200, "");
 }

@@ -33,11 +33,39 @@ namespace lwsc_admin
             this.tvMachines = new System.Windows.Forms.TreeView();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.pMachine = new System.Windows.Forms.Panel();
+            this.btFSave5 = new System.Windows.Forms.Button();
+            this.cbFRelais2_5 = new System.Windows.Forms.CheckBox();
+            this.cbFRelais1_5 = new System.Windows.Forms.CheckBox();
+            this.tbFDuration5 = new System.Windows.Forms.TextBox();
+            this.tbFName5 = new System.Windows.Forms.TextBox();
+            this.btFSave4 = new System.Windows.Forms.Button();
+            this.cbFRelais2_4 = new System.Windows.Forms.CheckBox();
+            this.cbFRelais1_4 = new System.Windows.Forms.CheckBox();
+            this.tbFDuration4 = new System.Windows.Forms.TextBox();
+            this.tbFName4 = new System.Windows.Forms.TextBox();
+            this.btFSave3 = new System.Windows.Forms.Button();
+            this.cbFRelais2_3 = new System.Windows.Forms.CheckBox();
+            this.cbFRelais1_3 = new System.Windows.Forms.CheckBox();
+            this.tbFDuration3 = new System.Windows.Forms.TextBox();
+            this.tbFName3 = new System.Windows.Forms.TextBox();
+            this.btFSave2 = new System.Windows.Forms.Button();
+            this.cbFRelais2_2 = new System.Windows.Forms.CheckBox();
+            this.cbFRelais1_2 = new System.Windows.Forms.CheckBox();
+            this.tbFDuration2 = new System.Windows.Forms.TextBox();
+            this.tbFName2 = new System.Windows.Forms.TextBox();
+            this.btFSave1 = new System.Windows.Forms.Button();
+            this.btDelete = new System.Windows.Forms.Button();
+            this.cbFRelais2_1 = new System.Windows.Forms.CheckBox();
             this.btResetCounterMachine = new System.Windows.Forms.Button();
+            this.cbFRelais1_1 = new System.Windows.Forms.CheckBox();
             this.tbMNewId = new System.Windows.Forms.TextBox();
+            this.tbFDuration1 = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.btMReassign = new System.Windows.Forms.Button();
+            this.tbFName1 = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.btMSave = new System.Windows.Forms.Button();
             this.lbMName = new System.Windows.Forms.Label();
             this.cbMDisabled = new System.Windows.Forms.CheckBox();
@@ -45,17 +73,9 @@ namespace lwsc_admin
             this.label2 = new System.Windows.Forms.Label();
             this.tbMName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.pFunction = new System.Windows.Forms.Panel();
-            this.btFSave = new System.Windows.Forms.Button();
-            this.cbFRelais2 = new System.Windows.Forms.CheckBox();
-            this.cbFRelais1 = new System.Windows.Forms.CheckBox();
-            this.tbFDuration = new System.Windows.Forms.TextBox();
-            this.lbFName = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.tbFName = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btDebug = new System.Windows.Forms.Button();
             this.pnRSSIButtons = new System.Windows.Forms.Panel();
             this.btSave = new System.Windows.Forms.Button();
             this.btReboot = new System.Windows.Forms.Button();
@@ -76,6 +96,7 @@ namespace lwsc_admin
             this.label7 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.label13 = new System.Windows.Forms.Label();
             this.dgvFunctions = new System.Windows.Forms.DataGridView();
             this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -98,14 +119,13 @@ namespace lwsc_admin
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.btRefresh = new System.Windows.Forms.Button();
             this.lwscMap1 = new lwsc_admin.LWSCMap();
-            this.label13 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
             this.pMachine.SuspendLayout();
-            this.pFunction.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.pnRSSIButtons.SuspendLayout();
@@ -123,7 +143,7 @@ namespace lwsc_admin
             this.tvMachines.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvMachines.Location = new System.Drawing.Point(0, 0);
             this.tvMachines.Name = "tvMachines";
-            this.tvMachines.Size = new System.Drawing.Size(1494, 508);
+            this.tvMachines.Size = new System.Drawing.Size(1787, 693);
             this.tvMachines.TabIndex = 0;
             this.tvMachines.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvMachines_AfterSelect);
             // 
@@ -142,18 +162,45 @@ namespace lwsc_admin
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.pMachine);
-            this.splitContainer2.Panel2.Controls.Add(this.pFunction);
-            this.splitContainer2.Size = new System.Drawing.Size(1494, 717);
-            this.splitContainer2.SplitterDistance = 508;
+            this.splitContainer2.Size = new System.Drawing.Size(1787, 902);
+            this.splitContainer2.SplitterDistance = 693;
             this.splitContainer2.TabIndex = 1;
             // 
             // pMachine
             // 
+            this.pMachine.Controls.Add(this.btFSave5);
+            this.pMachine.Controls.Add(this.cbFRelais2_5);
+            this.pMachine.Controls.Add(this.cbFRelais1_5);
+            this.pMachine.Controls.Add(this.tbFDuration5);
+            this.pMachine.Controls.Add(this.tbFName5);
+            this.pMachine.Controls.Add(this.btFSave4);
+            this.pMachine.Controls.Add(this.cbFRelais2_4);
+            this.pMachine.Controls.Add(this.cbFRelais1_4);
+            this.pMachine.Controls.Add(this.tbFDuration4);
+            this.pMachine.Controls.Add(this.tbFName4);
+            this.pMachine.Controls.Add(this.btFSave3);
+            this.pMachine.Controls.Add(this.cbFRelais2_3);
+            this.pMachine.Controls.Add(this.cbFRelais1_3);
+            this.pMachine.Controls.Add(this.tbFDuration3);
+            this.pMachine.Controls.Add(this.tbFName3);
+            this.pMachine.Controls.Add(this.btFSave2);
+            this.pMachine.Controls.Add(this.cbFRelais2_2);
+            this.pMachine.Controls.Add(this.cbFRelais1_2);
+            this.pMachine.Controls.Add(this.tbFDuration2);
+            this.pMachine.Controls.Add(this.tbFName2);
+            this.pMachine.Controls.Add(this.btFSave1);
+            this.pMachine.Controls.Add(this.btDelete);
+            this.pMachine.Controls.Add(this.cbFRelais2_1);
             this.pMachine.Controls.Add(this.btResetCounterMachine);
+            this.pMachine.Controls.Add(this.cbFRelais1_1);
             this.pMachine.Controls.Add(this.tbMNewId);
+            this.pMachine.Controls.Add(this.tbFDuration1);
             this.pMachine.Controls.Add(this.label6);
+            this.pMachine.Controls.Add(this.label3);
             this.pMachine.Controls.Add(this.btMReassign);
+            this.pMachine.Controls.Add(this.tbFName1);
             this.pMachine.Controls.Add(this.label4);
+            this.pMachine.Controls.Add(this.label5);
             this.pMachine.Controls.Add(this.btMSave);
             this.pMachine.Controls.Add(this.lbMName);
             this.pMachine.Controls.Add(this.cbMDisabled);
@@ -164,60 +211,313 @@ namespace lwsc_admin
             this.pMachine.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pMachine.Location = new System.Drawing.Point(0, 0);
             this.pMachine.Name = "pMachine";
-            this.pMachine.Size = new System.Drawing.Size(1494, 205);
+            this.pMachine.Size = new System.Drawing.Size(1787, 205);
             this.pMachine.TabIndex = 3;
-            this.pMachine.Visible = false;
+            // 
+            // btFSave5
+            // 
+            this.btFSave5.Location = new System.Drawing.Point(1046, 151);
+            this.btFSave5.Name = "btFSave5";
+            this.btFSave5.Size = new System.Drawing.Size(85, 26);
+            this.btFSave5.TabIndex = 39;
+            this.btFSave5.Text = "Save";
+            this.btFSave5.UseVisualStyleBackColor = true;
+            this.btFSave5.Click += new System.EventHandler(this.btFSave5_Click);
+            // 
+            // cbFRelais2_5
+            // 
+            this.cbFRelais2_5.AutoSize = true;
+            this.cbFRelais2_5.Location = new System.Drawing.Point(1046, 124);
+            this.cbFRelais2_5.Name = "cbFRelais2_5";
+            this.cbFRelais2_5.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_5.TabIndex = 38;
+            this.cbFRelais2_5.Text = "Relais2";
+            this.cbFRelais2_5.UseVisualStyleBackColor = true;
+            // 
+            // cbFRelais1_5
+            // 
+            this.cbFRelais1_5.AutoSize = true;
+            this.cbFRelais1_5.Location = new System.Drawing.Point(1046, 97);
+            this.cbFRelais1_5.Name = "cbFRelais1_5";
+            this.cbFRelais1_5.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_5.TabIndex = 36;
+            this.cbFRelais1_5.Text = "Relais 1";
+            this.cbFRelais1_5.UseVisualStyleBackColor = true;
+            // 
+            // tbFDuration5
+            // 
+            this.tbFDuration5.Location = new System.Drawing.Point(1046, 68);
+            this.tbFDuration5.Name = "tbFDuration5";
+            this.tbFDuration5.Size = new System.Drawing.Size(100, 22);
+            this.tbFDuration5.TabIndex = 37;
+            // 
+            // tbFName5
+            // 
+            this.tbFName5.Location = new System.Drawing.Point(1046, 37);
+            this.tbFName5.MaxLength = 37;
+            this.tbFName5.Name = "tbFName5";
+            this.tbFName5.Size = new System.Drawing.Size(100, 22);
+            this.tbFName5.TabIndex = 35;
+            // 
+            // btFSave4
+            // 
+            this.btFSave4.Location = new System.Drawing.Point(926, 151);
+            this.btFSave4.Name = "btFSave4";
+            this.btFSave4.Size = new System.Drawing.Size(85, 26);
+            this.btFSave4.TabIndex = 34;
+            this.btFSave4.Text = "Save";
+            this.btFSave4.UseVisualStyleBackColor = true;
+            this.btFSave4.Click += new System.EventHandler(this.btFSave4_Click);
+            // 
+            // cbFRelais2_4
+            // 
+            this.cbFRelais2_4.AutoSize = true;
+            this.cbFRelais2_4.Location = new System.Drawing.Point(926, 124);
+            this.cbFRelais2_4.Name = "cbFRelais2_4";
+            this.cbFRelais2_4.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_4.TabIndex = 33;
+            this.cbFRelais2_4.Text = "Relais2";
+            this.cbFRelais2_4.UseVisualStyleBackColor = true;
+            // 
+            // cbFRelais1_4
+            // 
+            this.cbFRelais1_4.AutoSize = true;
+            this.cbFRelais1_4.Location = new System.Drawing.Point(926, 97);
+            this.cbFRelais1_4.Name = "cbFRelais1_4";
+            this.cbFRelais1_4.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_4.TabIndex = 31;
+            this.cbFRelais1_4.Text = "Relais 1";
+            this.cbFRelais1_4.UseVisualStyleBackColor = true;
+            // 
+            // tbFDuration4
+            // 
+            this.tbFDuration4.Location = new System.Drawing.Point(926, 68);
+            this.tbFDuration4.Name = "tbFDuration4";
+            this.tbFDuration4.Size = new System.Drawing.Size(100, 22);
+            this.tbFDuration4.TabIndex = 32;
+            // 
+            // tbFName4
+            // 
+            this.tbFName4.Location = new System.Drawing.Point(926, 37);
+            this.tbFName4.MaxLength = 37;
+            this.tbFName4.Name = "tbFName4";
+            this.tbFName4.Size = new System.Drawing.Size(100, 22);
+            this.tbFName4.TabIndex = 30;
+            // 
+            // btFSave3
+            // 
+            this.btFSave3.Location = new System.Drawing.Point(805, 151);
+            this.btFSave3.Name = "btFSave3";
+            this.btFSave3.Size = new System.Drawing.Size(85, 26);
+            this.btFSave3.TabIndex = 29;
+            this.btFSave3.Text = "Save";
+            this.btFSave3.UseVisualStyleBackColor = true;
+            this.btFSave3.Click += new System.EventHandler(this.btFSave3_Click);
+            // 
+            // cbFRelais2_3
+            // 
+            this.cbFRelais2_3.AutoSize = true;
+            this.cbFRelais2_3.Location = new System.Drawing.Point(805, 124);
+            this.cbFRelais2_3.Name = "cbFRelais2_3";
+            this.cbFRelais2_3.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_3.TabIndex = 28;
+            this.cbFRelais2_3.Text = "Relais2";
+            this.cbFRelais2_3.UseVisualStyleBackColor = true;
+            // 
+            // cbFRelais1_3
+            // 
+            this.cbFRelais1_3.AutoSize = true;
+            this.cbFRelais1_3.Location = new System.Drawing.Point(805, 97);
+            this.cbFRelais1_3.Name = "cbFRelais1_3";
+            this.cbFRelais1_3.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_3.TabIndex = 26;
+            this.cbFRelais1_3.Text = "Relais 1";
+            this.cbFRelais1_3.UseVisualStyleBackColor = true;
+            // 
+            // tbFDuration3
+            // 
+            this.tbFDuration3.Location = new System.Drawing.Point(805, 68);
+            this.tbFDuration3.Name = "tbFDuration3";
+            this.tbFDuration3.Size = new System.Drawing.Size(100, 22);
+            this.tbFDuration3.TabIndex = 27;
+            // 
+            // tbFName3
+            // 
+            this.tbFName3.Location = new System.Drawing.Point(805, 37);
+            this.tbFName3.MaxLength = 37;
+            this.tbFName3.Name = "tbFName3";
+            this.tbFName3.Size = new System.Drawing.Size(100, 22);
+            this.tbFName3.TabIndex = 25;
+            // 
+            // btFSave2
+            // 
+            this.btFSave2.Location = new System.Drawing.Point(682, 151);
+            this.btFSave2.Name = "btFSave2";
+            this.btFSave2.Size = new System.Drawing.Size(85, 26);
+            this.btFSave2.TabIndex = 24;
+            this.btFSave2.Text = "Save";
+            this.btFSave2.UseVisualStyleBackColor = true;
+            this.btFSave2.Click += new System.EventHandler(this.btFSave2_Click);
+            // 
+            // cbFRelais2_2
+            // 
+            this.cbFRelais2_2.AutoSize = true;
+            this.cbFRelais2_2.Location = new System.Drawing.Point(682, 124);
+            this.cbFRelais2_2.Name = "cbFRelais2_2";
+            this.cbFRelais2_2.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_2.TabIndex = 23;
+            this.cbFRelais2_2.Text = "Relais2";
+            this.cbFRelais2_2.UseVisualStyleBackColor = true;
+            // 
+            // cbFRelais1_2
+            // 
+            this.cbFRelais1_2.AutoSize = true;
+            this.cbFRelais1_2.Location = new System.Drawing.Point(682, 97);
+            this.cbFRelais1_2.Name = "cbFRelais1_2";
+            this.cbFRelais1_2.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_2.TabIndex = 20;
+            this.cbFRelais1_2.Text = "Relais 1";
+            this.cbFRelais1_2.UseVisualStyleBackColor = true;
+            // 
+            // tbFDuration2
+            // 
+            this.tbFDuration2.Location = new System.Drawing.Point(682, 68);
+            this.tbFDuration2.Name = "tbFDuration2";
+            this.tbFDuration2.Size = new System.Drawing.Size(100, 22);
+            this.tbFDuration2.TabIndex = 22;
+            // 
+            // tbFName2
+            // 
+            this.tbFName2.Location = new System.Drawing.Point(682, 37);
+            this.tbFName2.MaxLength = 37;
+            this.tbFName2.Name = "tbFName2";
+            this.tbFName2.Size = new System.Drawing.Size(100, 22);
+            this.tbFName2.TabIndex = 19;
+            // 
+            // btFSave1
+            // 
+            this.btFSave1.Location = new System.Drawing.Point(560, 151);
+            this.btFSave1.Name = "btFSave1";
+            this.btFSave1.Size = new System.Drawing.Size(85, 26);
+            this.btFSave1.TabIndex = 10;
+            this.btFSave1.Text = "Save";
+            this.btFSave1.UseVisualStyleBackColor = true;
+            this.btFSave1.Click += new System.EventHandler(this.btFSave1_Click);
+            // 
+            // btDelete
+            // 
+            this.btDelete.Location = new System.Drawing.Point(82, 152);
+            this.btDelete.Name = "btDelete";
+            this.btDelete.Size = new System.Drawing.Size(122, 26);
+            this.btDelete.TabIndex = 17;
+            this.btDelete.Text = "Delete Machine";
+            this.btDelete.UseVisualStyleBackColor = true;
+            this.btDelete.Click += new System.EventHandler(this.btDelete_Click);
+            // 
+            // cbFRelais2_1
+            // 
+            this.cbFRelais2_1.AutoSize = true;
+            this.cbFRelais2_1.Location = new System.Drawing.Point(560, 124);
+            this.cbFRelais2_1.Name = "cbFRelais2_1";
+            this.cbFRelais2_1.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_1.TabIndex = 9;
+            this.cbFRelais2_1.Text = "Relais2";
+            this.cbFRelais2_1.UseVisualStyleBackColor = true;
             // 
             // btResetCounterMachine
             // 
-            this.btResetCounterMachine.Location = new System.Drawing.Point(493, 39);
+            this.btResetCounterMachine.Location = new System.Drawing.Point(258, 152);
             this.btResetCounterMachine.Name = "btResetCounterMachine";
-            this.btResetCounterMachine.Size = new System.Drawing.Size(210, 26);
+            this.btResetCounterMachine.Size = new System.Drawing.Size(125, 26);
             this.btResetCounterMachine.TabIndex = 16;
             this.btResetCounterMachine.Text = "Reset Release Counter";
             this.btResetCounterMachine.UseVisualStyleBackColor = true;
             this.btResetCounterMachine.Click += new System.EventHandler(this.btResetCounterMachine_Click);
             // 
+            // cbFRelais1_1
+            // 
+            this.cbFRelais1_1.AutoSize = true;
+            this.cbFRelais1_1.Location = new System.Drawing.Point(560, 97);
+            this.cbFRelais1_1.Name = "cbFRelais1_1";
+            this.cbFRelais1_1.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_1.TabIndex = 7;
+            this.cbFRelais1_1.Text = "Relais 1";
+            this.cbFRelais1_1.UseVisualStyleBackColor = true;
+            // 
             // tbMNewId
             // 
-            this.tbMNewId.Location = new System.Drawing.Point(292, 62);
+            this.tbMNewId.Location = new System.Drawing.Point(283, 67);
+            this.tbMNewId.MaxLength = 8;
             this.tbMNewId.Name = "tbMNewId";
             this.tbMNewId.Size = new System.Drawing.Size(100, 22);
             this.tbMNewId.TabIndex = 13;
             // 
+            // tbFDuration1
+            // 
+            this.tbFDuration1.Location = new System.Drawing.Point(560, 68);
+            this.tbFDuration1.Name = "tbFDuration1";
+            this.tbFDuration1.Size = new System.Drawing.Size(100, 22);
+            this.tbFDuration1.TabIndex = 8;
+            // 
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(271, 65);
+            this.label6.Location = new System.Drawing.Point(255, 70);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(22, 17);
             this.label6.TabIndex = 15;
             this.label6.Text = "0x";
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(459, 71);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(94, 17);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "Duration (ms)";
+            // 
             // btMReassign
             // 
-            this.btMReassign.Location = new System.Drawing.Point(292, 90);
+            this.btMReassign.Location = new System.Drawing.Point(258, 95);
             this.btMReassign.Name = "btMReassign";
-            this.btMReassign.Size = new System.Drawing.Size(100, 26);
+            this.btMReassign.Size = new System.Drawing.Size(125, 26);
             this.btMReassign.TabIndex = 14;
             this.btMReassign.Text = "Reassign";
             this.btMReassign.UseVisualStyleBackColor = true;
             this.btMReassign.Click += new System.EventHandler(this.btMReassign_Click);
             // 
+            // tbFName1
+            // 
+            this.tbFName1.Location = new System.Drawing.Point(560, 37);
+            this.tbFName1.MaxLength = 37;
+            this.tbFName1.Name = "tbFName1";
+            this.tbFName1.Size = new System.Drawing.Size(100, 22);
+            this.tbFName1.TabIndex = 1;
+            // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(240, 42);
+            this.label4.Location = new System.Drawing.Point(255, 43);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(146, 17);
             this.label4.TabIndex = 12;
             this.label4.Text = "Reassign ID (Careful!)";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(508, 40);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(45, 17);
+            this.label5.TabIndex = 0;
+            this.label5.Text = "Name";
+            // 
             // btMSave
             // 
-            this.btMSave.Location = new System.Drawing.Point(103, 122);
+            this.btMSave.Location = new System.Drawing.Point(81, 121);
             this.btMSave.Name = "btMSave";
-            this.btMSave.Size = new System.Drawing.Size(85, 26);
+            this.btMSave.Size = new System.Drawing.Size(123, 26);
             this.btMSave.TabIndex = 11;
             this.btMSave.Text = "Save";
             this.btMSave.UseVisualStyleBackColor = true;
@@ -246,6 +546,7 @@ namespace lwsc_admin
             // tbMShortName
             // 
             this.tbMShortName.Location = new System.Drawing.Point(104, 67);
+            this.tbMShortName.MaxLength = 8;
             this.tbMShortName.Name = "tbMShortName";
             this.tbMShortName.Size = new System.Drawing.Size(100, 22);
             this.tbMShortName.TabIndex = 3;
@@ -262,6 +563,7 @@ namespace lwsc_admin
             // tbMName
             // 
             this.tbMName.Location = new System.Drawing.Point(104, 39);
+            this.tbMName.MaxLength = 37;
             this.tbMName.Name = "tbMName";
             this.tbMName.Size = new System.Drawing.Size(100, 22);
             this.tbMName.TabIndex = 1;
@@ -275,95 +577,6 @@ namespace lwsc_admin
             this.label1.TabIndex = 0;
             this.label1.Text = "Name";
             // 
-            // pFunction
-            // 
-            this.pFunction.Controls.Add(this.btFSave);
-            this.pFunction.Controls.Add(this.cbFRelais2);
-            this.pFunction.Controls.Add(this.cbFRelais1);
-            this.pFunction.Controls.Add(this.tbFDuration);
-            this.pFunction.Controls.Add(this.lbFName);
-            this.pFunction.Controls.Add(this.label3);
-            this.pFunction.Controls.Add(this.tbFName);
-            this.pFunction.Controls.Add(this.label5);
-            this.pFunction.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pFunction.Location = new System.Drawing.Point(0, 0);
-            this.pFunction.Name = "pFunction";
-            this.pFunction.Size = new System.Drawing.Size(1494, 205);
-            this.pFunction.TabIndex = 7;
-            this.pFunction.Visible = false;
-            // 
-            // btFSave
-            // 
-            this.btFSave.Location = new System.Drawing.Point(104, 153);
-            this.btFSave.Name = "btFSave";
-            this.btFSave.Size = new System.Drawing.Size(85, 26);
-            this.btFSave.TabIndex = 10;
-            this.btFSave.Text = "Save";
-            this.btFSave.UseVisualStyleBackColor = true;
-            this.btFSave.Click += new System.EventHandler(this.btFSave_Click);
-            // 
-            // cbFRelais2
-            // 
-            this.cbFRelais2.AutoSize = true;
-            this.cbFRelais2.Location = new System.Drawing.Point(104, 126);
-            this.cbFRelais2.Name = "cbFRelais2";
-            this.cbFRelais2.Size = new System.Drawing.Size(77, 21);
-            this.cbFRelais2.TabIndex = 9;
-            this.cbFRelais2.Text = "Relais2";
-            this.cbFRelais2.UseVisualStyleBackColor = true;
-            // 
-            // cbFRelais1
-            // 
-            this.cbFRelais1.AutoSize = true;
-            this.cbFRelais1.Location = new System.Drawing.Point(104, 99);
-            this.cbFRelais1.Name = "cbFRelais1";
-            this.cbFRelais1.Size = new System.Drawing.Size(81, 21);
-            this.cbFRelais1.TabIndex = 7;
-            this.cbFRelais1.Text = "Relais 1";
-            this.cbFRelais1.UseVisualStyleBackColor = true;
-            // 
-            // tbFDuration
-            // 
-            this.tbFDuration.Location = new System.Drawing.Point(104, 70);
-            this.tbFDuration.Name = "tbFDuration";
-            this.tbFDuration.Size = new System.Drawing.Size(100, 22);
-            this.tbFDuration.TabIndex = 8;
-            // 
-            // lbFName
-            // 
-            this.lbFName.AutoSize = true;
-            this.lbFName.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbFName.Location = new System.Drawing.Point(19, 17);
-            this.lbFName.Name = "lbFName";
-            this.lbFName.Size = new System.Drawing.Size(52, 18);
-            this.lbFName.TabIndex = 6;
-            this.lbFName.Text = "Name";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(3, 73);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(94, 17);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "Duration (ms)";
-            // 
-            // tbFName
-            // 
-            this.tbFName.Location = new System.Drawing.Point(104, 39);
-            this.tbFName.Name = "tbFName";
-            this.tbFName.Size = new System.Drawing.Size(100, 22);
-            this.tbFName.TabIndex = 1;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(52, 42);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(45, 17);
-            this.label5.TabIndex = 0;
-            this.label5.Text = "Name";
-            // 
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage4);
@@ -375,11 +588,13 @@ namespace lwsc_admin
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1508, 752);
+            this.tabControl1.Size = new System.Drawing.Size(1801, 937);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.btRefresh);
+            this.tabPage4.Controls.Add(this.btDebug);
             this.tabPage4.Controls.Add(this.pnRSSIButtons);
             this.tabPage4.Controls.Add(this.btEspHome);
             this.tabPage4.Controls.Add(this.btEspClick);
@@ -390,10 +605,20 @@ namespace lwsc_admin
             this.tabPage4.Controls.Add(this.lwscMap1);
             this.tabPage4.Location = new System.Drawing.Point(4, 25);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage4.Size = new System.Drawing.Size(1793, 908);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // btDebug
+            // 
+            this.btDebug.Location = new System.Drawing.Point(1357, 63);
+            this.btDebug.Name = "btDebug";
+            this.btDebug.Size = new System.Drawing.Size(105, 38);
+            this.btDebug.TabIndex = 19;
+            this.btDebug.Text = "loadJson";
+            this.btDebug.UseVisualStyleBackColor = true;
+            this.btDebug.Click += new System.EventHandler(this.btDebug_Click);
             // 
             // pnRSSIButtons
             // 
@@ -582,7 +807,7 @@ namespace lwsc_admin
             this.tabPage1.Location = new System.Drawing.Point(4, 25);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage1.Size = new System.Drawing.Size(1793, 908);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Machines";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -594,10 +819,21 @@ namespace lwsc_admin
             this.tabPage2.Location = new System.Drawing.Point(4, 25);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage2.Size = new System.Drawing.Size(1793, 908);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Functions";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.label13.Location = new System.Drawing.Point(2, -2);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(438, 17);
+            this.label13.TabIndex = 1;
+            this.label13.Text = "This is read-only. Doubleclick will \"Fire\" the Machine/Relais";
             // 
             // dgvFunctions
             // 
@@ -615,7 +851,7 @@ namespace lwsc_admin
             this.dgvFunctions.Name = "dgvFunctions";
             this.dgvFunctions.RowHeadersWidth = 51;
             this.dgvFunctions.RowTemplate.Height = 24;
-            this.dgvFunctions.Size = new System.Drawing.Size(1494, 717);
+            this.dgvFunctions.Size = new System.Drawing.Size(1787, 902);
             this.dgvFunctions.TabIndex = 0;
             this.dgvFunctions.DoubleClick += new System.EventHandler(this.dgvFunctions_DoubleClick);
             // 
@@ -687,7 +923,7 @@ namespace lwsc_admin
             this.tabPage3.Controls.Add(this.lbMapSelect);
             this.tabPage3.Location = new System.Drawing.Point(4, 25);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage3.Size = new System.Drawing.Size(1793, 908);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Mappings";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -784,7 +1020,7 @@ namespace lwsc_admin
             this.tabPage5.Controls.Add(this.rtbLog);
             this.tabPage5.Location = new System.Drawing.Point(4, 25);
             this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Size = new System.Drawing.Size(1500, 723);
+            this.tabPage5.Size = new System.Drawing.Size(1793, 908);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "Log";
             this.tabPage5.UseVisualStyleBackColor = true;
@@ -795,7 +1031,7 @@ namespace lwsc_admin
             this.rtbLog.Location = new System.Drawing.Point(0, 0);
             this.rtbLog.Name = "rtbLog";
             this.rtbLog.ReadOnly = true;
-            this.rtbLog.Size = new System.Drawing.Size(1500, 723);
+            this.rtbLog.Size = new System.Drawing.Size(1793, 908);
             this.rtbLog.TabIndex = 0;
             this.rtbLog.Text = "";
             // 
@@ -804,9 +1040,9 @@ namespace lwsc_admin
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 752);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 937);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1508, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1801, 22);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -815,30 +1051,29 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
+            // btRefresh
+            // 
+            this.btRefresh.Location = new System.Drawing.Point(357, 12);
+            this.btRefresh.Name = "btRefresh";
+            this.btRefresh.Size = new System.Drawing.Size(28, 25);
+            this.btRefresh.TabIndex = 20;
+            this.btRefresh.Text = "R";
+            this.btRefresh.UseVisualStyleBackColor = true;
+            this.btRefresh.Click += new System.EventHandler(this.btRefresh_Click);
+            // 
             // lwscMap1
             // 
             this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lwscMap1.Location = new System.Drawing.Point(0, 0);
             this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(1500, 723);
+            this.lwscMap1.Size = new System.Drawing.Size(1793, 908);
             this.lwscMap1.TabIndex = 2;
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.ForeColor = System.Drawing.Color.DodgerBlue;
-            this.label13.Location = new System.Drawing.Point(2, -2);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(438, 17);
-            this.label13.TabIndex = 1;
-            this.label13.Text = "This is read-only. Doubleclick will \"Fire\" the Machine/Relais";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1508, 774);
+            this.ClientSize = new System.Drawing.Size(1801, 959);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.statusStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -850,8 +1085,6 @@ namespace lwsc_admin
             this.splitContainer2.ResumeLayout(false);
             this.pMachine.ResumeLayout(false);
             this.pMachine.PerformLayout();
-            this.pFunction.ResumeLayout(false);
-            this.pFunction.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
@@ -886,15 +1119,13 @@ namespace lwsc_admin
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox tbMName;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Panel pFunction;
-        private System.Windows.Forms.Label lbFName;
-        private System.Windows.Forms.TextBox tbFName;
+        private System.Windows.Forms.TextBox tbFName1;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox tbFDuration;
+        private System.Windows.Forms.TextBox tbFDuration1;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.CheckBox cbFRelais2;
-        private System.Windows.Forms.CheckBox cbFRelais1;
-        private System.Windows.Forms.Button btFSave;
+        private System.Windows.Forms.CheckBox cbFRelais2_1;
+        private System.Windows.Forms.CheckBox cbFRelais1_1;
+        private System.Windows.Forms.Button btFSave1;
         private System.Windows.Forms.Button btMSave;
         private System.Windows.Forms.Button btSave;
         private System.Windows.Forms.TextBox tbMNewId;
@@ -944,6 +1175,29 @@ namespace lwsc_admin
         private System.Windows.Forms.RichTextBox rtbLog;
         private System.Windows.Forms.Button btResetCounterMachine;
         private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Button btDebug;
+        private System.Windows.Forms.Button btDelete;
+        private System.Windows.Forms.Button btFSave5;
+        private System.Windows.Forms.CheckBox cbFRelais2_5;
+        private System.Windows.Forms.CheckBox cbFRelais1_5;
+        private System.Windows.Forms.TextBox tbFDuration5;
+        private System.Windows.Forms.TextBox tbFName5;
+        private System.Windows.Forms.Button btFSave4;
+        private System.Windows.Forms.CheckBox cbFRelais2_4;
+        private System.Windows.Forms.CheckBox cbFRelais1_4;
+        private System.Windows.Forms.TextBox tbFDuration4;
+        private System.Windows.Forms.TextBox tbFName4;
+        private System.Windows.Forms.Button btFSave3;
+        private System.Windows.Forms.CheckBox cbFRelais2_3;
+        private System.Windows.Forms.CheckBox cbFRelais1_3;
+        private System.Windows.Forms.TextBox tbFDuration3;
+        private System.Windows.Forms.TextBox tbFName3;
+        private System.Windows.Forms.Button btFSave2;
+        private System.Windows.Forms.CheckBox cbFRelais2_2;
+        private System.Windows.Forms.CheckBox cbFRelais1_2;
+        private System.Windows.Forms.TextBox tbFDuration2;
+        private System.Windows.Forms.TextBox tbFName2;
+        private System.Windows.Forms.Button btRefresh;
     }
 }
 

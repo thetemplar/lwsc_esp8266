@@ -3,10 +3,12 @@
 #include "A_config.h"
 
 void restServerRouting();
+void web_interface();
 void rest_get_host();
 void rest_get_machine_count();
 void rest_get_machine();
 void rest_post_machine();
+void rest_delete_machine();
 void rest_get_machine_rssi();
 void rest_post_fire();
 

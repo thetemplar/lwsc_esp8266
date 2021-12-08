@@ -100,11 +100,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\lwsc.PNG" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="lwsc.jpg" />
     <None Include="Resources\lwsc.jpg" />
+    <None Include="Resources\lwsc.PNG" />
     <Content Include="unnamed.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
