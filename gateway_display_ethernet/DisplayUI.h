@@ -1,6 +1,7 @@
 #pragma once
 
 #include "A_config.h"
+#include "lwsc_wifi.h"
 #include "defines.h"
 
 #include <Wire.h>
@@ -70,9 +71,7 @@ class DisplayUI {
         ~DisplayUI();
 
         void setup();
-#ifdef HIGHLIGHT_LED
         void setupLED();
-#endif // ifdef HIGHLIGHT_LED
 
         void update(bool force = false);
         

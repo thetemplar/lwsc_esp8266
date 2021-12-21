@@ -30,6 +30,7 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len);
 uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst, uint8_t type);
 
 uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask);
+void ping(uint32_t dest);
 void blink(uint32_t dest);
 void reboot(uint32_t dest);
 void reqRssi(uint32_t dest);
