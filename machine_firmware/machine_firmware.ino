@@ -409,7 +409,8 @@ void processData()
         Serial.println("releaseRelais_LegacyVersion");  
         releaseRelais_LegacyVersion(msg.data[0], msg.data[1]);
       }
-    } else if(msg.type == MSG_RequestRssi) {
+    } 
+    if(msg.type == MSG_RequestRssi) {
       Serial.printf("MSG_RequestRssi \r\n"); 
       digitalWrite(2, LOW);
       if(msg.dst == 0xffffffff)

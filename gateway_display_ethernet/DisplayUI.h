@@ -35,6 +35,7 @@ enum class DISPLAY_MODE { OFF,
                           REQ_RSSI,
                           LIST_RSSI,
                           LIST_CONNECTED,
+                          PING_DIRECT,
                           LIVE_APP };
 
 class DisplayUI {
@@ -107,6 +108,7 @@ class DisplayUI {
         void draw(bool force = false);
         void drawButtonTest();
         void drawMenu();
+        void drawPingDirect();
         void drawScreenSaver();
         void drawLiveApp();
         void drawLiveMachine();

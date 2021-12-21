@@ -106,6 +106,11 @@ void DisplayUI::setup() {
         addMenuNode(&mainMenu, "LIST CONNECTED APPS", [this]() {
           mode = DISPLAY_MODE::LIST_CONNECTED;
         });
+        addMenuNode(&mainMenu, "PING (DIRECT)", [this]() {
+          listSelIndex = 0;
+          listSelId = 0;
+          mode = DISPLAY_MODE::PING_DIRECT;
+        });
 
 #ifdef HIGHLIGHT_LED
         addMenuNode(&mainMenu, "LED", [this]() {     // LED
@@ -168,6 +173,7 @@ void DisplayUI::bt_click() {
           }
           break;
           
+      case DISPLAY_MODE::PING_DIRECT:
       case DISPLAY_MODE::LIST_RSSI:
         listSelLvl = listSelLvl == 0 ? 1 : 0;
         listSelIndex = 0;
@@ -178,7 +184,7 @@ void DisplayUI::bt_click() {
         setupAP();
         mode = DISPLAY_MODE::MENU;
         break;
-        
+
       case DISPLAY_MODE::SCREEN_SAVER:
       case DISPLAY_MODE::LIST_CONNECTED:
       case DISPLAY_MODE::LIVE_APP:
@@ -242,7 +248,7 @@ void DisplayUI::setupButtons() {
             if (currentMenu->list->get(currentMenu->selected).hold) {
                 currentMenu->list->get(currentMenu->selected).hold();
             }
-        } else if (mode == DISPLAY_MODE::LIST_RSSI) {
+        } else if (mode == DISPLAY_MODE::LIST_RSSI || mode == DISPLAY_MODE::PING_DIRECT) {
             mode = DISPLAY_MODE::MENU;
         }
     }, 800);
@@ -283,6 +289,9 @@ void DisplayUI::draw(bool force) {
                 drawString(2, "  ... then click");
                 break;
 
+            case DISPLAY_MODE::PING_DIRECT:
+                drawPingDirect();
+                break;
                 
             case DISPLAY_MODE::LIST_RSSI:
                 drawRSSIList();
@@ -298,6 +307,41 @@ String ipToString(IPAddress ip){
   for (int i=0; i<4; i++)
     s += i  ? "." + String(ip[i]) : String(ip[i]);
   return s;
+}
+
+void DisplayUI::drawPingDirect() {
+  if(listSelLvl == 0)
+  {
+    std::vector<MachineData>::iterator it;
+    int i = 0;
+    for (it = machines.begin(); it != machines.end(); it++)
+    {        
+      char ctmp[30] = { 0 };
+      char cInd = ' ';
+      if (listSelIndex == (i)) 
+      {
+        cInd = '>';
+        listSelId = it->Id;
+      }
+      if(showNames && it->ShortName[0] != '?')
+        sprintf(ctmp, "%c %8.8s Rssi: %-4d", cInd, it->ShortName, (int8_t)it->Rssi);
+      else
+        sprintf(ctmp, "%c %08X Rssi: %-4d", cInd, it->Id, (int8_t)it->Rssi);
+        
+      drawString(i-listSelIndex, String(ctmp));
+      
+      i++;
+    }
+  } 
+  else {
+    if(machinesIndexCache.count(listSelId) == 0)
+      return;
+      
+    ping(listSelId);
+    drawString(0, "Ping: 0x" + String(listSelId, HEX));
+    
+    drawString(2, "RSSI: " + machines[machinesIndexCache[listSelId]].Rssi);    
+  }
 }
 
 void DisplayUI::drawRSSIList() {

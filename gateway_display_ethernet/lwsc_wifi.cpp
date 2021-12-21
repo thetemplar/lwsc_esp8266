@@ -117,7 +117,8 @@ void processData()
     uint16_t thisAckSeq = (msg.data[0] << 8) | msg.data[1];      
     if (ackStart > 0 && millis() < ackStart + ackTimeout && ackSeq == thisAckSeq && ackId == msg.src)
     {
-      server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (millis() - ackStart) + "\"}");
+      uint32_t diff = millis() - ackStart;
+      server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\"}");
       ackStart = 0;
     }
   }
@@ -191,6 +192,16 @@ uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst,
   result[44] = type;
 
   return seqTmp;
+}
+
+
+void ping(uint32_t dest)
+{
+  uint8_t result[sizeof(beacon_raw) + 2];
+  createPacket(result, {}, 0, dest, MSG_Unknown);
+  result[43] = 0x00; //ttl = 0;
+  int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
+  Serial.printf("blink to %08x = %d\n", dest, res);
 }
 
 void reboot(uint32_t dest)
