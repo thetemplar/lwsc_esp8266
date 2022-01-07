@@ -37,7 +37,8 @@ enum class DISPLAY_MODE { OFF,
                           LIST_RSSI,
                           LIST_CONNECTED,
                           PING_DIRECT,
-                          LIVE_APP };
+                          LIVE_APP,
+                          ADC };
 
 class DisplayUI {
     public:

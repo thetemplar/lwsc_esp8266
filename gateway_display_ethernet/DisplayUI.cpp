@@ -111,6 +111,9 @@ void DisplayUI::setup() {
           listSelId = 0;
           mode = DISPLAY_MODE::PING_DIRECT;
         });
+        addMenuNode(&mainMenu, "ADC/Battery", [this]() {
+          mode = DISPLAY_MODE::ADC;
+        });
 
 #ifdef HIGHLIGHT_LED
         addMenuNode(&mainMenu, "LED", [this]() {     // LED
@@ -188,6 +191,7 @@ void DisplayUI::bt_click() {
       case DISPLAY_MODE::SCREEN_SAVER:
       case DISPLAY_MODE::LIST_CONNECTED:
       case DISPLAY_MODE::LIVE_APP:
+      case DISPLAY_MODE::ADC:
         mode = DISPLAY_MODE::MENU;
         break;
   }
@@ -295,6 +299,11 @@ void DisplayUI::draw(bool force) {
                 
             case DISPLAY_MODE::LIST_RSSI:
                 drawRSSIList();
+                break;
+                
+            case DISPLAY_MODE::ADC:
+                drawString(0, "ADC Voltage:");   
+                drawString(1, String(analogRead(A0)));
                 break;
         }
 

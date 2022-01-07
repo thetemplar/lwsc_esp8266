@@ -2,6 +2,7 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <ArduinoOTA.h>
 
 #include "A_config.h"
 #include "DisplayUI.h"
@@ -13,13 +14,13 @@
 
 
 #ifdef ETH_ENABLE
- #include <ENC28J60lwIP.h>
- #define CSPIN 16
-  ENC28J60lwIP eth(CSPIN);
-  byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
+#include <ENC28J60lwIP.h>
+#define CSPIN 16
+ENC28J60lwIP eth(CSPIN);
+byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 #endif
 
-char packetBuffer[256];       //buffer to hold incoming packet 
+char packetBuffer[256];       //buffer to hold incoming packet
 byte ibuffer[100];
 
 ESP8266WebServer server(80);
@@ -76,7 +77,7 @@ void timer_query_rssi()
 
 void start_query_rssi()
 {
-  if(rssiOngoing > 0)
+  if (rssiOngoing > 0)
     return;
   Serial.println("start_query_rssi");
   setupFreedom();
@@ -86,44 +87,44 @@ void start_query_rssi()
 }
 #endif
 
-boolean InitalizeFileSystem() {   
-  bool initok = false;   
-  initok = SPIFFS.begin();   
-  if (!(initok)) // Format SPIFS, of not formatted. - Try 1   
-  {     
-    Serial.println("SPIFFS file system formatted.");     
-    SPIFFS.format();     
-    initok = SPIFFS.begin();   
-    }   
-    if (!(initok)) // format SPIFS. - Try 2   
-    {     
-      SPIFFS.format();     
-      initok = SPIFFS.begin();   
-    }   
-    if (initok) 
-    {
-      Serial.println("SPIFFS is OK"); 
-    } else { 
-      Serial.println("SPIFFS is not OK"); 
-    }   
-      Serial.println("SPIFFS Information:");
+boolean InitalizeFileSystem() {
+  bool initok = false;
+  initok = SPIFFS.begin();
+  if (!(initok)) // Format SPIFS, of not formatted. - Try 1
+  {
+    Serial.println("SPIFFS file system formatted.");
+    SPIFFS.format();
+    initok = SPIFFS.begin();
+  }
+  if (!(initok)) // format SPIFS. - Try 2
+  {
+    SPIFFS.format();
+    initok = SPIFFS.begin();
+  }
+  if (initok)
+  {
+    Serial.println("SPIFFS is OK");
+  } else {
+    Serial.println("SPIFFS is not OK");
+  }
+  Serial.println("SPIFFS Information:");
 #ifdef ARDUINO_ARCH_ESP32
-    // different methods of getting information
-    Serial.print("Total bytes:    "); Serial.println(SPIFFS.totalBytes());
-    Serial.print("Used bytes:     "); Serial.println(SPIFFS.usedBytes());
+  // different methods of getting information
+  Serial.print("Total bytes:    "); Serial.println(SPIFFS.totalBytes());
+  Serial.print("Used bytes:     "); Serial.println(SPIFFS.usedBytes());
 #else
-    FSInfo fs_info;
-    SPIFFS.info(fs_info);
-    Serial.print("Total bytes:    "); Serial.println(fs_info.totalBytes);
-    Serial.print("Used bytes:     "); Serial.println(fs_info.usedBytes);
-    Serial.print("Block size:     "); Serial.println(fs_info.blockSize);
-    Serial.print("Page size:      "); Serial.println(fs_info.pageSize);
-    Serial.print("Max open files: "); Serial.println(fs_info.maxOpenFiles);
-    Serial.print("Max path length:"); Serial.println(fs_info.maxPathLength);
-    Serial.println();
+  FSInfo fs_info;
+  SPIFFS.info(fs_info);
+  Serial.print("Total bytes:    "); Serial.println(fs_info.totalBytes);
+  Serial.print("Used bytes:     "); Serial.println(fs_info.usedBytes);
+  Serial.print("Block size:     "); Serial.println(fs_info.blockSize);
+  Serial.print("Page size:      "); Serial.println(fs_info.pageSize);
+  Serial.print("Max open files: "); Serial.println(fs_info.maxOpenFiles);
+  Serial.print("Max path length:"); Serial.println(fs_info.maxPathLength);
+  Serial.println();
 #endif
 
-    return initok;
+  return initok;
 }
 
 extern std::vector<MachineData> machines;
@@ -139,7 +140,7 @@ void ReadConfig()
     uint8_t len = 0;
     configFile.readBytes((char*)&len, 1);
     Serial.println(F("readBytes len: ") + String(len));
-    for(int i = 0; i < len; i++)
+    for (int i = 0; i < len; i++)
     {
       Serial.println(F("reading # ") + String(i));
       MachineData md;
@@ -150,35 +151,35 @@ void ReadConfig()
       configFile.readBytes((char*)&md.SymbolX, 4);
       configFile.readBytes((char*)&md.SymbolY, 4);
       Serial.println(F("read: 0x00") + String(md.Id, HEX));
-      
+
       configFile.readBytes((char*)&md.Functions[0].Name, 38);
       configFile.readBytes((char*)&md.Functions[0].Duration, 4);
       configFile.readBytes((char*)&md.Functions[0].RelaisBitmask, 1);
       configFile.readBytes((char*)&md.Functions[0].SymbolX, 4);
       configFile.readBytes((char*)&md.Functions[0].SymbolY, 4);
       configFile.readBytes((char*)&md.Functions[0].Rotation, 1);
-      
+
       configFile.readBytes((char*)&md.Functions[1].Name, 38);
       configFile.readBytes((char*)&md.Functions[1].Duration, 4);
       configFile.readBytes((char*)&md.Functions[1].RelaisBitmask, 1);
       configFile.readBytes((char*)&md.Functions[1].SymbolX, 4);
       configFile.readBytes((char*)&md.Functions[1].SymbolY, 4);
       configFile.readBytes((char*)&md.Functions[1].Rotation, 1);
-      
+
       configFile.readBytes((char*)&md.Functions[2].Name, 38);
       configFile.readBytes((char*)&md.Functions[2].Duration, 4);
       configFile.readBytes((char*)&md.Functions[2].RelaisBitmask, 1);
       configFile.readBytes((char*)&md.Functions[2].SymbolX, 4);
       configFile.readBytes((char*)&md.Functions[2].SymbolY, 4);
       configFile.readBytes((char*)&md.Functions[2].Rotation, 1);
-      
+
       configFile.readBytes((char*)&md.Functions[3].Name, 38);
       configFile.readBytes((char*)&md.Functions[3].Duration, 4);
       configFile.readBytes((char*)&md.Functions[3].RelaisBitmask, 1);
       configFile.readBytes((char*)&md.Functions[3].SymbolX, 4);
       configFile.readBytes((char*)&md.Functions[3].SymbolY, 4);
       configFile.readBytes((char*)&md.Functions[3].Rotation, 1);
-      
+
       configFile.readBytes((char*)&md.Functions[4].Name, 38);
       configFile.readBytes((char*)&md.Functions[4].Duration, 4);
       configFile.readBytes((char*)&md.Functions[4].RelaisBitmask, 1);
@@ -205,7 +206,7 @@ void WriteConfig()
     uint8_t len = machines.size();
     configFile.write((char*)&len, 1);
     Serial.println(F("write len: ") + String(len));
-    for(int i = 0; i < len; i++)
+    for (int i = 0; i < len; i++)
     {
       Serial.println(F("writing # ") + String(i));
       configFile.write((char*)&machines[i].Name, 38);
@@ -215,35 +216,35 @@ void WriteConfig()
       configFile.write((char*)&machines[i].SymbolX, 4);
       configFile.write((char*)&machines[i].SymbolY, 4);
       Serial.println(F("write: 0x00") + String(machines[i].Id, HEX));
-      
+
       configFile.write((char*)&machines[i].Functions[0].Name, 38);
       configFile.write((char*)&machines[i].Functions[0].Duration, 4);
       configFile.write((char*)&machines[i].Functions[0].RelaisBitmask, 1);
       configFile.write((char*)&machines[i].Functions[0].SymbolX, 4);
       configFile.write((char*)&machines[i].Functions[0].SymbolY, 4);
       configFile.write((char*)&machines[i].Functions[0].Rotation, 1);
-      
+
       configFile.write((char*)&machines[i].Functions[1].Name, 38);
       configFile.write((char*)&machines[i].Functions[1].Duration, 4);
       configFile.write((char*)&machines[i].Functions[1].RelaisBitmask, 1);
       configFile.write((char*)&machines[i].Functions[1].SymbolX, 4);
       configFile.write((char*)&machines[i].Functions[1].SymbolY, 4);
       configFile.write((char*)&machines[i].Functions[1].Rotation, 1);
-      
+
       configFile.write((char*)&machines[i].Functions[2].Name, 38);
       configFile.write((char*)&machines[i].Functions[2].Duration, 4);
       configFile.write((char*)&machines[i].Functions[2].RelaisBitmask, 1);
       configFile.write((char*)&machines[i].Functions[2].SymbolX, 4);
       configFile.write((char*)&machines[i].Functions[2].SymbolY, 4);
       configFile.write((char*)&machines[i].Functions[2].Rotation, 1);
-      
+
       configFile.write((char*)&machines[i].Functions[3].Name, 38);
       configFile.write((char*)&machines[i].Functions[3].Duration, 4);
       configFile.write((char*)&machines[i].Functions[3].RelaisBitmask, 1);
       configFile.write((char*)&machines[i].Functions[3].SymbolX, 4);
       configFile.write((char*)&machines[i].Functions[3].SymbolY, 4);
       configFile.write((char*)&machines[i].Functions[3].Rotation, 1);
-      
+
       configFile.write((char*)&machines[i].Functions[4].Name, 38);
       configFile.write((char*)&machines[i].Functions[4].Duration, 4);
       configFile.write((char*)&machines[i].Functions[4].RelaisBitmask, 1);
@@ -269,12 +270,12 @@ void udpBroadcast() {
   stat_info = wifi_softap_get_station_info();
   while (stat_info != NULL)
   {
-    IPaddress = &stat_info->ip;    
+    IPaddress = &stat_info->ip;
     Udp.beginPacket(IPaddress, 5556);
     Udp.printf("WIFIBRIDGE %d.%d.%d.%d WIFI", WiFi.softAPIP()[0], WiFi.softAPIP()[1], WiFi.softAPIP()[2], WiFi.softAPIP()[3]);
     Udp.endPacket();
     stat_info = STAILQ_NEXT(stat_info, next);
-  } 
+  }
 #endif
 }
 
@@ -282,8 +283,8 @@ void setup() {
   // start serial
   Serial.begin(115200);
   Serial.println();
-  
-  InitalizeFileSystem();  
+
+  InitalizeFileSystem();
   ReadConfig();
   Serial.println("Loaded " + String(machines.size()) + " machines");
 
@@ -292,8 +293,8 @@ void setup() {
 
   // setup LED
   led::setup();
-  led::setColor(0,100,0);
-  
+  led::setColor(0, 100, 0);
+
   pinMode(2, OUTPUT);
 
   wifi_setup();
@@ -309,9 +310,9 @@ void setup() {
   int present = eth.begin(mac);
   if (!present) {
     Serial.println("no ethernet hardware present");
-    while(1) yield();
+    while (1) yield();
   }
-  
+
   Serial.print("connecting ethernet");
   while (!eth.connected()) {
     Serial.print(".");
@@ -331,15 +332,49 @@ void setup() {
   setupAP();
   network_ip = String(WiFi.softAPIP()[0]) + String(".") + String(WiFi.softAPIP()[1]) + String(".") + String(WiFi.softAPIP()[2]) + String(".") + String(WiFi.softAPIP()[3]);
 #endif
-  
+
   timerIdUDP = timer.setInterval(2500, udpBroadcast);
   timer.enable(timerIdUDP);
-  
+
   restServerRouting();
   server.begin();
+
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
 }
 
 void loop() {
+  ArduinoOTA.handle();
   timer.run();
   led::update();
   displayUI.update();
