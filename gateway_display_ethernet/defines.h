@@ -81,6 +81,10 @@ enum MsgTypes : uint8_t
   //0x2... Network
   MSG_RequestRssi = 0x20,
   MSG_SendRssi = 0x21,
+  //STM32
+  MSG_SetID = 0x40,
+  //Misc
+  MSG_Version = 0xA0,
   //0xF... System
   MSG_KeepAlive = 0xFA,
   MSG_ERROR = 0xFF

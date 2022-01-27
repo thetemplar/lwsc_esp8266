@@ -8,7 +8,6 @@
 
 #include <map>
 #include "defines.h"
-#include "led.h"
   
 static inline uint32_t intDisable()
 {
@@ -37,7 +36,7 @@ void reqRssi(uint32_t dest);
 
 void setupFreedom();
 void setupAP();
-void processData();
+void processWiFiData();
 
 void readWifi(char* buf, uint8_t len);
 

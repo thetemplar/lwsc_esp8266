@@ -259,15 +259,15 @@ namespace lwsc_admin
 
 
             dynamic dJson = JsonConvert.DeserializeObject(res);
-            m.rssi = dJson["rssi"];
+            m.rssi = (sbyte)dJson["rssi"];
 
             if (dJson["rssiMap"] == null)
                 return;
 
             foreach (var r in dJson["rssiMap"])
             {
-                uint id = r["id"];
-                sbyte rssi = r["rssi"];
+                uint id = (uint)r["id"];
+                sbyte rssi = (sbyte)r["rssi"];
                 m.rssiMap[id] = rssi;
                 
             }
@@ -656,15 +656,15 @@ namespace lwsc_admin
                 }
 
                 dynamic dJson = JsonConvert.DeserializeObject(res);
-                m.rssi = dJson["rssi"];
+                m.rssi = (sbyte)dJson["rssi"];
 
                 if (dJson["rssiMap"] == null)
                     continue;
 
                 foreach(var r in dJson["rssiMap"])
                 {
-                    uint id = r["id"];
-                    sbyte rssi  = r["rssi"];
+                    uint id = (uint)r["id"];
+                    sbyte rssi  = (sbyte)r["rssi"];
                     m.rssiMap[id] = rssi;
                 }
             }
@@ -1208,6 +1208,26 @@ namespace lwsc_admin
             GetData();
             GetFunctions();
             GetMappings();
+        }
+
+        private void btDynDns_Click(object sender, EventArgs e)
+        {
+            tbIpAddress.Text = "lwsc.ddns.net:8280";
+            AddToLog("lwsc.ddns.net:8280");
+
+            GetData();
+            GetFunctions();
+            GetMappings();
+
+            pnRSSIButtons.Enabled = true;
+            AddToLog("Setup done");
+
+            btEspClick.Visible = true;
+            btEspHome.Visible = true;
+            btEspUp.Visible = true;
+            btEspDown.Visible = true;
+            isEthernet = true;
+
         }
     }
 }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "A_config.h"
-
 void restServerRouting();
 void web_interface();
 void rest_get_host();
@@ -22,12 +20,12 @@ void rest_upload_handler();
 void rest_get_file();
 void rest_post_save_config();
 
+void rest_post_stm32_set_id();
+
 void rest_post_set_relaiscounter();
 
 
-#ifdef ETH_ENABLE
 void rest_bt_up();
 void rest_bt_down();
 void rest_bt_click();
 void rest_bt_home();
-#endif

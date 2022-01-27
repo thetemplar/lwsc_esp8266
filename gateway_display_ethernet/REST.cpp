@@ -17,15 +17,7 @@ extern uint8_t MachineBufferIndex;
 extern void ReadConfig();
 extern void WriteConfig();
 
-#ifdef ETH_ENABLE
 extern void reqRssi(uint32_t dest);
-extern void wrap_bt_up();
-extern void wrap_bt_down();
-extern void wrap_bt_click();
-extern void wrap_bt_home();
-#else
-extern void start_query_rssi();
-#endif
 
 uint64_t ackStart;
 uint32_t ackTimeout;
@@ -48,6 +40,7 @@ void restServerRouting() {
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
     server.on(F("/fire"), HTTP_GET, rest_post_fire);
+    server.on(F("/stm32_set_id"), HTTP_GET, rest_post_stm32_set_id);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/change_id"), HTTP_POST, rest_post_change_id);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
@@ -56,14 +49,6 @@ void restServerRouting() {
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
     server.on(F("/reboot"), HTTP_POST, rest_post_reboot);
-
-#ifdef ETH_ENABLE
-    //button via webinterface
-    server.on(F("/bt_up"), HTTP_GET, rest_bt_up);  
-    server.on(F("/bt_down"), HTTP_GET, rest_bt_down);  
-    server.on(F("/bt_click"), HTTP_GET, rest_bt_click);  
-    server.on(F("/bt_home"), HTTP_GET, rest_bt_home); 
-#endif
 }
 void setCrossOrigin(){
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
@@ -266,6 +251,23 @@ void rest_delete_machine() {
   server.send(200, "text/json", "{\"result\": \"fail\"}");
 }
 
+void rest_post_query_rssi() {  
+  setCrossOrigin();  
+  if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+  }
+
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  if(machinesIndexCache.count(id) == 0)
+  {
+    server.send(404, "text/json", "{\"result\": \"not found\"}");
+    return;
+  }
+  reqRssi(id); 
+
+  server.send(200, "text/json", "{\"result\": \"success\"}");
+}
+
 void rest_get_machine_rssi() {
   setCrossOrigin();
   if (server.arg("id") == ""){
@@ -338,7 +340,7 @@ void rest_post_function() {
 }
 
 
-void rest_post_fire() {
+void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
   if (server.arg("id") == "" || server.arg("f_id") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
@@ -364,16 +366,12 @@ void rest_post_fire() {
   if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[machinesIndexCache[id]].Relais2Counter++;
   uint16_t seq = fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
-#ifdef ETH_ENABLE
   ackStart = millis();
   ackTimeout = 1000;
   ackSeq = seq;
   ackId = id;
 
-  //no server.send -> in processdata()->ack!
-#else
-  server.send(200, "text/json", "{\"result\": \"true\"}");
-#endif
+  //no server.send -> in processWiFiData()->ack!
 }
 
 void rest_post_blink() {
@@ -426,6 +424,36 @@ void rest_post_change_id() {
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"change id\", \"id\": 0x00" + String(md->Id, HEX) + ", \"name\": \"" + md->Name + "\", \"shortName\": \"" + md->ShortName + "\"}");
 }
 
+
+void rest_post_stm32_set_id() {  
+  setCrossOrigin();  
+  if (server.arg("id") == "" || server.arg("new_id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+  }
+
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  uint32_t new_id = strtoul(server.arg("new_id").c_str(), NULL, 10);
+  if(machinesIndexCache.count(id) == 0)
+  {
+    server.send(404, "text/json", "{\"result\": \"not existing\"}");
+  }  
+  if(machinesIndexCache.count(new_id) != 0)
+  {
+    server.send(404, "text/json", "{\"result\": \"already existing\"}");
+  }  
+
+  //TODO -> rfm command!
+  
+  uint8_t index = machinesIndexCache[id];
+  MachineData* md = &machines[index]; 
+  md->Id = new_id;
+  machinesIndexCache.erase(id);
+  machinesIndexCache[new_id] = index;
+  
+  server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"change id\", \"id\": 0x00" + String(md->Id, HEX) + ", \"name\": \"" + md->Name + "\", \"shortName\": \"" + md->ShortName + "\"}");
+
+}
+
 void rest_get_file() {
   setCrossOrigin();
   if (server.arg("filename") == ""){
@@ -467,30 +495,6 @@ void rest_upload_handler(){ // upload a new file to the SPIFFS
       server.send(500, "text/plain", "500: couldn't create file");
     }
   }
-}
-
-void rest_post_query_rssi() {  
-  setCrossOrigin();  
-#ifdef ETH_ENABLE
-  if (server.arg("id") == ""){
-    reqRssi(0xFFFFFFFF);
-  } else {
-    uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-    if(machinesIndexCache.count(id) == 0)
-    {
-      server.send(404, "text/json", "{\"result\": \"not found\"}");
-      return;
-    }
-    reqRssi(id); 
-  }
-  server.send(200, "text/json", "{\"result\": \"success\"}");
-#else
-  if (server.arg("id") == "")
-  {
-    server.send(200, "text/json", "{\"result\": \"success\"}");
-    start_query_rssi();
-  }
-#endif
 }
 
 void rest_get_all_functions() {
@@ -580,26 +584,3 @@ void rest_post_reboot() {
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }
-
-#ifdef ETH_ENABLE
-void rest_bt_up() {
-  setCrossOrigin();
-  wrap_bt_up();
-  server.send(200, "");
-}
-void rest_bt_down() {
-  setCrossOrigin();
-  wrap_bt_down();
-  server.send(200, "");
-}
-void rest_bt_click() {
-  setCrossOrigin();
-  wrap_bt_click();
-  server.send(200, "");
-}
-void rest_bt_home() {
-  setCrossOrigin();
-  wrap_bt_home();
-  server.send(200, "");
-}
-#endif

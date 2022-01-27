@@ -7,7 +7,7 @@
 extern const char* ssid;
 extern const char* password;
 
-int localAddress = 0x00;      // address of this device
+uint32_t localAddress = 0x00;      // address of this device
 struct sniffer_buf2 *sniffer;
 
 uint16_t seqnum = 0x000;
@@ -45,7 +45,7 @@ uint8_t beacon_raw[] = {
   0xDD, 0x05, 0x07, 0xFA, VERSION, START_TTL, MSG_Unknown //38-44++
 };
 
-void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
+void IRAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
 {
   //uint32_t old_ints = intDisable();
   if (len == 128 && buf[12+4] == 0xef && buf[12] == 0x80){
@@ -58,7 +58,7 @@ void ICACHE_RAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
   //intEnable(old_ints);
 }
 
-void processData()
+void processWiFiData()
 {  
   if(dataStack.empty())
     return;
@@ -96,11 +96,11 @@ void processData()
   MachineBuffer[MachineBufferIndex].Seq = msg.seq;
   MachineBuffer[MachineBufferIndex].Timestamp = millis();
   MachineBufferIndex++;
-  Serial.println("[" + String(millis()) + "] processData --> " + String(msg.src, HEX) + " - via: " + String(msg.trs, HEX) + "  (ttl: " + String(msg.ttl) + ") type: " + String(msg.type, HEX));
+  Serial.println("[" + String(millis()) + "] processWiFiData --> " + String(msg.src, HEX) + " - via: " + String(msg.trs, HEX) + "  (ttl: " + String(msg.ttl) + ") type: " + String(msg.type, HEX));
 
   if (machinesIndexCache.count(msg.src) == 0)
   {
-    Serial.println("new MachineData():" + String(msg.src, HEX));
+    Serial.println("[WiFi] new MachineData():" + String(msg.src, HEX));
     MachineData* md = new MachineData();
     md->Id = msg.src;
     md->ShortName[0] = '?';
@@ -150,11 +150,6 @@ void processData()
       }
     }
   }      
-
-  if (MachineBufferIndex % 2 == 0)
-    led::setColor(100, 30, 0);
-  else
-    led::setColor(100, 0, 30);
 }
 
 uint16_t createPacket(uint8_t* result, uint8_t *buf, uint16_t len, uint32_t dst, uint8_t type)
@@ -201,7 +196,7 @@ void ping(uint32_t dest)
   createPacket(result, {}, 0, dest, MSG_Unknown);
   result[43] = 0x00; //ttl = 0;
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("blink to %08x = %d\n", dest, res);
+  Serial.printf("[WiFi] blink to %08x = %d\n", dest, res);
 }
 
 void reboot(uint32_t dest)
@@ -211,7 +206,7 @@ void reboot(uint32_t dest)
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("reboot to %08x = %d\n", dest, res);
+  Serial.printf("[WiFi] reboot to %08x = %d\n", dest, res);
 }
 
 void blink(uint32_t dest)
@@ -221,7 +216,7 @@ void blink(uint32_t dest)
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("blink to %08x = %d\n", dest, res);
+  Serial.printf("[WiFi] blink to %08x = %d\n", dest, res);
 }
 
 uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
@@ -231,13 +226,13 @@ uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   memcpy((uint8_t*)&data, (uint8_t*)&duration, 4);
   memcpy((uint8_t*)&data + 4, (uint8_t*)&relaisBitmask, 1);
 
-  Serial.printf("data %02X %02X %02X %02X %02X\n", data[0], data[1], data[2], data[3], data[4]);
+  Serial.printf("[WiFi] data %02X %02X %02X %02X %02X\n", data[0], data[1], data[2], data[3], data[4]);
 
   uint16_t seq = createPacket(result, data, 5, dest, MSG_Fire);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("fired to %08x duration %d relaisBitmask %02X = %d\n", dest, duration, relaisBitmask, res);
+  Serial.printf("[WiFi] fired to %08x duration %d relaisBitmask %02X = %d\n", dest, duration, relaisBitmask, res);
   return seq;
 }
 
@@ -247,13 +242,12 @@ void reqRssi(uint32_t dest)
   uint8_t data[1] = {0};
   createPacket(result, data, 1, dest, MSG_RequestRssi);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("reqRssi to %08x = %d\n\n", dest, res);
+  Serial.printf("[WiFi] reqRssi to %08x = %d\n\n", dest, res);
 }
 
 void setupFreedom()
 {
-  led::setColor(100, 0, 0);
-  Serial.println("Setting up Freedom Mode");
+  Serial.println("[WiFi] Setting up Freedom Mode");
   WiFi.mode(WIFI_STA);
   wifi_set_channel(CHANNEL);
   wifi_set_phy_mode(PHY_MODE_11B);
@@ -262,8 +256,7 @@ void setupFreedom()
 
 void setupAP()
 {
-  led::setColor(0, 100, 0);
-  Serial.println("Setting up AP Mode");
+  Serial.println("[WiFi] Setting up AP Mode");
 
   wifi_promiscuous_enable(0);
   wifi_set_phy_mode(PHY_MODE_11B);
