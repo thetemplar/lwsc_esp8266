@@ -4,6 +4,7 @@
 #pragma once
 
 #include <map>
+#include "Arduino.h"
 
 #define VERSION 0x03
 //uint8_t VERSION;

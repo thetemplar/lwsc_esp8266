@@ -9,6 +9,7 @@
 #include "DisplayUI.h"
 
 #include "lwsc_wifi.h"
+#include "lwsc_lora.h"
 #include "REST.h"
 #include "src/SimpleTimer/SimpleTimer.h"
 
@@ -206,10 +207,7 @@ void udpBroadcast() {
   Udp.printf("WIFIBRIDGE %d.%d.%d.%d ETH", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
   Udp.endPacket();
 
-  LoRa.beginPacket();
-  LoRa.print(0xff);
-  LoRa.print(0x03);
-  LoRa.endPacket();
+  lora_blink(0xff);
 }
 
 void setup() {
