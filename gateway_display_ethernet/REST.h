@@ -8,6 +8,7 @@ void rest_get_machine();
 void rest_post_machine();
 void rest_delete_machine();
 void rest_get_machine_rssi();
+void rest_force_fire();
 void rest_post_fire();
 
 void rest_get_all_functions();

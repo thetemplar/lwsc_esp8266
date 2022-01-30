@@ -30,6 +30,7 @@ extern uint64_t ackStart;
 extern uint32_t ackTimeout;
 extern uint16_t ackSeq;
 extern uint32_t ackId;
+extern void udpMsg(String msg);
 
 uint8_t beacon_raw[] = {
   0x80, 0x00,             // 0-1: Frame Control
@@ -97,7 +98,7 @@ void processWiFiData()
   MachineBuffer[MachineBufferIndex].Timestamp = millis();
   MachineBufferIndex++;
   Serial.println("[" + String(millis()) + "] processWiFiData --> " + String(msg.src, HEX) + " - via: " + String(msg.trs, HEX) + "  (ttl: " + String(msg.ttl) + ") type: " + String(msg.type, HEX));
-
+  udpMsg("[WiFi] processWiFiData");
   if (machinesIndexCache.count(msg.src) == 0)
   {
     Serial.println("[WiFi] new MachineData():" + String(msg.src, HEX));
@@ -196,7 +197,7 @@ void ping(uint32_t dest)
   createPacket(result, {}, 0, dest, MSG_Unknown);
   result[43] = 0x00; //ttl = 0;
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("[WiFi] blink to %08x = %d\n", dest, res);
+  Serial.printf("[WiFi] ping to %08x = %d\n", dest, res);
 }
 
 void reboot(uint32_t dest)

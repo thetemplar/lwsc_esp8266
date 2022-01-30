@@ -207,7 +207,15 @@ void udpBroadcast() {
   Udp.printf("WIFIBRIDGE %d.%d.%d.%d ETH", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
   Udp.endPacket();
 
-  lora_blink(0xff);
+  //lora_blink(0xff);
+}
+
+void udpMsg(String msg) {
+  IPAddress broadcastIP(255, 255, 255, 255);
+  Udp.beginPacket(broadcastIP, 5557);
+  String s = String("[") + String(millis()) + String("] ") + msg;
+  Udp.printf(s.c_str());
+  Udp.endPacket();
 }
 
 void setup() {
@@ -312,15 +320,17 @@ void loop() {
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
     //received a packet
-    Serial.print("Received packet ");
+    Serial.print("Received packet '");
 
     //read packet
     while (LoRa.available()) {
-      Serial.print(LoRa.readString());
+      String s = LoRa.readString();
+      Serial.print(s);
+      udpMsg("[LoRa] processLoRaData: " + s);
     }
 
     //print RSSI of packet
-    Serial.print(" with RSSI ");    
+    Serial.print("' with RSSI ");    
     Serial.println(LoRa.packetRssi()); 
   }
   

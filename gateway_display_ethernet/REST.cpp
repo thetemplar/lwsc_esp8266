@@ -3,6 +3,11 @@
 #include "REST.h"
 #include "defines.h"
 #include "lwsc_wifi.h"
+#include "lwsc_lora.h"
+
+
+#include "LittleFS.h" // LittleFS is declared
+
 #include <ArduinoJson.h> //3rd Party Lib! Version 6.x.x
 
 File fsUploadFile;
@@ -40,6 +45,8 @@ void restServerRouting() {
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
     server.on(F("/fire"), HTTP_GET, rest_post_fire);
+    server.on(F("/force_fire"), HTTP_POST, rest_force_fire);
+    server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/stm32_set_id"), HTTP_GET, rest_post_stm32_set_id);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/change_id"), HTTP_POST, rest_post_change_id);
@@ -339,6 +346,15 @@ void rest_post_function() {
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\", \"id\": \"" + String(id) + "\", \"f_id\": \"" + String(f_id) + "\"}");
 }
 
+void rest_force_fire()
+{
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  uint32_t duration = strtoul(server.arg("duration").c_str(), NULL, 10);
+  uint32_t bitMask = strtoul(server.arg("bitmask").c_str(), NULL, 10);
+  lora_fire(id, duration, bitMask); 
+  server.send(400, "text/json", "{\"result\": \"ok\"}");
+}
+
 
 void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
@@ -365,6 +381,7 @@ void IRAM_ATTR rest_post_fire() {
   if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x01 == 0x01) machines[machinesIndexCache[id]].Relais1Counter++;
   if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[machinesIndexCache[id]].Relais2Counter++;
   uint16_t seq = fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
+  lora_fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
   ackStart = millis();
   ackTimeout = 1000;
@@ -376,6 +393,11 @@ void IRAM_ATTR rest_post_fire() {
 
 void rest_post_blink() {
   setCrossOrigin();
+   if (server.arg("id") == "lora"){
+    lora_blink(0xff);
+    server.send(200, "text/json", "{\"result\": \"lora\"}");
+    return;
+  }
    if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -460,12 +482,12 @@ void rest_get_file() {
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
-  File file = SPIFFS.open("/" + server.arg("filename"), "r");
+  File file = LittleFS.open("/" + server.arg("filename"), "r");
   size_t sent = server.streamFile(file, "application/octet-stream");
   file.close();
 }
 
-void rest_upload_handler(){ // upload a new file to the SPIFFS  
+void rest_upload_handler(){ // upload a new file to the LittleFS  
   setCrossOrigin();
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START)
@@ -478,7 +500,7 @@ void rest_upload_handler(){ // upload a new file to the SPIFFS
     }
     Serial.print("handleFileUpload Name: "); 
     Serial.println(filename);
-    fsUploadFile = SPIFFS.open(filename, "w");            // Open the file for writing in SPIFFS (create if it doesn't exist)
+    fsUploadFile = LittleFS.open(filename, "w");            // Open the file for writing in LittleFS (create if it doesn't exist)
     filename = String();
   } else if(upload.status == UPLOAD_FILE_WRITE){
     Serial.println("UPLOAD_FILE_WRITE");
