@@ -79,6 +79,11 @@ enum MsgTypes : uint8_t
   MSG_Ack = 0x02,
   MSG_Blink = 0x03,
   MSG_Reboot = 0x04,
+  //0x1 LoRa Fire Port
+  MSG_Lora_Fire_Base = 0x10,
+  MSG_Lora_Fire_1 = 0x11,
+  MSG_Lora_Fire_2 = 0x12,
+  MSG_Lora_Fire_3 = 0x13,
   //0x2... Network
   MSG_RequestRssi = 0x20,
   MSG_SendRssi = 0x21,

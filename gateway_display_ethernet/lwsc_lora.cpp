@@ -45,17 +45,23 @@ void lora_blink(uint32_t dest)
 uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
 {
   uint8_t loraDest = (uint8_t)dest & 0xFF;
+  if(duration > 256*5-2)
+  { 
+    udpMsg("[LoRa] NOT fired to " + String(dest) + " duration: " + String(duration) + ": DURATION TOO LONG.");
+    return 0;
+  }
+  uint8_t durationShort = 0;
+  if(duration >= 0)
+  {
+    durationShort = duration / 20 + 1;
+  }
   LoRa.beginPacket();
   LoRa.write(loraDest);
-  LoRa.write(0x01);
-  LoRa.write(relaisBitmask);
-  LoRa.write((uint8_t) ((duration) & 0xFF));
-  LoRa.write((uint8_t) ((duration >> 8) & 0xFF));
-  LoRa.write((uint8_t) ((duration >> 16) & 0xFF));
-  LoRa.write((uint8_t) ((duration >> 24) & 0xFF));
+  LoRa.write(MSG_Lora_Fire_Base + relaisBitmask);
+  LoRa.write(durationShort);
   LoRa.endPacket();
   int res = 0;
-  udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " bitmask: " + String(relaisBitmask));
+  udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
   return 0;
 }
 
@@ -86,12 +92,13 @@ void lora_processData()
     if (buf[0] == MSG_Ack)
     {
       int16_t machineRssi = buf[2] + (buf[3] << 8);
-      udpMsg("[LoRa] processLoRaData: Got Msg_ACK from " + String(buf[1]) + " at Rssi(Gateway->Machine): " + String(machineRssi) + " at LocalRssi(Machine->Gateway): " + String(LoRa.packetRssi()) + " at SNR: " + String(LoRa.packetSnr()));
+      int8_t machineSnr = buf[4];
+      udpMsg("[LoRa] processLoRaData: Got Msg_ACK from " + String(buf[1]) + " at Rssi(Gateway->Machine): " + String(machineRssi) + " at LocalRssi(Machine->Gateway): " + String(LoRa.packetRssi()) + " at SNR(Gateway->Machine): " + String(machineSnr) + " at SNR(Machine->Gateway): " + String(LoRa.packetSnr()));
          
       if (ackStart > 0 && millis() < ackStart + ackTimeout)
       {
         uint32_t diff = millis() - ackStart;
-        server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String(machineRssi) + "\", \"reply_rssi\": \"" + String(LoRa.packetRssi()) + "\", \"reply_snr\": \"" + String(LoRa.packetSnr()) + "\"}");
+        server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String(machineRssi) + "\", \"snr\": \"" + String(machineSnr) + "\", \"reply_rssi\": \"" + String(LoRa.packetRssi()) + "\", \"reply_snr\": \"" + String(LoRa.packetSnr()) + "\"}");
         ackStart = 0;
       }
     } else if (buf[0] == MSG_KeepAlive) {
