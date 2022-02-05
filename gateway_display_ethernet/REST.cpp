@@ -21,6 +21,7 @@ extern struct WifiLog MachineBuffer[256];
 extern uint8_t MachineBufferIndex;
 extern void ReadConfig();
 extern void WriteConfig();
+extern void udpMsg(String msg);
 
 extern void reqRssi(uint32_t dest);
 
@@ -601,6 +602,7 @@ void rest_post_reboot() {
   if(id == 0)
   {
     server.send(200, "text/json", "{\"result\": \"success\"}");
+    udpMsg("REBOOT");
     delay(10);
     ESP.restart();
     return;

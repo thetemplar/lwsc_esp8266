@@ -229,7 +229,7 @@ void setup() {
 
   InitalizeFileSystem();
   ReadConfig();
-  Serial.println("Loaded " + String(machines.size()) + " machines");
+  //Serial.println("Loaded " + String(machines.size()) + " machines");
 
   // start display
   displayUI.setup();
@@ -306,6 +306,9 @@ void setup() {
     }
   });
   ArduinoOTA.begin();
+  
+  udpMsg("Hello everyone! I am " + String(eth.localIP()[0]) + "." + String(eth.localIP()[1]) + "." + String(eth.localIP()[2]) + "." + String(eth.localIP()[3]) + "!");
+  udpMsg("Loaded " + String(machines.size()) + " machines");
 }
 
 extern uint64_t ackStart;
