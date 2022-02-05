@@ -59,7 +59,7 @@ void IRAM_ATTR promisc_cb(uint8_t *buf, uint16_t len)
   //intEnable(old_ints);
 }
 
-void processWiFiData()
+void wifi_processData()
 {  
   if(dataStack.empty())
     return;
@@ -97,11 +97,11 @@ void processWiFiData()
   MachineBuffer[MachineBufferIndex].Seq = msg.seq;
   MachineBuffer[MachineBufferIndex].Timestamp = millis();
   MachineBufferIndex++;
-  Serial.println("[" + String(millis()) + "] processWiFiData --> " + String(msg.src, HEX) + " - via: " + String(msg.trs, HEX) + "  (ttl: " + String(msg.ttl) + ") type: " + String(msg.type, HEX));
+  udpMsg("[" + String(millis()) + "] processWiFiData --> " + String(msg.src, HEX) + " - via: " + String(msg.trs, HEX) + "  (ttl: " + String(msg.ttl) + ") type: " + String(msg.type, HEX));
   udpMsg("[WiFi] processWiFiData");
   if (machinesIndexCache.count(msg.src) == 0)
   {
-    Serial.println("[WiFi] new MachineData():" + String(msg.src, HEX));
+    udpMsg("[WiFi] new MachineData():" + String(msg.src, HEX));
     MachineData* md = new MachineData();
     md->Id = msg.src;
     md->ShortName[0] = '?';
@@ -119,7 +119,7 @@ void processWiFiData()
     if (ackStart > 0 && millis() < ackStart + ackTimeout && ackSeq == thisAckSeq && ackId == msg.src)
     {
       uint32_t diff = millis() - ackStart;
-      server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\"}");
+      server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"wifi\"}");
       ackStart = 0;
     }
   }
@@ -197,7 +197,7 @@ void ping(uint32_t dest)
   createPacket(result, {}, 0, dest, MSG_Unknown);
   result[43] = 0x00; //ttl = 0;
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("[WiFi] ping to %08x = %d\n", dest, res);
+  udpMsg("[WiFi] ping to " + String(dest));
 }
 
 void reboot(uint32_t dest)
@@ -207,7 +207,7 @@ void reboot(uint32_t dest)
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("[WiFi] reboot to %08x = %d\n", dest, res);
+  udpMsg("[WiFi] reboot to " + String(dest));
 }
 
 void blink(uint32_t dest)
@@ -217,7 +217,7 @@ void blink(uint32_t dest)
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("[WiFi] blink to %08x = %d\n", dest, res);
+  udpMsg("[WiFi] blink to " + String(dest));
 }
 
 uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
@@ -227,13 +227,13 @@ uint16_t fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   memcpy((uint8_t*)&data, (uint8_t*)&duration, 4);
   memcpy((uint8_t*)&data + 4, (uint8_t*)&relaisBitmask, 1);
 
-  Serial.printf("[WiFi] data %02X %02X %02X %02X %02X\n", data[0], data[1], data[2], data[3], data[4]);
+  //Serial.printf("[WiFi] data %02X %02X %02X %02X %02X\n", data[0], data[1], data[2], data[3], data[4]);
 
   uint16_t seq = createPacket(result, data, 5, dest, MSG_Fire);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
   //delay(20);
   //res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("[WiFi] fired to %08x duration %d relaisBitmask %02X = %d\n", dest, duration, relaisBitmask, res);
+  udpMsg("[WiFi] fired to " + String(dest) + " duration " + String(duration) + " relaisBitmask " + String(relaisBitmask) + "\n");
   return seq;
 }
 
@@ -243,7 +243,7 @@ void reqRssi(uint32_t dest)
   uint8_t data[1] = {0};
   createPacket(result, data, 1, dest, MSG_RequestRssi);
   int res = wifi_send_pkt_freedom(result, sizeof(result), 0);
-  Serial.printf("[WiFi] reqRssi to %08x = %d\n\n", dest, res);
+  udpMsg("[WiFi] reqRssi to " + String(dest));
 }
 
 void setupFreedom()

@@ -56,6 +56,7 @@ void restServerRouting() {
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
     server.on(F("/reboot"), HTTP_POST, rest_post_reboot);
+    server.on(F("/version"), HTTP_GET, rest_get_version);
 }
 void setCrossOrigin(){
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
@@ -91,6 +92,17 @@ void web_interface() {
 void rest_get_host() {
   setCrossOrigin();
   server.send(200, "text/json", "{\"id\": \"0x00" + String(ESP.getChipId(), HEX) + "\"}");
+}
+
+void rest_get_version() {
+  setCrossOrigin();
+  if (server.arg("id") == "" && server.arg("it") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  lora_get_version(id);
+  server.send(200, "text/json", "{}");
 }
 
 void rest_post_save_config() {     
@@ -348,6 +360,10 @@ void rest_post_function() {
 
 void rest_force_fire()
 {
+  if (server.arg("id") == "" || server.arg("duration") == ""  || server.arg("bitmask") == "" ){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   uint32_t duration = strtoul(server.arg("duration").c_str(), NULL, 10);
   uint32_t bitMask = strtoul(server.arg("bitmask").c_str(), NULL, 10);
@@ -384,7 +400,7 @@ void IRAM_ATTR rest_post_fire() {
   lora_fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
   ackStart = millis();
-  ackTimeout = 1000;
+  ackTimeout = 500;
   ackSeq = seq;
   ackId = id;
 
@@ -408,6 +424,7 @@ void rest_post_blink() {
     return;
   }
   blink(id);
+  lora_blink(id);
   
   AppBuffer[AppBufferIndex].Id = id;
   AppBuffer[AppBufferIndex].Duration = 0;
@@ -594,6 +611,7 @@ void rest_post_reboot() {
     return;
   }
   reboot(id);
+  lora_reboot(id);
   
   AppBuffer[AppBufferIndex].Id = id;
   AppBuffer[AppBufferIndex].Duration = 0;

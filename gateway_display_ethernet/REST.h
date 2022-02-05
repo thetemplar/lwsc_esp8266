@@ -20,6 +20,7 @@ void rest_post_query_rssi();
 void rest_upload_handler();
 void rest_get_file();
 void rest_post_save_config();
+void rest_get_version();
 
 void rest_post_stm32_set_id();
 

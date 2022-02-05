@@ -7,7 +7,7 @@
 #include "defines.h"
 #include "Arduino.h"
 
-
+void lora_get_version(uint32_t dest);
 void lora_ping(uint32_t dest);
 void lora_reboot(uint32_t dest);
 void lora_blink(uint32_t dest);

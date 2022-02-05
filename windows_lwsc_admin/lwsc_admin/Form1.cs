@@ -229,7 +229,18 @@ namespace lwsc_admin
                 return;
             }
             else
+            {
+                if(res.Contains("rssi"))
+                {
+                    //dynamic dJson = JsonConvert.DeserializeObject(res);
+                    var data = (JObject)JsonConvert.DeserializeObject(res);
+                    int a = data["rssi"].Value<int>();
+
+                    MachineData m = machines.First(x => x.id == m_id);
+                    m.rssiMap[0] = (sbyte)a;
+                }
                 MessageBox.Show(res);
+            }
         }
 
         private void LwscMap1_ReqRssi(uint m_id)
@@ -397,7 +408,6 @@ namespace lwsc_admin
 
         private void GetFunctions()
         {
-            return;
             dgvFunctions.Rows.Clear();
             var status = RESTful("/all_functions", RESTType.GET, out string res);
             if (status != HttpStatusCode.OK)
@@ -525,7 +535,11 @@ namespace lwsc_admin
 
         private void btMSave_Click(object sender, EventArgs e)
         {
-            var m = machines[mSelected];
+            var m = new MachineData();
+            if (mSelected >= 0)
+                m = machines[mSelected];
+            else
+                m.id = uint.Parse(tbMNewId.Text, System.Globalization.NumberStyles.HexNumber);
 
             m.name = tbMName.Text;
             m.shortName = tbMShortName.Text;

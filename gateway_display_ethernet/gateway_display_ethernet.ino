@@ -206,14 +206,13 @@ void udpBroadcast() {
   Udp.beginPacket(broadcastIP, 5556);
   Udp.printf("WIFIBRIDGE %d.%d.%d.%d ETH", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
   Udp.endPacket();
-
-  //lora_blink(0xff);
 }
 
 void udpMsg(String msg) {
+  String s = String("[") + String(millis()) + String("] ") + msg;
+  Serial.println(s);
   IPAddress broadcastIP(255, 255, 255, 255);
   Udp.beginPacket(broadcastIP, 5557);
-  String s = String("[") + String(millis()) + String("] ") + msg;
   Udp.printf(s.c_str());
   Udp.endPacket();
 }
@@ -309,29 +308,21 @@ void setup() {
   ArduinoOTA.begin();
 }
 
+extern uint64_t ackStart;
+extern uint32_t ackTimeout;
 void loop() {
   //uint32_t loopTime = millis();
   ArduinoOTA.handle();
   timer.run();
   displayUI.update();
   server.handleClient();
-  processWiFiData();
+  wifi_processData();
+  lora_processData();
 
-  int packetSize = LoRa.parsePacket();
-  if (packetSize) {
-    //received a packet
-    Serial.print("Received packet '");
-
-    //read packet
-    while (LoRa.available()) {
-      String s = LoRa.readString();
-      Serial.print(s);
-      udpMsg("[LoRa] processLoRaData: " + s);
-    }
-
-    //print RSSI of packet
-    Serial.print("' with RSSI ");    
-    Serial.println(LoRa.packetRssi()); 
+  if (ackStart > 0 && millis() >= ackStart + ackTimeout)
+  {
+    server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
+    ackStart = 0;
   }
   
   //Serial.println("looptime: " + String(millis() - loopTime));

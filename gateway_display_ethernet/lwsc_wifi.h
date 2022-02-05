@@ -36,7 +36,7 @@ void reqRssi(uint32_t dest);
 
 void setupFreedom();
 void setupAP();
-void processWiFiData();
+void wifi_processData();
 
 void readWifi(char* buf, uint8_t len);
 
