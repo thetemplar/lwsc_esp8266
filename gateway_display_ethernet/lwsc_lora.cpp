@@ -94,7 +94,7 @@ void lora_processData()
         server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String(machineRssi) + "\", \"reply_rssi\": \"" + String(LoRa.packetRssi()) + "\", \"reply_snr\": \"" + String(LoRa.packetSnr()) + "\"}");
         ackStart = 0;
       }
-    } if (buf[0] == MSG_KeepAlive) {
+    } else if (buf[0] == MSG_KeepAlive) {
       udpMsg("[LoRa] processLoRaData: keep-alive by " + String(buf[1]) + " - Rssi: " + String(LoRa.packetRssi()) + " at SNR: " + String(LoRa.packetSnr()));
     } else {
       udpMsg("[LoRa] processLoRaData: unknown payload: '" + String((char*)&buf[0]) + "'");
