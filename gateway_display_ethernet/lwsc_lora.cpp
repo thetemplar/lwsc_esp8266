@@ -45,7 +45,7 @@ void lora_blink(uint32_t dest)
 uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
 {
   uint8_t loraDest = (uint8_t)dest & 0xFF;
-  if(duration > 256*5-2)
+  if(duration > 255*20-2)
   { 
     udpMsg("[LoRa] NOT fired to " + String(dest) + " duration: " + String(duration) + ": DURATION TOO LONG.");
     return 0;

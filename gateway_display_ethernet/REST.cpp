@@ -401,7 +401,7 @@ void IRAM_ATTR rest_post_fire() {
   lora_fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
   
   ackStart = millis();
-  ackTimeout = 500;
+  ackTimeout = 350;
   ackSeq = seq;
   ackId = id;
 
