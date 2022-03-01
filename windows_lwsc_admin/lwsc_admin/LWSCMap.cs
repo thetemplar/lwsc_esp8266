@@ -17,7 +17,7 @@ namespace lwsc_admin
 
         public Action<int> LocationUpdate { get; internal set; }
         public Action<uint> Blink { get; internal set; }
-        public Action<uint> ReqRssi { get; internal set; }
+        public Action<uint> ReqVersion { get; internal set; }
         public Action<uint, uint> Fire { get; internal set; }
 
         public LWSCMap()
@@ -87,7 +87,7 @@ namespace lwsc_admin
                 {
                     g.FillRectangle(mouseMapped == i ? new SolidBrush(Color.FromArgb(140, Color.LightGray)) : new SolidBrush(Color.FromArgb(220, Color.White)), new RectangleF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY, 200, 16 + 16 * m.FunctionCount()));
 
-                    g.DrawString("[O] [B] [R]" + m.ToString(), this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY));
+                    g.DrawString("[O] [B] [V]" + m.ToString(), this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X : m.symbolX, mouseMapped == i ? _mouse.Y : m.symbolY));
                     g.DrawString("[-]", this.Font, Brushes.Black, new PointF(mouseMapped == i ? _mouse.X + 188 : m.symbolX + 188, mouseMapped == i ? _mouse.Y : m.symbolY));
 
                     int i1 = 0;
@@ -153,7 +153,7 @@ namespace lwsc_admin
                         }
                         if (e.Location.X > m.symbolX + 36 && e.Location.X < m.symbolX + 16 + 36 && e.Location.Y > m.symbolY && e.Location.Y < m.symbolY + 16)
                         {
-                            ReqRssi(m.id);
+                            ReqVersion(m.id);
                             mouseMappedId = m.id;
                             Invalidate();
                             return;

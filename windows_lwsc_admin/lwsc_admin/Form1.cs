@@ -101,7 +101,7 @@ namespace lwsc_admin
             lwscMap1.LocationUpdate += LwscMap1_LocationUpdate;
             lwscMap1.Blink += LwscMap1_Blink;
             lwscMap1.Fire += LwscMap1_Fire;
-            lwscMap1.ReqRssi += LwscMap1_ReqRssi;
+            lwscMap1.ReqVersion += LwscMap1_ReqVersion;
 
             udpClient.Client.Bind(new IPEndPoint(IPAddress.Any, 5556));
             var from = new IPEndPoint(0, 0);
@@ -243,7 +243,7 @@ namespace lwsc_admin
             }
         }
 
-        private void LwscMap1_ReqRssi(uint m_id)
+        private void LwscMap1_ReqVersion(uint m_id)
         {
             MachineData m = machines.First(x => x.id == m_id);
             if (m == null || m.id == 0)
@@ -252,35 +252,11 @@ namespace lwsc_admin
                 return;
             }
 
-            var status = RESTful("/query_rssi?id=" + m.id, RESTType.POST, out string res);
+            var status = RESTful("/version?id=" + m.id, RESTType.POST, out string res);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
                 return;
-            }
-
-            res = "";
-            status = RESTful("/machine_rssi?id=" + m.id, RESTType.GET, out res);
-            if (status != HttpStatusCode.OK)
-            {
-                MessageBox.Show("Error: " + status);
-                return;
-            }
-
-
-
-            dynamic dJson = JsonConvert.DeserializeObject(res);
-            m.rssi = (sbyte)dJson["rssi"];
-
-            if (dJson["rssiMap"] == null)
-                return;
-
-            foreach (var r in dJson["rssiMap"])
-            {
-                uint id = (uint)r["id"];
-                sbyte rssi = (sbyte)r["rssi"];
-                m.rssiMap[id] = rssi;
-                
             }
             lwscMap1.Invalidate();
         }
@@ -494,6 +470,8 @@ namespace lwsc_admin
                 lbMName.Text = machines[mSelected].ToString();
                 tbMName.Text = machines[mSelected].name;
                 tbMShortName.Text = machines[mSelected].shortName;
+                tbMachineX.Text = machines[mSelected].symbolX.ToString();
+                tbMachineY.Text = machines[mSelected].symbolY.ToString();
                 cbMDisabled.Checked = machines[mSelected].disabled;
 
                 tbFName1.Text = machines[mSelected].functions[0].name;
@@ -544,6 +522,8 @@ namespace lwsc_admin
             m.name = tbMName.Text;
             m.shortName = tbMShortName.Text;
             m.disabled = cbMDisabled.Checked;
+            m.symbolX = uint.Parse(tbMachineX.Text);
+            m.symbolY = uint.Parse(tbMachineY.Text);
 
             var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)

@@ -75,6 +75,7 @@ namespace lwsc_admin
             this.label1 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btDynDns = new System.Windows.Forms.Button();
             this.btRefresh = new System.Windows.Forms.Button();
             this.btDebug = new System.Windows.Forms.Button();
             this.pnRSSIButtons = new System.Windows.Forms.Panel();
@@ -121,7 +122,8 @@ namespace lwsc_admin
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.btDynDns = new System.Windows.Forms.Button();
+            this.tbMachineX = new System.Windows.Forms.TextBox();
+            this.tbMachineY = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -169,6 +171,8 @@ namespace lwsc_admin
             // 
             // pMachine
             // 
+            this.pMachine.Controls.Add(this.tbMachineY);
+            this.pMachine.Controls.Add(this.tbMachineX);
             this.pMachine.Controls.Add(this.btFSave5);
             this.pMachine.Controls.Add(this.cbFRelais2_5);
             this.pMachine.Controls.Add(this.cbFRelais1_5);
@@ -611,6 +615,16 @@ namespace lwsc_admin
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // btDynDns
+            // 
+            this.btDynDns.Location = new System.Drawing.Point(8, 6);
+            this.btDynDns.Name = "btDynDns";
+            this.btDynDns.Size = new System.Drawing.Size(70, 25);
+            this.btDynDns.TabIndex = 21;
+            this.btDynDns.Text = "Remote";
+            this.btDynDns.UseVisualStyleBackColor = true;
+            this.btDynDns.Click += new System.EventHandler(this.btDynDns_Click);
             // 
             // btRefresh
             // 
@@ -1071,15 +1085,21 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
-            // btDynDns
+            // tbMachineX
             // 
-            this.btDynDns.Location = new System.Drawing.Point(8, 6);
-            this.btDynDns.Name = "btDynDns";
-            this.btDynDns.Size = new System.Drawing.Size(70, 25);
-            this.btDynDns.TabIndex = 21;
-            this.btDynDns.Text = "Remote";
-            this.btDynDns.UseVisualStyleBackColor = true;
-            this.btDynDns.Click += new System.EventHandler(this.btDynDns_Click);
+            this.tbMachineX.Location = new System.Drawing.Point(5, 125);
+            this.tbMachineX.MaxLength = 8;
+            this.tbMachineX.Name = "tbMachineX";
+            this.tbMachineX.Size = new System.Drawing.Size(46, 22);
+            this.tbMachineX.TabIndex = 40;
+            // 
+            // tbMachineY
+            // 
+            this.tbMachineY.Location = new System.Drawing.Point(5, 155);
+            this.tbMachineY.MaxLength = 8;
+            this.tbMachineY.Name = "tbMachineY";
+            this.tbMachineY.Size = new System.Drawing.Size(46, 22);
+            this.tbMachineY.TabIndex = 41;
             // 
             // Form1
             // 
@@ -1211,6 +1231,8 @@ namespace lwsc_admin
         private System.Windows.Forms.TextBox tbFName2;
         private System.Windows.Forms.Button btRefresh;
         private System.Windows.Forms.Button btDynDns;
+        private System.Windows.Forms.TextBox tbMachineY;
+        private System.Windows.Forms.TextBox tbMachineX;
     }
 }
 
