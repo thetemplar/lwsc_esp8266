@@ -75,6 +75,8 @@ namespace lwsc_admin
             this.label1 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btDynDns = new System.Windows.Forms.Button();
+            this.btRefresh = new System.Windows.Forms.Button();
             this.btDebug = new System.Windows.Forms.Button();
             this.pnRSSIButtons = new System.Windows.Forms.Panel();
             this.btSave = new System.Windows.Forms.Button();
@@ -94,6 +96,7 @@ namespace lwsc_admin
             this.label9 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.lwscMap1 = new lwsc_admin.LWSCMap();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.label13 = new System.Windows.Forms.Label();
@@ -119,8 +122,8 @@ namespace lwsc_admin
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.btRefresh = new System.Windows.Forms.Button();
-            this.lwscMap1 = new lwsc_admin.LWSCMap();
+            this.tbMachineX = new System.Windows.Forms.TextBox();
+            this.tbMachineY = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -168,6 +171,8 @@ namespace lwsc_admin
             // 
             // pMachine
             // 
+            this.pMachine.Controls.Add(this.tbMachineY);
+            this.pMachine.Controls.Add(this.tbMachineX);
             this.pMachine.Controls.Add(this.btFSave5);
             this.pMachine.Controls.Add(this.cbFRelais2_5);
             this.pMachine.Controls.Add(this.cbFRelais1_5);
@@ -229,7 +234,7 @@ namespace lwsc_admin
             this.cbFRelais2_5.AutoSize = true;
             this.cbFRelais2_5.Location = new System.Drawing.Point(1046, 124);
             this.cbFRelais2_5.Name = "cbFRelais2_5";
-            this.cbFRelais2_5.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_5.Size = new System.Drawing.Size(75, 20);
             this.cbFRelais2_5.TabIndex = 38;
             this.cbFRelais2_5.Text = "Relais2";
             this.cbFRelais2_5.UseVisualStyleBackColor = true;
@@ -239,7 +244,7 @@ namespace lwsc_admin
             this.cbFRelais1_5.AutoSize = true;
             this.cbFRelais1_5.Location = new System.Drawing.Point(1046, 97);
             this.cbFRelais1_5.Name = "cbFRelais1_5";
-            this.cbFRelais1_5.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_5.Size = new System.Drawing.Size(78, 20);
             this.cbFRelais1_5.TabIndex = 36;
             this.cbFRelais1_5.Text = "Relais 1";
             this.cbFRelais1_5.UseVisualStyleBackColor = true;
@@ -274,7 +279,7 @@ namespace lwsc_admin
             this.cbFRelais2_4.AutoSize = true;
             this.cbFRelais2_4.Location = new System.Drawing.Point(926, 124);
             this.cbFRelais2_4.Name = "cbFRelais2_4";
-            this.cbFRelais2_4.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_4.Size = new System.Drawing.Size(75, 20);
             this.cbFRelais2_4.TabIndex = 33;
             this.cbFRelais2_4.Text = "Relais2";
             this.cbFRelais2_4.UseVisualStyleBackColor = true;
@@ -284,7 +289,7 @@ namespace lwsc_admin
             this.cbFRelais1_4.AutoSize = true;
             this.cbFRelais1_4.Location = new System.Drawing.Point(926, 97);
             this.cbFRelais1_4.Name = "cbFRelais1_4";
-            this.cbFRelais1_4.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_4.Size = new System.Drawing.Size(78, 20);
             this.cbFRelais1_4.TabIndex = 31;
             this.cbFRelais1_4.Text = "Relais 1";
             this.cbFRelais1_4.UseVisualStyleBackColor = true;
@@ -319,7 +324,7 @@ namespace lwsc_admin
             this.cbFRelais2_3.AutoSize = true;
             this.cbFRelais2_3.Location = new System.Drawing.Point(805, 124);
             this.cbFRelais2_3.Name = "cbFRelais2_3";
-            this.cbFRelais2_3.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_3.Size = new System.Drawing.Size(75, 20);
             this.cbFRelais2_3.TabIndex = 28;
             this.cbFRelais2_3.Text = "Relais2";
             this.cbFRelais2_3.UseVisualStyleBackColor = true;
@@ -329,7 +334,7 @@ namespace lwsc_admin
             this.cbFRelais1_3.AutoSize = true;
             this.cbFRelais1_3.Location = new System.Drawing.Point(805, 97);
             this.cbFRelais1_3.Name = "cbFRelais1_3";
-            this.cbFRelais1_3.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_3.Size = new System.Drawing.Size(78, 20);
             this.cbFRelais1_3.TabIndex = 26;
             this.cbFRelais1_3.Text = "Relais 1";
             this.cbFRelais1_3.UseVisualStyleBackColor = true;
@@ -364,7 +369,7 @@ namespace lwsc_admin
             this.cbFRelais2_2.AutoSize = true;
             this.cbFRelais2_2.Location = new System.Drawing.Point(682, 124);
             this.cbFRelais2_2.Name = "cbFRelais2_2";
-            this.cbFRelais2_2.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_2.Size = new System.Drawing.Size(75, 20);
             this.cbFRelais2_2.TabIndex = 23;
             this.cbFRelais2_2.Text = "Relais2";
             this.cbFRelais2_2.UseVisualStyleBackColor = true;
@@ -374,7 +379,7 @@ namespace lwsc_admin
             this.cbFRelais1_2.AutoSize = true;
             this.cbFRelais1_2.Location = new System.Drawing.Point(682, 97);
             this.cbFRelais1_2.Name = "cbFRelais1_2";
-            this.cbFRelais1_2.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_2.Size = new System.Drawing.Size(78, 20);
             this.cbFRelais1_2.TabIndex = 20;
             this.cbFRelais1_2.Text = "Relais 1";
             this.cbFRelais1_2.UseVisualStyleBackColor = true;
@@ -419,7 +424,7 @@ namespace lwsc_admin
             this.cbFRelais2_1.AutoSize = true;
             this.cbFRelais2_1.Location = new System.Drawing.Point(560, 124);
             this.cbFRelais2_1.Name = "cbFRelais2_1";
-            this.cbFRelais2_1.Size = new System.Drawing.Size(77, 21);
+            this.cbFRelais2_1.Size = new System.Drawing.Size(75, 20);
             this.cbFRelais2_1.TabIndex = 9;
             this.cbFRelais2_1.Text = "Relais2";
             this.cbFRelais2_1.UseVisualStyleBackColor = true;
@@ -439,7 +444,7 @@ namespace lwsc_admin
             this.cbFRelais1_1.AutoSize = true;
             this.cbFRelais1_1.Location = new System.Drawing.Point(560, 97);
             this.cbFRelais1_1.Name = "cbFRelais1_1";
-            this.cbFRelais1_1.Size = new System.Drawing.Size(81, 21);
+            this.cbFRelais1_1.Size = new System.Drawing.Size(78, 20);
             this.cbFRelais1_1.TabIndex = 7;
             this.cbFRelais1_1.Text = "Relais 1";
             this.cbFRelais1_1.UseVisualStyleBackColor = true;
@@ -464,7 +469,7 @@ namespace lwsc_admin
             this.label6.AutoSize = true;
             this.label6.Location = new System.Drawing.Point(255, 70);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(22, 17);
+            this.label6.Size = new System.Drawing.Size(20, 16);
             this.label6.TabIndex = 15;
             this.label6.Text = "0x";
             // 
@@ -473,7 +478,7 @@ namespace lwsc_admin
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(459, 71);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(94, 17);
+            this.label3.Size = new System.Drawing.Size(86, 16);
             this.label3.TabIndex = 7;
             this.label3.Text = "Duration (ms)";
             // 
@@ -500,7 +505,7 @@ namespace lwsc_admin
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(255, 43);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(146, 17);
+            this.label4.Size = new System.Drawing.Size(137, 16);
             this.label4.TabIndex = 12;
             this.label4.Text = "Reassign ID (Careful!)";
             // 
@@ -509,7 +514,7 @@ namespace lwsc_admin
             this.label5.AutoSize = true;
             this.label5.Location = new System.Drawing.Point(508, 40);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(45, 17);
+            this.label5.Size = new System.Drawing.Size(44, 16);
             this.label5.TabIndex = 0;
             this.label5.Text = "Name";
             // 
@@ -538,7 +543,7 @@ namespace lwsc_admin
             this.cbMDisabled.AutoSize = true;
             this.cbMDisabled.Location = new System.Drawing.Point(103, 95);
             this.cbMDisabled.Name = "cbMDisabled";
-            this.cbMDisabled.Size = new System.Drawing.Size(85, 21);
+            this.cbMDisabled.Size = new System.Drawing.Size(84, 20);
             this.cbMDisabled.TabIndex = 5;
             this.cbMDisabled.Text = "Disabled";
             this.cbMDisabled.UseVisualStyleBackColor = true;
@@ -556,7 +561,7 @@ namespace lwsc_admin
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(19, 70);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(79, 17);
+            this.label2.Size = new System.Drawing.Size(75, 16);
             this.label2.TabIndex = 2;
             this.label2.Text = "ShortName";
             // 
@@ -573,7 +578,7 @@ namespace lwsc_admin
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(52, 42);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(45, 17);
+            this.label1.Size = new System.Drawing.Size(44, 16);
             this.label1.TabIndex = 0;
             this.label1.Text = "Name";
             // 
@@ -593,6 +598,7 @@ namespace lwsc_admin
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.btDynDns);
             this.tabPage4.Controls.Add(this.btRefresh);
             this.tabPage4.Controls.Add(this.btDebug);
             this.tabPage4.Controls.Add(this.pnRSSIButtons);
@@ -609,6 +615,26 @@ namespace lwsc_admin
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // btDynDns
+            // 
+            this.btDynDns.Location = new System.Drawing.Point(8, 6);
+            this.btDynDns.Name = "btDynDns";
+            this.btDynDns.Size = new System.Drawing.Size(70, 25);
+            this.btDynDns.TabIndex = 21;
+            this.btDynDns.Text = "Remote";
+            this.btDynDns.UseVisualStyleBackColor = true;
+            this.btDynDns.Click += new System.EventHandler(this.btDynDns_Click);
+            // 
+            // btRefresh
+            // 
+            this.btRefresh.Location = new System.Drawing.Point(357, 12);
+            this.btRefresh.Name = "btRefresh";
+            this.btRefresh.Size = new System.Drawing.Size(28, 25);
+            this.btRefresh.TabIndex = 20;
+            this.btRefresh.Text = "R";
+            this.btRefresh.UseVisualStyleBackColor = true;
+            this.btRefresh.Click += new System.EventHandler(this.btRefresh_Click);
             // 
             // btDebug
             // 
@@ -770,7 +796,7 @@ namespace lwsc_admin
             this.label10.AutoSize = true;
             this.label10.Location = new System.Drawing.Point(1, 54);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(57, 17);
+            this.label10.Size = new System.Drawing.Size(51, 16);
             this.label10.TabIndex = 3;
             this.label10.Text = "X = Fire";
             // 
@@ -779,7 +805,7 @@ namespace lwsc_admin
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(1, 37);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(65, 17);
+            this.label9.Size = new System.Drawing.Size(61, 16);
             this.label9.TabIndex = 2;
             this.label9.Text = "R = RSSI";
             // 
@@ -788,7 +814,7 @@ namespace lwsc_admin
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(1, 20);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(63, 17);
+            this.label8.Size = new System.Drawing.Size(58, 16);
             this.label8.TabIndex = 1;
             this.label8.Text = "B = Blink";
             // 
@@ -797,9 +823,17 @@ namespace lwsc_admin
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(1, 3);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(69, 17);
+            this.label7.Size = new System.Drawing.Size(64, 16);
             this.label7.TabIndex = 0;
             this.label7.Text = "O = Move";
+            // 
+            // lwscMap1
+            // 
+            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
+            this.lwscMap1.Name = "lwscMap1";
+            this.lwscMap1.Size = new System.Drawing.Size(1793, 908);
+            this.lwscMap1.TabIndex = 2;
             // 
             // tabPage1
             // 
@@ -831,7 +865,7 @@ namespace lwsc_admin
             this.label13.ForeColor = System.Drawing.Color.DodgerBlue;
             this.label13.Location = new System.Drawing.Point(2, -2);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(438, 17);
+            this.label13.Size = new System.Drawing.Size(419, 16);
             this.label13.TabIndex = 1;
             this.label13.Text = "This is read-only. Doubleclick will \"Fire\" the Machine/Relais";
             // 
@@ -981,7 +1015,7 @@ namespace lwsc_admin
             this.label12.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label12.Location = new System.Drawing.Point(229, 10);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(36, 17);
+            this.label12.Size = new System.Drawing.Size(35, 16);
             this.label12.TabIndex = 3;
             this.label12.Text = "Pad";
             // 
@@ -991,7 +1025,7 @@ namespace lwsc_admin
             this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label11.Location = new System.Drawing.Point(8, 10);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(53, 17);
+            this.label11.Size = new System.Drawing.Size(51, 16);
             this.label11.TabIndex = 2;
             this.label11.Text = "Select";
             // 
@@ -1051,23 +1085,21 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
-            // btRefresh
+            // tbMachineX
             // 
-            this.btRefresh.Location = new System.Drawing.Point(357, 12);
-            this.btRefresh.Name = "btRefresh";
-            this.btRefresh.Size = new System.Drawing.Size(28, 25);
-            this.btRefresh.TabIndex = 20;
-            this.btRefresh.Text = "R";
-            this.btRefresh.UseVisualStyleBackColor = true;
-            this.btRefresh.Click += new System.EventHandler(this.btRefresh_Click);
+            this.tbMachineX.Location = new System.Drawing.Point(5, 125);
+            this.tbMachineX.MaxLength = 8;
+            this.tbMachineX.Name = "tbMachineX";
+            this.tbMachineX.Size = new System.Drawing.Size(46, 22);
+            this.tbMachineX.TabIndex = 40;
             // 
-            // lwscMap1
+            // tbMachineY
             // 
-            this.lwscMap1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lwscMap1.Location = new System.Drawing.Point(0, 0);
-            this.lwscMap1.Name = "lwscMap1";
-            this.lwscMap1.Size = new System.Drawing.Size(1793, 908);
-            this.lwscMap1.TabIndex = 2;
+            this.tbMachineY.Location = new System.Drawing.Point(5, 155);
+            this.tbMachineY.MaxLength = 8;
+            this.tbMachineY.Name = "tbMachineY";
+            this.tbMachineY.Size = new System.Drawing.Size(46, 22);
+            this.tbMachineY.TabIndex = 41;
             // 
             // Form1
             // 
@@ -1198,6 +1230,9 @@ namespace lwsc_admin
         private System.Windows.Forms.TextBox tbFDuration2;
         private System.Windows.Forms.TextBox tbFName2;
         private System.Windows.Forms.Button btRefresh;
+        private System.Windows.Forms.Button btDynDns;
+        private System.Windows.Forms.TextBox tbMachineY;
+        private System.Windows.Forms.TextBox tbMachineX;
     }
 }
 

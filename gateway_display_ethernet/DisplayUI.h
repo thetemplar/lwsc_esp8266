@@ -1,133 +1,41 @@
 #pragma once
 
-#include "A_config.h"
-#include "lwsc_wifi.h"
-#include "defines.h"
-
 #include <Wire.h>
 #include "src/esp8266-oled-ssd1306-4.1.0/SH1106Wire.h"
 
-#include "src/SimpleList/SimpleList.h"
-
-#ifndef ETH_ENABLE
- #include "src/SimpleButton/SimpleButton.h"
- using namespace simplebutton;
-#endif
+#include "defines.h"
 
 
-
-struct MenuNode {
-    String str; // function used to create the displayed string
-    std::function<void()>  click;  // function that is executed when node is clicked
-    std::function<void()>  hold;   // function that is executed when node is pressed for > 800ms
-};
-
-struct Menu {
-    SimpleList<MenuNode>* list;
-    Menu                * parentMenu;
-    uint8_t               selected;
-    std::function<void()> build; // function that is executed when button is clicked
-};
-
-enum class DISPLAY_MODE { OFF,
-                          SCREEN_SAVER,
-                          MENU,
-                          LIVE_MACHINE,
-                          REQ_RSSI,
-                          LIST_RSSI,
-                          LIST_CONNECTED,
-                          PING_DIRECT,
-                          LIVE_APP,
-                          ADC };
+extern MachineData machines[64];
+extern int8_t machineCount;
 
 class DisplayUI {
     public:
-        DISPLAY_MODE mode = DISPLAY_MODE::MENU;
-        bool highlightLED = false;
-        
-#ifndef ETH_ENABLE
-        Button* up   = NULL;
-        Button* down = NULL;
-        Button* a    = NULL;
-#endif
-
         // ===== adjustable ===== //
-        SH1106Wire display = SH1106Wire(I2C_ADDR, I2C_SDA, I2C_SCL);
-        const uint8_t maxLen           = 18;
+        SH1106Wire display = SH1106Wire(0x3C, 5, 4);
         const uint8_t lineHeight       = 10;
-        const uint8_t buttonDelay      = 250;
-        const uint8_t drawInterval     = 100; // 100ms = 10 FPS
+        const uint32_t drawInterval     = 2000; // 100ms = 10 FPS
 
-        void configInit();
-        void configOn();
-        void configOff();
         void updatePrefix();
         void updateSuffix();
         void drawString(int x, int y, String str);
         void drawString(int row, String str);
         void drawLine(int x1, int y1, int x2, int y2);
+
+        String IpToString(IPAddress ip);
         // ====================== //
 
         DisplayUI();
         ~DisplayUI();
 
         void setup();
-        void setupLED();
-
-        void update(bool force = false);
-        
-        void bt_up();
-        void bt_down();
-        void bt_click();
-        void bt_home();
+        void update(bool force = false);        
+        void waitForETH();
 
     private:
-        int16_t selectedID    = 0; // i.e. access point ID to draw the apMenu
-        uint8_t scrollCounter = 0; // for horizontal scrolling
-        uint8_t listSelIndex  = 0;
-        uint8_t listSelLvl    = 0;
-        uint32_t listSelId    = 0;
-
-        uint32_t drawTime   = 0;   // last time a frame was drawn
-        uint32_t startTime  = 0;   // when the screen was enabled
-        uint32_t buttonTime = 0;   // last time a button was pressed
-
-        bool showNames = true;
-
-        // menus
-        Menu* currentMenu;
-
-        Menu mainMenu;
-
-#ifndef ETH_ENABLE
-        void setupButtons();
-#endif
-
-        // draw functions
-        String BufferToString(WifiLog entry);
-        void draw(bool force = false);
-        void drawButtonTest();
-        void drawMenu();
-        void drawPingDirect();
-        void drawScreenSaver();
-        void drawLiveApp();
-        void drawLiveMachine();
-        void drawConnectedApp();
-        void drawRSSIList();
-        void clearMenu(Menu* menu);
-
-        // menu functions
-        void changeMenu(Menu* menu);
-        void goBack();
-        void createMenu(Menu* menu, Menu* parent, std::function<void()>build);
-
-        void addMenuNode(Menu* menu, String str, std::function<void()>click, std::function<void()>hold);
-        void addMenuNode(Menu* menu, String str, std::function<void()>click);
-        void addMenuNode(Menu* menu, String str, Menu* next);
-        void addMenuNode(Menu* menu, const char* ptr, std::function<void()>click);
-        void addMenuNode(Menu* menu, const char* ptr, Menu* next);
+      uint32_t drawTime   = 0;   // last time a frame was drawn
 };
-
+        
 // ===== FONT ===== //
 // Created by http://oleddisplay.squix.ch/ Consider a donation
 // In case of problems make sure that you are using the font file with the correct version!
