@@ -8,7 +8,6 @@
 
 #include "DisplayUI.h"
 
-#include "lwsc_wifi.h"
 #include "lwsc_lora.h"
 #include "REST.h"
 #include "src/SimpleTimer/SimpleTimer.h"
@@ -29,6 +28,8 @@ SimpleTimer timer;
 WiFiUDP Udp;
 int timerIdUDP;
 
+MachineData machines[64];
+int8_t machineCount;
 
 bool InitalizeFileSystem() {
   bool initok = false;
@@ -70,8 +71,6 @@ bool InitalizeFileSystem() {
   return initok;
 }
 
-extern std::vector<MachineData> machines;
-extern std::map<uint32_t, uint8_t> machinesIndexCache;
 void ReadConfig()
 {
   File configFile = LittleFS.open("/machines.conf", "r");
@@ -81,58 +80,54 @@ void ReadConfig()
   } else {
     Serial.println(F("Opened machines.conf"));
     uint8_t len = 0;
-    configFile.readBytes((char*)&len, 1);
-    Serial.println(F("readBytes len: ") + String(len));
-    for (int i = 0; i < len; i++)
+    configFile.readBytes((char*)&machineCount, 1);
+    Serial.println(F("readBytes len: ") + String(machineCount));
+    for (int i = 0; i < machineCount; i++)
     {
       Serial.println(F("reading # ") + String(i));
-      MachineData md;
-      configFile.readBytes((char*)&md.Name, 38);
-      configFile.readBytes((char*)&md.ShortName, 9);
-      configFile.readBytes((char*)&md.Id, 4);
-      configFile.readBytes((char*)&md.Disabled, 1);
-      configFile.readBytes((char*)&md.SymbolX, 4);
-      configFile.readBytes((char*)&md.SymbolY, 4);
-      Serial.println(F("read: 0x00") + String(md.Id, HEX));
+      configFile.readBytes((char*)&machines[i].Name, 38);
+      configFile.readBytes((char*)&machines[i].ShortName, 9);
+      configFile.readBytes((char*)&machines[i].Disabled, 1);
+      configFile.readBytes((char*)&machines[i].SymbolX, 4);
+      configFile.readBytes((char*)&machines[i].SymbolY, 4);
+      Serial.println(F("read: 0x00") + String(i, HEX));
 
-      configFile.readBytes((char*)&md.Functions[0].Name, 38);
-      configFile.readBytes((char*)&md.Functions[0].Duration, 4);
-      configFile.readBytes((char*)&md.Functions[0].RelaisBitmask, 1);
-      configFile.readBytes((char*)&md.Functions[0].SymbolX, 4);
-      configFile.readBytes((char*)&md.Functions[0].SymbolY, 4);
-      configFile.readBytes((char*)&md.Functions[0].Rotation, 1);
+      configFile.readBytes((char*)&machines[i].Functions[0].Name, 38);
+      configFile.readBytes((char*)&machines[i].Functions[0].Duration, 4);
+      configFile.readBytes((char*)&machines[i].Functions[0].RelaisBitmask, 1);
+      configFile.readBytes((char*)&machines[i].Functions[0].SymbolX, 4);
+      configFile.readBytes((char*)&machines[i].Functions[0].SymbolY, 4);
+      configFile.readBytes((char*)&machines[i].Functions[0].Rotation, 1);
 
-      configFile.readBytes((char*)&md.Functions[1].Name, 38);
-      configFile.readBytes((char*)&md.Functions[1].Duration, 4);
-      configFile.readBytes((char*)&md.Functions[1].RelaisBitmask, 1);
-      configFile.readBytes((char*)&md.Functions[1].SymbolX, 4);
-      configFile.readBytes((char*)&md.Functions[1].SymbolY, 4);
-      configFile.readBytes((char*)&md.Functions[1].Rotation, 1);
+      configFile.readBytes((char*)&machines[i].Functions[1].Name, 38);
+      configFile.readBytes((char*)&machines[i].Functions[1].Duration, 4);
+      configFile.readBytes((char*)&machines[i].Functions[1].RelaisBitmask, 1);
+      configFile.readBytes((char*)&machines[i].Functions[1].SymbolX, 4);
+      configFile.readBytes((char*)&machines[i].Functions[1].SymbolY, 4);
+      configFile.readBytes((char*)&machines[i].Functions[1].Rotation, 1);
 
-      configFile.readBytes((char*)&md.Functions[2].Name, 38);
-      configFile.readBytes((char*)&md.Functions[2].Duration, 4);
-      configFile.readBytes((char*)&md.Functions[2].RelaisBitmask, 1);
-      configFile.readBytes((char*)&md.Functions[2].SymbolX, 4);
-      configFile.readBytes((char*)&md.Functions[2].SymbolY, 4);
-      configFile.readBytes((char*)&md.Functions[2].Rotation, 1);
+      configFile.readBytes((char*)&machines[i].Functions[2].Name, 38);
+      configFile.readBytes((char*)&machines[i].Functions[2].Duration, 4);
+      configFile.readBytes((char*)&machines[i].Functions[2].RelaisBitmask, 1);
+      configFile.readBytes((char*)&machines[i].Functions[2].SymbolX, 4);
+      configFile.readBytes((char*)&machines[i].Functions[2].SymbolY, 4);
+      configFile.readBytes((char*)&machines[i].Functions[2].Rotation, 1);
 
-      configFile.readBytes((char*)&md.Functions[3].Name, 38);
-      configFile.readBytes((char*)&md.Functions[3].Duration, 4);
-      configFile.readBytes((char*)&md.Functions[3].RelaisBitmask, 1);
-      configFile.readBytes((char*)&md.Functions[3].SymbolX, 4);
-      configFile.readBytes((char*)&md.Functions[3].SymbolY, 4);
-      configFile.readBytes((char*)&md.Functions[3].Rotation, 1);
+      configFile.readBytes((char*)&machines[i].Functions[3].Name, 38);
+      configFile.readBytes((char*)&machines[i].Functions[3].Duration, 4);
+      configFile.readBytes((char*)&machines[i].Functions[3].RelaisBitmask, 1);
+      configFile.readBytes((char*)&machines[i].Functions[3].SymbolX, 4);
+      configFile.readBytes((char*)&machines[i].Functions[3].SymbolY, 4);
+      configFile.readBytes((char*)&machines[i].Functions[3].Rotation, 1);
 
-      configFile.readBytes((char*)&md.Functions[4].Name, 38);
-      configFile.readBytes((char*)&md.Functions[4].Duration, 4);
-      configFile.readBytes((char*)&md.Functions[4].RelaisBitmask, 1);
-      configFile.readBytes((char*)&md.Functions[4].SymbolX, 4);
-      configFile.readBytes((char*)&md.Functions[4].SymbolY, 4);
-      configFile.readBytes((char*)&md.Functions[4].Rotation, 1);
+      configFile.readBytes((char*)&machines[i].Functions[4].Name, 38);
+      configFile.readBytes((char*)&machines[i].Functions[4].Duration, 4);
+      configFile.readBytes((char*)&machines[i].Functions[4].RelaisBitmask, 1);
+      configFile.readBytes((char*)&machines[i].Functions[4].SymbolX, 4);
+      configFile.readBytes((char*)&machines[i].Functions[4].SymbolY, 4);
+      configFile.readBytes((char*)&machines[i].Functions[4].Rotation, 1);
 
-      machines.push_back(md);
-      machinesIndexCache[md.Id] = machines.size() - 1;
-      Serial.println("added: " + String(md.ShortName));
+      Serial.println("added: " + String(machines[i].ShortName));
     }
   }
   configFile.close();
@@ -146,19 +141,17 @@ void WriteConfig()
     Serial.println(F("Failed to open machines.conf"));
   } else {
     Serial.println(F("Opened machines.conf"));
-    uint8_t len = machines.size();
-    configFile.write((char*)&len, 1);
-    Serial.println(F("write len: ") + String(len));
-    for (int i = 0; i < len; i++)
+    configFile.write((char*)&machineCount, 1);
+    Serial.println(F("write len: ") + String(machineCount));
+    for (int i = 0; i < machineCount; i++)
     {
       Serial.println(F("writing # ") + String(i));
       configFile.write((char*)&machines[i].Name, 38);
       configFile.write((char*)&machines[i].ShortName, 9);
-      configFile.write((char*)&machines[i].Id, 4);
       configFile.write((char*)&machines[i].Disabled, 1);
       configFile.write((char*)&machines[i].SymbolX, 4);
       configFile.write((char*)&machines[i].SymbolY, 4);
-      Serial.println(F("write: 0x00") + String(machines[i].Id, HEX));
+      Serial.println(F("write: 0x00") + String(i, HEX));
 
       configFile.write((char*)&machines[i].Functions[0].Name, 38);
       configFile.write((char*)&machines[i].Functions[0].Duration, 4);
@@ -236,7 +229,7 @@ void setup() {
 
   pinMode(2, OUTPUT);
 
-  wifi_setup();
+  WiFi.mode(WIFI_OFF);
   lora_setup();
 
   SPI.begin();
@@ -266,7 +259,6 @@ void setup() {
   Serial.println(eth.subnetMask());
   Serial.print("ethernet gateway: ");
   Serial.println(eth.gatewayIP());
-  setupFreedom();
 
   timerIdUDP = timer.setInterval(1000, udpBroadcast);
   timer.enable(timerIdUDP);
@@ -308,7 +300,7 @@ void setup() {
   ArduinoOTA.begin();
   
   udpMsg("Hello everyone! I am " + String(eth.localIP()[0]) + "." + String(eth.localIP()[1]) + "." + String(eth.localIP()[2]) + "." + String(eth.localIP()[3]) + "!");
-  udpMsg("Loaded " + String(machines.size()) + " machines");
+  udpMsg("Loaded " + String(machineCount) + " machines");
 }
 
 extern uint64_t ackStart;
@@ -319,7 +311,6 @@ void loop() {
   timer.run();
   displayUI.update();
   server.handleClient();
-  wifi_processData();
   lora_processData();
 
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)

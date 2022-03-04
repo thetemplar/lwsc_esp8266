@@ -6,12 +6,15 @@
 #include "defines.h"
 
 
+extern MachineData machines[64];
+extern int8_t machineCount;
+
 class DisplayUI {
     public:
         // ===== adjustable ===== //
         SH1106Wire display = SH1106Wire(0x3C, 5, 4);
         const uint8_t lineHeight       = 10;
-        const uint8_t drawInterval     = 100; // 100ms = 10 FPS
+        const uint32_t drawInterval     = 2000; // 100ms = 10 FPS
 
         void updatePrefix();
         void updateSuffix();
@@ -20,7 +23,6 @@ class DisplayUI {
         void drawLine(int x1, int y1, int x2, int y2);
 
         String IpToString(IPAddress ip);
-        String BufferToString(WifiLog entry);
         // ====================== //
 
         DisplayUI();

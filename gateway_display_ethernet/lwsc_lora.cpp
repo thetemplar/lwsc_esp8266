@@ -4,6 +4,12 @@
 #include <ESP8266WebServer.h>
 
 extern void udpMsg(String msg);
+extern uint64_t ackStart;
+extern uint32_t ackTimeout;
+extern ESP8266WebServer server;
+extern MachineData machines[256];
+
+uint8_t buf[128];
 
 void lora_ping(uint32_t dest)
 {
@@ -72,10 +78,6 @@ void lora_reqRssi(uint32_t dest)
   //udpMsg("[LoRa] reqRssi to %08x = %d\n\n", dest, res);
 }
 
-uint8_t buf[128];
-extern uint64_t ackStart;
-extern uint32_t ackTimeout;
-extern ESP8266WebServer server;
 void lora_processData()
 {
 
@@ -89,20 +91,60 @@ void lora_processData()
       i++;
     }
 
-    if (buf[0] == MSG_Ack)
+    if (buf[1] == MSG_Ack)
     {
-      int16_t machineRssi = buf[2] + (buf[3] << 8);
-      int8_t machineSnr = buf[4];
-      udpMsg("[LoRa] processLoRaData: Got Msg_ACK from " + String(buf[1]) + " at Rssi(Gateway->Machine): " + String(machineRssi) + " at LocalRssi(Machine->Gateway): " + String(LoRa.packetRssi()) + " at SNR(Gateway->Machine): " + String(machineSnr) + " at SNR(Machine->Gateway): " + String(LoRa.packetSnr()));
-         
+      uint8_t machineId = buf[2];
+      
+      int16_t machineRssi = buf[3] + (buf[4] << 8);
+      int8_t machineSnr = buf[5];
+      
+      int16_t ownRssi = LoRa.packetRssi();
+      int8_t ownSnr = LoRa.packetSnr();
+      
+      machines[machineId].MachineRssi = machineRssi;
+      machines[machineId].MachineSnr = machineSnr;
+      machines[machineId].Rssi = ownRssi;
+      machines[machineId].Snr = ownSnr;
+      machines[machineId].LastSeen = millis();
+      
+      udpMsg("[LoRa] processLoRaData: Got Msg_ACK from " + String() + " at Rssi(Gateway->Machine): " + String(machineRssi) + " at LocalRssi(Machine->Gateway): " + String(ownRssi) + " at SNR(Gateway->Machine): " + String(machineSnr) + " at SNR(Machine->Gateway): " + String(ownSnr));
+      
       if (ackStart > 0 && millis() < ackStart + ackTimeout)
       {
         uint32_t diff = millis() - ackStart;
         server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String(machineRssi) + "\", \"snr\": \"" + String(machineSnr) + "\", \"reply_rssi\": \"" + String(LoRa.packetRssi()) + "\", \"reply_snr\": \"" + String(LoRa.packetSnr()) + "\"}");
         ackStart = 0;
       }
-    } else if (buf[0] == MSG_KeepAlive) {
-      udpMsg("[LoRa] processLoRaData: keep-alive by " + String(buf[1]) + " - Rssi: " + String(LoRa.packetRssi()) + " at SNR: " + String(LoRa.packetSnr()));
+    } else if (buf[1] == MSG_KeepAlive) {
+      uint8_t machineId = buf[2];
+      
+      int16_t machineRssi = 0;
+      int8_t machineSnr = 0;
+      
+      int16_t ownRssi = LoRa.packetRssi();
+      int8_t ownSnr = LoRa.packetSnr();
+      
+      machines[machineId].MachineRssi = machineRssi;
+      machines[machineId].MachineSnr = machineSnr;
+      machines[machineId].Rssi = ownRssi;
+      machines[machineId].Snr = ownSnr;
+      machines[machineId].LastSeen = millis();
+      
+      udpMsg("[LoRa] processLoRaData: keep-alive by " + String(machineId) + " - Rssi: " + String(LoRa.packetRssi()) + " at SNR: " + String(LoRa.packetSnr()));
+    } else if (buf[1] == MSG_RSSI_Ping) {    
+      delay(250);  
+      int16_t ownRssi = LoRa.packetRssi();
+      uint8_t aa1 = ownRssi;
+      uint8_t aa2 = (ownRssi >> 8);
+      LoRa.beginPacket();
+      LoRa.write(0xFF);
+      LoRa.write(MSG_RSSI_Ping_Reply);
+      LoRa.write(aa1);
+      LoRa.write(aa2);
+      LoRa.endPacket();
+      udpMsg("[LoRa] MSG_RSSI_Ping (" + String(ownRssi) + ")");
+    } else if (buf[1] == MSG_Version_Reply) {    
+      udpMsg("[LoRa] MSG_Version_Reply: '" + String((char*)&buf[2]) + "'");
     } else {
       udpMsg("[LoRa] processLoRaData: unknown payload: '" + String((char*)&buf[0]) + "'");
     }

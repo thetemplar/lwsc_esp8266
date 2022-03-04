@@ -373,7 +373,7 @@ namespace lwsc_admin
 
             for(int i = 0; i < c; i++)
             {
-                status = RESTful("/machine?it=" + i + "&force=1", RESTType.GET, out res);
+                status = RESTful("/machine?id=" + i + "&force=1", RESTType.GET, out res);
                 if (status != HttpStatusCode.OK)
                     break;
                 machines.Add(JsonConvert.DeserializeObject<MachineData>(res));

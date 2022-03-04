@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <map>
 #include "Arduino.h"
 
 #define VERSION 0x03
@@ -91,19 +90,12 @@ enum MsgTypes : uint8_t
   MSG_SetID = 0x40,
   //Misc
   MSG_Version = 0xA0,
+  MSG_Version_Reply = 0xA1,
+  MSG_RSSI_Ping = 0xAE,
+  MSG_RSSI_Ping_Reply = 0xAF,
   //0xF... System
   MSG_KeepAlive = 0xFA,
   MSG_ERROR = 0xFF
-};
-
-struct WifiLog {
-  uint32_t Id;
-  uint32_t Duration;
-  uint8_t RelaisBitmask;
-  uint8_t Type;
-  int8_t Rssi;
-  uint8_t Seq;
-  uint32_t Timestamp;
 };
 
 struct MachineFunction {
@@ -119,8 +111,6 @@ struct MachineFunction {
 struct MachineData {
   char Name[38];
   char ShortName[9];
-  uint32_t Id;
-  int8_t Rssi;
   uint8_t Distance;
   uint8_t Disabled;
   uint32_t Relais1Counter;
@@ -131,9 +121,11 @@ struct MachineData {
 
   MachineFunction Functions[5];
   
-  std::map<uint32_t, int8_t> RssiMap; //Not persistent!
+  int8_t Rssi;
+  int8_t Snr;
+  int8_t MachineRssi;
+  int8_t MachineSnr;
+  uint64_t LastSeen;
 };
-
-
 
 #endif

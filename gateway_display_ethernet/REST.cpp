@@ -2,7 +2,6 @@
 
 #include "REST.h"
 #include "defines.h"
-#include "lwsc_wifi.h"
 #include "lwsc_lora.h"
 
 
@@ -13,47 +12,35 @@
 File fsUploadFile;
 
 extern ESP8266WebServer server;
-extern std::vector<MachineData> machines;
-extern std::map<uint32_t, uint8_t> machinesIndexCache;
-extern struct WifiLog AppBuffer[256];
-extern uint8_t AppBufferIndex;
-extern struct WifiLog MachineBuffer[256];
-extern uint8_t MachineBufferIndex;
 extern void ReadConfig();
 extern void WriteConfig();
 extern void udpMsg(String msg);
 
-extern void reqRssi(uint32_t dest);
+extern MachineData machines[256];
+extern int8_t machineCount;
 
 uint64_t ackStart;
 uint32_t ackTimeout;
-uint16_t ackSeq;
 uint32_t ackId;
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
         server.send(200, F("text/html"),
-            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap() + F("<br><a href='\web'>Web Fernbedienung</a>"));
+            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap() + F("<br><a href='/web'>Web Fernbedienung</a>"));
     });
     server.on(F("/web"), HTTP_GET, web_interface);
-    server.on(F("/host"), HTTP_GET, rest_get_host);
     server.on(F("/save_config"), HTTP_POST, rest_post_save_config);
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
     server.on(F("/machine"), HTTP_POST, rest_post_machine);
-    server.on(F("/machine"), HTTP_DELETE, rest_delete_machine);
-    server.on(F("/machine_rssi"), HTTP_GET, rest_get_machine_rssi);
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
     server.on(F("/fire"), HTTP_GET, rest_post_fire);
     server.on(F("/force_fire"), HTTP_POST, rest_force_fire);
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
-    server.on(F("/stm32_set_id"), HTTP_GET, rest_post_stm32_set_id);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
-    server.on(F("/change_id"), HTTP_POST, rest_post_change_id);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
-    server.on(F("/query_rssi"), HTTP_POST, rest_post_query_rssi);
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
     server.on(F("/reboot"), HTTP_POST, rest_post_reboot);
@@ -68,12 +55,88 @@ void setCrossOrigin(){
 
 void web_interface() {
   setCrossOrigin();
-  String head = F("<!DOCTYPE html> <html> <head> <title>LWSC</title>  <script> function clearAll() { document.getElementById('lastFire').innerHTML = ''; } function fire(j, mid, fid) { if (j) { var last = document.getElementById(j); var copyOfLast = last.cloneNode(true); copyOfLast.setAttribute( 'onClick', 'fire(null, ' + mid + ', ' + fid + ')' ); document.getElementById('lastFire').appendChild(copyOfLast); } const request = new XMLHttpRequest(); const url = '/fire?id='+mid+'&f_id='+fid; request.open('GET', url); request.send();}</script> <style type='text/css'> html, body { overflow-x: hidden; } body { position: relative; } .myButton { box-shadow:inset 0px 10px 40px 10px #91b8b3; background-color:#768d87; border-radius:20px; border:6px solid #566963; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:5em; font-weight:bold; padding:7px 50px; text-decoration:none; width: 80%; text-align:center; margin: 15px; } .myButton:hover { background-color:#6c7c7c; } .myButton:active { position:relative; top:1px; } </style> </head> <body><div id=\"lastFire\" style='width:100%;'></div><div style='width:100%'><a class=\"myButton\" style='background-color: #211cb9; border: 6px solid #1d1b66;' onclick=\"clearAll()\">Clear</a><br>");
+  String head = F("<!DOCTYPE html> "\
+                  "<html> "\
+                  "   <head> "\
+                  "      <title>LWSC</title> "\
+                  "      <script> "\
+                  "        function clearAll() { "\
+                  "            document.getElementById('lastFire').innerHTML = ''; "\
+                  "        } "\
+                  "         "\
+                  "        function fire(j, mid, fid) { "\
+                  "            if (j) { "\
+                  "                var last = document.getElementById(j); "\
+                  "                var copyOfLast = last.cloneNode(true); "\
+                  "                copyOfLast.setAttribute('onClick', 'fire(null, ' + mid + ', ' + fid + ')'); "\
+                  "                document.getElementById('lastFire').appendChild(copyOfLast); "\
+                  "            } "\
+                  "            const request = new XMLHttpRequest(); "\
+                  "            const url = '/fire?id=' + mid + '&f_id=' + fid; "\
+                  "            request.onload  = function() { "\
+                  "                var jsonResponse = JSON.parse(request.responseText); "\
+                  "                if(jsonResponse.result == 'success') "\
+                  "                { "\
+                  "                    const canVibrate = window.navigator.vibrate; "\
+                  "              if (canVibrate) {window.navigator.vibrate(100);} "\
+                  "                    if (j) {document.getElementById(j).style.backgroundColor = \"#768d87\";} "\
+                  "                } else  "\
+                  "                { "\
+                  "                  if (j) {document.getElementById(j).style.backgroundColor = \"#661e1e\";} "\
+                  "                } "\
+                  "            }; "\
+                  "            request.open('GET', url); "\
+                  "            request.send();   "\
+                  "        } "\
+                  "      </script>  "\
+                  "      <style type='text/css'>"\	
+                  "        html,"\
+                  "        body {"\
+                  "          overflow-x: hidden;"\
+                  "        }"\
+                  "        "\
+                  "        body {"\
+                  "          position: relative;"\
+                  "        }"\
+                  "        "\
+                  "        .myButton {"\
+                  "          box-shadow: inset 0px 10px 40px 10px #91b8b3;"\
+                  "          background-color: #768d87;"\
+                  "          border-radius: 20px;"\
+                  "          border: 6px solid #566963;"\
+                  "          display: inline-block;"\
+                  "          cursor: pointer;"\
+                  "          color: #ffffff;"\
+                  "          font-family: Arial;"\
+                  "          font-size: 5em;"\
+                  "          font-weight: bold;"\
+                  "          padding: 7px 50px;"\
+                  "          text-decoration: none;"\
+                  "          width: 80%;"\
+                  "          text-align: center;"\
+                  "          margin: 15px;"\
+                  "        }"\
+                  "        "\
+                  "        .myButton:hover {"\
+                  "          background-color: #6c7c7c;"\
+                  "        }"\
+                  "        "\
+                  "        .myButton:active {"\
+                  "          position: relative;"\
+                  "          top: 1px;"\
+                  "        }"\
+                  "      </style> "\
+                  "   </head> "\
+                  "   <body> "\
+                  "      <div id=\"lastFire\" style='width:100%;'></div> "\
+                  "      <div style='width:100%'> "\
+                  "      <a class=\"myButton\" style='background-color: #211cb9; border: 6px solid #1d1b66;' onclick=\"clearAll()\">Clear</a><br> "\
+                  "");
   String message = "";
-  std::vector<MachineData>::iterator it;
   int j = 0;
-  for (it = machines.begin(); it != machines.end(); it++)
+  for (int i = 0; i < machineCount; i++)
   {
+    MachineData* it = &machines[i];
     if (it->Disabled == 1)
       continue;
       
@@ -81,7 +144,7 @@ void web_interface() {
     {
       if(it->Functions[i].RelaisBitmask > 0x00)
       { 
-        message += String("<a id=\"machine_") + String(j) + "\" class=\"myButton\" onclick=\"fire('machine_" + String(j) + "', " + String(it->Id) + ", " + String(i) + String(")\">") + String(it->Functions[i].Name) + String("</a><br>");
+        message += String("<a id=\"machine_") + String(j) + "\" class=\"myButton\" onclick=\"fire('machine_" + String(j) + "', " + String(i) + ", " + String(i) + String(")\">") + String(it->Functions[i].Name) + String("</a><br>");
         j++;
       }
     }
@@ -90,14 +153,9 @@ void web_interface() {
   server.send(200, "text/html", head + message);
 }
 
-void rest_get_host() {
-  setCrossOrigin();
-  server.send(200, "text/json", "{\"id\": \"0x00" + String(ESP.getChipId(), HEX) + "\"}");
-}
-
 void rest_get_version() {
   setCrossOrigin();
-  if (server.arg("id") == "" && server.arg("it") == ""){
+  if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
@@ -115,46 +173,30 @@ void rest_post_save_config() {
 void rest_get_machine_count()
 {
   setCrossOrigin();
-  server.send(200, "text/json", "{\"count\": \"" + String(machines.size()) + "\"}");
+  server.send(200, "text/json", "{\"count\": \"" + String(machineCount) + "\"}");
 }
 
 void rest_get_machine()
 {  
   setCrossOrigin();
-  if (server.arg("id") == "" && server.arg("it") == ""){
+  if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
 
-  int i = 0;
-  if(server.arg("it") == "")
-  {
-    uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-    if(machinesIndexCache.count(id) == 0)
-    {
-      server.send(404, "text/json", "{\"result\": \"not found\"}");
-      return;
-    }
-    i = machinesIndexCache[id];
-  } else {
-    i = server.arg("it").toInt();
-    if (i < 0 || i > machines.size() - 1) {
-      server.send(404, "text/json", "{\"result\": \"not found\"}");
-      return;
-    }
-  }
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   
-  if(machines.size() == 0 || machinesIndexCache.size() == 0)
+  if(machineCount == 0 || id >= machineCount)
   {
     server.send(404, "text/json", "{\"result\": \"no data\"}");
     return;
   }
   
-  MachineData* md = &machines[i];  
+  MachineData* md = &machines[id];  
   
   String message = "";
   DynamicJsonDocument doc(2048);
-  doc["id"] = md->Id;
+  doc["id"] = id;
   doc["name"] = md->Name;
   doc["shortName"] = md->ShortName;
   doc["disabled"] = md->Disabled;
@@ -168,7 +210,7 @@ void rest_get_machine()
     if(md->Functions[f].RelaisBitmask > 0x00 || server.arg("force") != "")
     {    
       doc["functions"][f]["functionId"] = f;
-      doc["functions"][f]["machineId"] = md->Id;
+      doc["functions"][f]["machineId"] = id;
       doc["functions"][f]["name"] = md->Functions[f].Name;
       doc["functions"][f]["duration"] = md->Functions[f].Duration;
       doc["functions"][f]["RelaisBitmask"] = md->Functions[f].RelaisBitmask;
@@ -188,40 +230,41 @@ void rest_post_machine() {
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  if(id >= 64)
+  {
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  Serial.println("rest_post_machine: " + String(id));
   
   String s = "changed";
   MachineData* md;
-  if(machinesIndexCache.count(id) == 0)
+  if(id > machineCount)
   {
     s = "added";
-    md = new MachineData;
-    memset(&md->Name, 0x00, 38);
-    memset(&md->ShortName, 0x00, 9);
+    memset(&machines[id].Name, 0x00, 38);
+    memset(&machines[id].ShortName, 0x00, 9);
     for(int i = 0; i < 5; i++)
     {
-      memset(&md->Functions[i].Name, 0x00, 38);
-      md->Functions[i].Duration = 0;
-      md->Functions[i].RelaisBitmask = 0;
-      md->Functions[i].SymbolX = 0;
-      md->Functions[i].SymbolY = 0;
-      md->Functions[i].Rotation = 0;
+      memset(&machines[id].Functions[i].Name, 0x00, 38);
+      machines[id].Functions[i].Duration = 0;
+      machines[id].Functions[i].RelaisBitmask = 0;
+      machines[id].Functions[i].SymbolX = 0;
+      machines[id].Functions[i].SymbolY = 0;
+      machines[id].Functions[i].Rotation = 0;
     }
-    md->Id = id;
-    machines.push_back(*md);  
-    machinesIndexCache[id] = machines.size() - 1;
+    machineCount = id + 1;
     Serial.println("New Machine: 0x00" + String(id, HEX));
   }
-  
-  md = &machines[machinesIndexCache[id]];
 
   if(server.arg("name") != "")
   {
     for(int i = 0; i < 37; i++)
     {
       if(i < server.arg("name").length())
-        md->Name[i] = server.arg("name")[i];
+        machines[id].Name[i] = server.arg("name")[i];
       else
-        md->Name[i] = 0x00;
+        machines[id].Name[i] = 0x00;
     }
   }
     
@@ -230,93 +273,20 @@ void rest_post_machine() {
     for(int i = 0; i < 8; i++)
     {
       if(i < server.arg("shortName").length())
-        md->ShortName[i] = server.arg("shortName")[i];
+        machines[id].ShortName[i] = server.arg("shortName")[i];
       else
-        md->ShortName[i] = 0x00;
+        machines[id].ShortName[i] = 0x00;
     }
   }
 
   if(server.arg("disabled") != "")
-    md->Disabled = server.arg("disabled").toInt();
+    machines[id].Disabled = server.arg("disabled").toInt();
   if(server.arg("symbolX") != "")
-    md->SymbolX = server.arg("symbolX").toInt();
+    machines[id].SymbolX = server.arg("symbolX").toInt();
   if(server.arg("symbolY") != "")
-    md->SymbolY = server.arg("symbolY").toInt();
+    machines[id].SymbolY = server.arg("symbolY").toInt();
   
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\"}");
-}
-
-void rest_delete_machine() {
-  setCrossOrigin();
-  if (server.arg("id") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-    return;
-  }
-  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  
-  std::vector<MachineData>::iterator it;
-  int i = 0;
-  for (it = machines.begin(); it != machines.end(); it++)
-  {
-    if(it->Id == id)
-    {
-      machines.erase(it);
-      machinesIndexCache.erase(id);
-      server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"delete\"}");
-      return;
-    }
-    i++;
-  }
-  
-  server.send(200, "text/json", "{\"result\": \"fail\"}");
-}
-
-void rest_post_query_rssi() {  
-  setCrossOrigin();  
-  if (server.arg("id") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-  }
-
-  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-    return;
-  }
-  reqRssi(id); 
-
-  server.send(200, "text/json", "{\"result\": \"success\"}");
-}
-
-void rest_get_machine_rssi() {
-  setCrossOrigin();
-  if (server.arg("id") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-    return;
-  }
-  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"not existing\"}");
-  }  
-  
-  MachineData* md;
-  md = &machines[machinesIndexCache[id]];
-
-  String message = "";
-  DynamicJsonDocument doc(1024);
-  int i = 0;
-  doc["id"] = md->Id;
-  doc["rssi"] = md->Rssi;
-  std::map<uint32_t, int8_t>::iterator it;
-  for (it = md-> RssiMap.begin(); it != md->RssiMap.end(); it++)
-  {
-    doc["rssiMap"][i]["id"] = it->first;
-    doc["rssiMap"][i]["rssi"] = it->second;
-    i++;
-  }
-  serializeJson(doc, message);
-  server.send(200, "text/json", message);
 }
 
 void rest_post_function() {
@@ -327,15 +297,9 @@ void rest_post_function() {
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   uint32_t f_id = strtoul(server.arg("f_id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0 || f_id >= 5){
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-    return;
-  }
 
-  MachineData* md;
-  md = &machines[machinesIndexCache[id]];
   String s = "changed";
-  if(md->Functions[f_id].RelaisBitmask == 0x00)
+  if(machines[id].Functions[f_id].RelaisBitmask == 0x00)
   {
     s = "added";
   } else if (server.arg("relaisBitmask").toInt() == 0x00) {
@@ -345,16 +309,16 @@ void rest_post_function() {
   for(int i = 0; i < 37; i++)
   {
     if(i < server.arg("name").length())
-      md->Functions[f_id].Name[i] = server.arg("name")[i];
+      machines[id].Functions[f_id].Name[i] = server.arg("name")[i];
     else
-      md->Functions[f_id].Name[i] = 0x00;
+      machines[id].Functions[f_id].Name[i] = 0x00;
   }
   
-  md->Functions[f_id].Duration = server.arg("duration").toInt();
-  md->Functions[f_id].RelaisBitmask = server.arg("relaisBitmask").toInt();
-  md->Functions[f_id].SymbolX = server.arg("symbolX").toInt();
-  md->Functions[f_id].SymbolY = server.arg("symbolY").toInt();
-  md->Functions[f_id].Rotation = server.arg("rotation").toInt();
+  machines[id].Functions[f_id].Duration = server.arg("duration").toInt();
+  machines[id].Functions[f_id].RelaisBitmask = server.arg("relaisBitmask").toInt();
+  machines[id].Functions[f_id].SymbolX = server.arg("symbolX").toInt();
+  machines[id].Functions[f_id].SymbolY = server.arg("symbolY").toInt();
+  machines[id].Functions[f_id].Rotation = server.arg("rotation").toInt();
   
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\", \"id\": \"" + String(id) + "\", \"f_id\": \"" + String(f_id) + "\"}");
 }
@@ -369,7 +333,7 @@ void rest_force_fire()
   uint32_t duration = strtoul(server.arg("duration").c_str(), NULL, 10);
   uint32_t bitMask = strtoul(server.arg("bitmask").c_str(), NULL, 10);
   lora_fire(id, duration, bitMask); 
-  server.send(400, "text/json", "{\"result\": \"ok\"}");
+  server.send(200, "text/json", "{\"result\": \"ok\"}");
 }
 
 
@@ -381,28 +345,13 @@ void IRAM_ATTR rest_post_fire() {
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   uint32_t f_id = strtoul(server.arg("f_id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0 || f_id >= 5 || machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask == 0x00){
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-    return;
-  }
-  
-  AppBuffer[AppBufferIndex].Id = id;
-  AppBuffer[AppBufferIndex].Duration = machines[machinesIndexCache[id]].Functions[f_id].Duration;
-  AppBuffer[AppBufferIndex].RelaisBitmask = machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask;
-  AppBuffer[AppBufferIndex].Type = MSG_Fire;
-  AppBuffer[AppBufferIndex].Rssi = 0x00;
-  AppBuffer[AppBufferIndex].Seq = 0x00;
-  AppBuffer[AppBufferIndex].Timestamp = millis();
-  AppBufferIndex++;
 
-  if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x01 == 0x01) machines[machinesIndexCache[id]].Relais1Counter++;
-  if(machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[machinesIndexCache[id]].Relais2Counter++;
-  uint16_t seq = fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
-  lora_fire(id, machines[machinesIndexCache[id]].Functions[f_id].Duration, machines[machinesIndexCache[id]].Functions[f_id].RelaisBitmask);
+  if(machines[id].Functions[f_id].RelaisBitmask & 0x01 == 0x01) machines[id].Relais1Counter++;
+  if(machines[id].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[id].Relais2Counter++;
+  lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
   
   ackStart = millis();
   ackTimeout = 350;
-  ackSeq = seq;
   ackId = id;
 
   //no server.send -> in processWiFiData()->ack!
@@ -420,78 +369,9 @@ void rest_post_blink() {
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0 ){
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-    return;
-  }
-  blink(id);
   lora_blink(id);
   
-  AppBuffer[AppBufferIndex].Id = id;
-  AppBuffer[AppBufferIndex].Duration = 0;
-  AppBuffer[AppBufferIndex].RelaisBitmask = 0;
-  AppBuffer[AppBufferIndex].Type = MSG_Blink;
-  AppBuffer[AppBufferIndex].Rssi = 0x00;
-  AppBuffer[AppBufferIndex].Seq = 0x00;
-  AppBuffer[AppBufferIndex].Timestamp = millis();
-  AppBufferIndex++;
-  
   server.send(200, "text/json", "{\"result\": \"success\"}");
-}
-
-void rest_post_change_id() {
-  setCrossOrigin();
-  if (server.arg("id") == "" || server.arg("new_id") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-    return;
-  }
-  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  uint32_t new_id = strtoul(server.arg("new_id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"not existing\"}");
-  }  
-  if(machinesIndexCache.count(new_id) != 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"already existing\"}");
-  }  
-  uint8_t index = machinesIndexCache[id];
-  MachineData* md = &machines[index]; 
-  md->Id = new_id;
-  machinesIndexCache.erase(id);
-  machinesIndexCache[new_id] = index;
-  
-  server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"change id\", \"id\": 0x00" + String(md->Id, HEX) + ", \"name\": \"" + md->Name + "\", \"shortName\": \"" + md->ShortName + "\"}");
-}
-
-
-void rest_post_stm32_set_id() {  
-  setCrossOrigin();  
-  if (server.arg("id") == "" || server.arg("new_id") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-  }
-
-  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  uint32_t new_id = strtoul(server.arg("new_id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"not existing\"}");
-  }  
-  if(machinesIndexCache.count(new_id) != 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"already existing\"}");
-  }  
-
-  //TODO -> rfm command!
-  
-  uint8_t index = machinesIndexCache[id];
-  MachineData* md = &machines[index]; 
-  md->Id = new_id;
-  machinesIndexCache.erase(id);
-  machinesIndexCache[new_id] = index;
-  
-  server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"change id\", \"id\": 0x00" + String(md->Id, HEX) + ", \"name\": \"" + md->Name + "\", \"shortName\": \"" + md->ShortName + "\"}");
-
 }
 
 void rest_get_file() {
@@ -541,21 +421,21 @@ void rest_get_all_functions() {
   setCrossOrigin();
   String message = "";
   DynamicJsonDocument doc(8192);
-  std::vector<MachineData>::iterator it;
-  int f = 0;
-  for (it = machines.begin(); it != machines.end(); it++)
+  int ff = 0;
+  for (int i = 0; i < machineCount; i++)
   {
-    if (it->Disabled == 1)
+    if (machines[i].Disabled == 1)
       continue;
       
-    for (int i = 0; i < 5; i++)
+    for (int f = 0; f < 5; f++)
     {
-      if(it->Functions[i].RelaisBitmask > 0x00)
+      if(machines[i].Functions[f].RelaisBitmask > 0x00)
       {
-        doc[f]["functionId"] = i;
-        doc[f]["machineId"] = it->Id;
-        doc[f]["name"] = it->Functions[i].Name;
-        f++;
+        //Serial.print("rest_get_all_functions: " + String(machines[i].Functions[f].Name) + " - " + String(i) + " - " + String(f) + "\r\n"); 
+        doc[ff]["functionId"] = f;
+        doc[ff]["machineId"] = i;
+        doc[ff]["name"] = machines[i].Functions[f].Name;
+        ff++;
       }
     }
   }
@@ -571,14 +451,8 @@ void rest_post_set_relaiscounter() {
   }
 
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
-  if(machinesIndexCache.count(id) == 0)
-  {
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-    return;
-  }
-  int i = machinesIndexCache[id];
   
-  MachineData* md = &machines[i];  
+  MachineData* md = &machines[id];  
 
   if(server.arg("relais1Counter") != "")
   {
@@ -608,21 +482,7 @@ void rest_post_reboot() {
     return;
   }
   
-  if(machinesIndexCache.count(id) == 0 ){
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-    return;
-  }
-  reboot(id);
   lora_reboot(id);
-  
-  AppBuffer[AppBufferIndex].Id = id;
-  AppBuffer[AppBufferIndex].Duration = 0;
-  AppBuffer[AppBufferIndex].RelaisBitmask = 0;
-  AppBuffer[AppBufferIndex].Type = MSG_Reboot;
-  AppBuffer[AppBufferIndex].Rssi = 0x00;
-  AppBuffer[AppBufferIndex].Seq = 0x00;
-  AppBuffer[AppBufferIndex].Timestamp = millis();
-  AppBufferIndex++;
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }

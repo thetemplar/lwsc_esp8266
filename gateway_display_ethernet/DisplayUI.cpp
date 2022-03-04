@@ -8,11 +8,6 @@
 
 extern String network_ip;
 
-extern struct WifiLog MachineBuffer[256];
-extern uint8_t MachineBufferIndex;
-extern std::vector<MachineData> machines;
-extern std::map<uint32_t, uint8_t> machinesIndexCache;
-
 // ===== adjustable ===== //
 void DisplayUI::drawString(int x, int y, String str) {
     display.drawString(x, y, str);
@@ -33,23 +28,6 @@ String DisplayUI::IpToString(IPAddress ip){
   return s;
 }
 
-String DisplayUI::BufferToString(WifiLog entry)
-{
-  if(machinesIndexCache.count(entry.Id) == 0)
-    return "";
-    
-  char tmp[30] = {0};
-
-  char tmp2[10]  = {0};
-  if(entry.Type == MSG_Fire)
-    sprintf(tmp2, "%02X %d", entry.RelaisBitmask, entry.Duration/100);   
-  
-  if(machines[machinesIndexCache[entry.Id]].ShortName[0] != '?')
-    sprintf(tmp, "%02X %8.8s %-4d %02X %s", entry.Seq, machines[machinesIndexCache[entry.Id]].ShortName, entry.Rssi, entry.Type, tmp2);
-  else
-    sprintf(tmp, "%02X %08X %-4d %02X %s", entry.Seq, entry.Id, entry.Rssi, entry.Type, tmp2);
-  return String(tmp);
-}
 
 // ====================== //
 
@@ -77,6 +55,7 @@ void DisplayUI::setup() {
     display.display();
 }
 
+int loopDrawIndex = 0;
 void DisplayUI::update(bool force) {
   if (force || ((millis() - drawTime > drawInterval))) {
     drawTime = millis();
@@ -86,10 +65,16 @@ void DisplayUI::update(bool force) {
     drawString(1, "Heap " + String(ESP.getFreeHeap()/1024) + "k, Uptime " + String(millis()/60000) + " min");
     drawString(2, "Ethernet IP Address:");
     drawString(3, network_ip);
-    drawString(4, "Last Command: ");
-    drawString(5, BufferToString(MachineBuffer[(MachineBufferIndex + 256 - 1) % 256]));
+    if(loopDrawIndex == 0)
+      drawString(5, "Machine Count: " + machineCount);
+    else
+      drawString(5, "[" + String(loopDrawIndex) + "] " + String(machines[loopDrawIndex].ShortName) + " " + String(machines[loopDrawIndex].Rssi));
   
     display.display();
+
+    loopDrawIndex++;
+    if (loopDrawIndex >= machineCount)
+      loopDrawIndex = 0;
   }
 }
 
