@@ -1,5 +1,614 @@
-openapi 3.0.0
-info
-  title API Documentation
-  version '1.0'
-  termsOfService ''
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/L31868/LWSC/1.0.0
+info:
+  description: LWSC Gateway API
+  version: "1.0.0"
+  title: LWSC Gateway API
+paths:
+  /web:
+    get:
+      summary: Simple HTML Page
+      responses:
+        '200':
+          description: Success response
+          content:
+            text/html:
+              schema:
+                type: object
+  /save_config:
+    post:
+      summary: Save the current config to the onboard flash
+      responses:
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [success]
+  /machine_count:
+    get:
+      summary: Get Number of Machines
+      responses:
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+  /machine:
+    get:
+      summary: Get Machine Detail
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 63
+          required: true
+      responses:
+        '400':
+          description: Missing id
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '404':
+          description: (Id == 0) or ()id >= machineCount)
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [no data]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  shortName:
+                    type: string
+                  disabled:
+                    type: boolean
+                  symbolX:
+                    type: integer
+                  symbolY:
+                    type: integer
+                  relais1Counter:
+                    type: integer
+                  relais2Counter:
+                    type: integer
+                  functions:
+                    type: array
+                    minItems: 0
+                    maxItems: 5
+                    items:
+                      type: object  
+                      properties:
+                        functionId:
+                          type: integer
+                        machineId:
+                          type: integer
+                        name:
+                          type: string
+                        duration:
+                          type: integer
+                        RelaisBitmask:
+                          type: integer
+                        symbolX:
+                          type: integer
+                        symbolY:
+                          type: integer
+                        rotation:
+                          type: integer
+    post:
+      summary: Updates Machine Parameters (Caution!)
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 63
+          required: true
+        - in: query
+          name: name
+          schema:
+            type: string
+            minimum: 1
+            maximum: 37
+        - in: query
+          name: shortName
+          schema:
+            type: string
+            minimum: 1
+            maximum: 37
+        - in: query
+          name: disabled
+          schema:
+            type: integer
+        - in: query
+          name: symbolX
+          schema:
+            type: integer
+        - in: query
+          name: symbolY
+          schema:
+            type: integer
+      responses:
+        '400':
+          description: Missing id or id not [0..63]
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [success]
+                  operation:
+                    type: string
+                    enum: [added, changed]
+                    
+  /function:
+    post:
+      summary: Updates Machine-Function Parameters (Caution!)
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 63
+          required: true
+        - in: query
+          name: f_id
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 4
+          required: true
+        - in: query
+          name: name
+          schema:
+            type: string
+            minimum: 1
+            maximum: 37
+          required: true
+        - in: query
+          name: relaisBitmask
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: duration
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: symbolX
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: symbolY
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: rotation
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [success]
+                  operation:
+                    type: string
+                    enum: [added, changed, removed]
+                  id:
+                    type: integer
+                  f_id:
+                    type: integer
+  /fire:
+    get:
+      summary: Fires the given function of given machine
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: f_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response (timeout)
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [success, no reply]
+                  timeout:
+                    type: integer
+                  roundtriptime:
+                    type: integer
+                  type:
+                    type: string
+                    enum: [lora]
+                  rssi:
+                    type: integer
+                  snr:
+                    type: integer
+                  reply_rssi:
+                    type: integer
+                  reply_snr:
+                    type: integer
+    post:
+      summary: Fires the given function of given machine
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: f_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response (timeout)
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [success, no reply]
+                  timeout:
+                    type: integer
+                  roundtriptime:
+                    type: integer
+                  type:
+                    type: string
+                    enum: [lora]
+                  rssi:
+                    type: integer
+                  snr:
+                    type: integer
+                  reply_rssi:
+                    type: integer
+                  reply_snr:
+                    type: integer
+                    
+  /force_fire:
+    get:
+      summary: For Debug
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: duration
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: bitmask
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [ok]
+    post:
+      summary: For Debug
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: duration
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: bitmask
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [ok]
+  /blink:
+    post:
+      summary: Lets the Chipmodule blink
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [success]
+  /file:
+    get:
+      summary: Receives file from internal flash
+      parameters:
+        - in: query
+          name: filename
+          schema:
+            type: string
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+  /upload:
+    post:
+      summary: Upload a file to internal flash
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              format: binary
+      responses:
+        '500':
+          description: couldn't create file
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum: ["500: couldn't create file"]
+        '200':
+          description: Success response
+  /all_functions:
+    get:
+      summary: Returns all funktions with name, id and f_id
+      responses:
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: array
+                items:
+                  type: object  
+                  properties:
+                    name:
+                      type: string
+                    machineId:
+                      type: integer
+                    functionId:
+                      type: integer
+  /set_relaiscounter:
+    post:
+      summary: Not Yet Implemented
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: relais1Counter
+          schema:
+            type: integer
+        - in: query
+          name: relais2Counter
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: string
+                enum: [success]
+  /reboot:
+    post:
+      summary: Reboots device
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: string
+                enum: [success]
+  /version:
+    get:
+      summary: Reveives device build details (Not Yet Fully Implemented)
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '400':
+          description: Missing query argument
+          content:
+            text/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    enum: [fail]
+        '200':
+          description: Success response
+          content:
+            text/json:
+              schema:
+                type: object
