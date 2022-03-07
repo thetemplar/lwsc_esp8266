@@ -318,8 +318,8 @@ void loop() {
 
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
   {
-    server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
-    ackStart = 0;
+    //server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
+    //ackStart = 0;
   }
   
   //Serial.println("looptime: " + String(millis() - loopTime));

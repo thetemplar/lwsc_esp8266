@@ -363,7 +363,21 @@ void IRAM_ATTR rest_post_fire() {
   ackTimeout = 350;
   ackId = id;
 
-  //no server.send -> in processWiFiData()->ack!
+  //TESTING  
+  int test_delay = random(200, 500);
+  
+  uint32_t diff = test_delay;
+  if(diff < ackTimeout)
+  {
+    server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String((-1 * random(50, 120))) + "\", \"snr\": \"" + String((random(2, 10))) + "\", \"reply_rssi\": \"" + String((-1 * random(50, 120))) + "\", \"reply_snr\": \"" + String((random(2, 10))) + "\"}");
+    ackStart = 0;
+  }
+  else
+  {
+    server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
+    ackStart = 0;
+  }
+      
 }
 
 void rest_post_blink() {
