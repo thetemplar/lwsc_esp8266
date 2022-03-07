@@ -19,6 +19,7 @@ void rest_get_file_list();
 void rest_post_save_config();
 void rest_get_version();
 
+void rest_get_last_msg();
 
 void rest_post_set_relaiscounter();
 

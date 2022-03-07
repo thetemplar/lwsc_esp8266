@@ -19,6 +19,8 @@
 ENC28J60lwIP eth(CSPIN);
 byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 
+char lastMsg[400];
+
 ESP8266WebServer server(80);
 DisplayUI displayUI;
 String network_ip;
@@ -208,6 +210,7 @@ void udpMsg(String msg) {
   Udp.beginPacket(broadcastIP, 5557);
   Udp.printf(s.c_str());
   Udp.endPacket();
+  s.toCharArray(lastMsg, 400);
 }
 
 void setup() {

@@ -11,6 +11,8 @@ extern MachineData machines[256];
 
 uint8_t buf[128];
 
+uint32_t fireCounter = 0;
+
 void lora_ping(uint32_t dest)
 {
   udpMsg("[LoRa] blink (as 0/0-fire) to " + String(dest) + ":");
@@ -50,6 +52,7 @@ void lora_blink(uint32_t dest)
 
 uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
 {
+  fireCounter++;
   uint8_t loraDest = (uint8_t)dest & 0xFF;
   if(duration > 255*20-2)
   { 

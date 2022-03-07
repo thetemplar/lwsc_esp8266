@@ -33,6 +33,7 @@ void restServerRouting() {
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
     server.on(F("/machine"), HTTP_POST, rest_post_machine);
+    server.on(F("/last_msg"), HTTP_GET, rest_get_last_msg);
     server.on(F("/function"), HTTP_POST, rest_post_function);
     server.on(F("/fire"), HTTP_POST, rest_post_fire);
     server.on(F("/fire"), HTTP_GET, rest_post_fire);
@@ -40,6 +41,7 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
+    server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
@@ -133,19 +135,19 @@ void web_interface() {
                   "      <a class=\"myButton\" style='background-color: #211cb9; border: 6px solid #1d1b66;' onclick=\"clearAll()\">Clear</a><br> "\
                   "");
   String message = "";
-  int j = 0;
+  //int j = 0;
   for (int i = 0; i < machineCount; i++)
   {
     MachineData* it = &machines[i];
     if (it->Disabled == 1)
       continue;
       
-    for (int i = 0; i < 5; i++)
+    for (int j = 0; j < 5; j++)
     {
-      if(it->Functions[i].RelaisBitmask > 0x00)
+      if(it->Functions[j].RelaisBitmask > 0x00)
       { 
-        message += String("<a id=\"machine_") + String(j) + "\" class=\"myButton\" onclick=\"fire('machine_" + String(j) + "', " + String(i) + ", " + String(i) + String(")\">") + String(it->Functions[i].Name) + String("</a><br>");
-        j++;
+        message += String("<a id=\"machine_") + String(i) + "\" class=\"myButton\" onclick=\"fire('machine_" + String(i) + "', " + String(i) + ", " + String(j) + String(")\">") + String(it->Functions[j].Name) + String("</a><br>");
+        //j++;
       }
     }
   }  
@@ -168,6 +170,13 @@ void rest_post_save_config() {
   setCrossOrigin();
   WriteConfig();
   server.send(200, "text/json", "{\"result\": \"success\"}");
+}
+
+extern char lastMsg[400];
+extern uint32_t fireCounter;
+void rest_get_last_msg() {     
+  setCrossOrigin();
+  server.send(200, "text/json", "{\"result\": \"" + String(lastMsg) + "\", \"firecounter\": \"" + String(fireCounter) + "\"}");
 }
 
 void rest_get_machine_count()
@@ -239,7 +248,7 @@ void rest_post_machine() {
   
   String s = "changed";
   MachineData* md;
-  if(id > machineCount)
+  if(id >= machineCount)
   {
     s = "added";
     memset(&machines[id].Name, 0x00, 38);
@@ -383,6 +392,24 @@ void rest_get_file() {
   File file = LittleFS.open("/" + server.arg("filename"), "r");
   size_t sent = server.streamFile(file, "application/octet-stream");
   file.close();
+}
+
+void rest_get_file_list() {
+  String message = "[";
+  File root = LittleFS.open("/", "r");
+ 
+  File file = root.openNextFile();
+ 
+  while(file){
+ 
+      Serial.print("FILE: ");
+      message += String(file.name()) + ",";
+ 
+      file = root.openNextFile();
+  }
+  message += "]";
+  
+  server.send(200, "text/plain", message);
 }
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
