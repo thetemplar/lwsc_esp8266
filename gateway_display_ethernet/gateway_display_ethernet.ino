@@ -4,8 +4,6 @@
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
 
-#include <LoRa.h>
-
 #include "DisplayUI.h"
 
 #include "lwsc_lora.h"
@@ -233,7 +231,7 @@ void setup() {
   pinMode(2, OUTPUT);
 
   WiFi.mode(WIFI_OFF);
-  lora_setup();
+  //lora_setup();
 
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
@@ -314,7 +312,7 @@ void loop() {
   timer.run();
   displayUI.update();
   server.handleClient();
-  lora_processData();
+  //lora_processData();
 
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
   {
