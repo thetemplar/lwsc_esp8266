@@ -409,6 +409,7 @@ void rest_get_file() {
 }
 
 void rest_get_file_list() {
+  setCrossOrigin();
   String message = "[";
   File root = LittleFS.open("/", "r");
  
