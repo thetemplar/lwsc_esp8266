@@ -410,20 +410,22 @@ void rest_get_file() {
 
 void rest_get_file_list() {
   setCrossOrigin();
-  String message = "[";
+  String message = "";
+  DynamicJsonDocument doc(2048);
   File root = LittleFS.open("/", "r");
  
   File file = root.openNextFile();
- 
+
+  int f = 0;
   while(file){
- 
       Serial.print("FILE: ");
-      message += String(file.name()) + ",";
+      doc["files"][f] = String(file.name());
  
       file = root.openNextFile();
+      f++;
   }
-  message += "]";
-  
+  serializeJson(doc, message);
+  Serial.print("message: "+message);
   server.send(200, "text/plain", message);
 }
 
