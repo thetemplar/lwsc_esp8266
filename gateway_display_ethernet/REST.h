@@ -15,6 +15,7 @@ void rest_post_blink();
 void rest_post_reboot();
 void rest_upload_handler();
 void rest_get_file();
+void rest_delete_file();
 void rest_get_file_list();
 void rest_post_save_config();
 void rest_get_version();

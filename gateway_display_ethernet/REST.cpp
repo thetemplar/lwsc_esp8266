@@ -41,6 +41,7 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
+    server.on(F("/file"), HTTP_DELETE, rest_delete_file);  
     server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
@@ -406,6 +407,20 @@ void rest_get_file() {
   File file = LittleFS.open("/" + server.arg("filename"), "r");
   size_t sent = server.streamFile(file, "application/octet-stream");
   file.close();
+}
+
+void rest_delete_file() {
+  setCrossOrigin();
+  if (server.arg("filename") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  if(LittleFS.exists("/" + server.arg("filename"))){
+    LittleFS.remove("/" + server.arg("filename"));
+    server.send(200, "text/json", "{\"result\": \"success\"}");
+  }else{
+    server.send(404, "text/json", "{\"result\": \"not found\"}");
+  }
 }
 
 void rest_get_file_list() {
