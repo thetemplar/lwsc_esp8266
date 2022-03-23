@@ -16,8 +16,10 @@ extern void ReadConfig();
 extern void WriteConfig();
 extern void udpMsg(String msg);
 
-extern MachineData machines[256];
+extern MachineData machines[32];
+extern User users[16];
 extern int8_t machineCount;
+extern FSInfo fs_info;
 
 uint64_t ackStart;
 uint32_t ackTimeout;
@@ -41,13 +43,32 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
-    server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
+    server.on(F("/file_list"), HTTP_GET, rest_get_file_list); 
+    server.on(F("/file_delete"), HTTP_POST, rest_get_file_delete);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
     server.on(F("/reboot"), HTTP_POST, rest_post_reboot);
     server.on(F("/version"), HTTP_GET, rest_get_version);
 }
+bool checkUserRights(String user, String password, UserRights neededRights){
+    for(int i = 0; i < 64; i++)
+    {
+      if(users[i].Name == user.c_str())
+      {
+        if(users[i].Password != password.c_str() || users[i].Rights < neededRights)
+        {
+          server.send(400, "text/json", "{\"result\": \"no auth\"}");
+          return false;
+        }
+        return true;
+      }
+    }
+    
+    server.send(400, "text/json", "{\"result\": \"no auth\"}");
+    return false;
+}
+  
 void setCrossOrigin(){
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.sendHeader(F("Access-Control-Max-Age"), F("600"));
@@ -57,6 +78,9 @@ void setCrossOrigin(){
 
 void web_interface() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
+  
+    
   String head = F("<!DOCTYPE html> "\
                   "<html> "\
                   "   <head> "\
@@ -363,7 +387,21 @@ void IRAM_ATTR rest_post_fire() {
   ackTimeout = 350;
   ackId = id;
 
-  //no server.send -> in processWiFiData()->ack!
+  //TESTING  
+  int test_delay = random(200, 500);
+  
+  uint32_t diff = test_delay;
+  if(diff < ackTimeout)
+  {
+    server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String((-1 * random(50, 120))) + "\", \"snr\": \"" + String((random(2, 10))) + "\", \"reply_rssi\": \"" + String((-1 * random(50, 120))) + "\", \"reply_snr\": \"" + String((random(2, 10))) + "\"}");
+    ackStart = 0;
+  }
+  else
+  {
+    server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
+    ackStart = 0;
+  }
+      
 }
 
 void rest_post_blink() {
@@ -396,23 +434,32 @@ void rest_get_file() {
 
 void rest_get_file_list() {
   setCrossOrigin();
-  String message = "";
-  DynamicJsonDocument doc(2048);
+  String message = "[";
   File root = LittleFS.open("/", "r");
  
   File file = root.openNextFile();
-
-  int f = 0;
+ 
   while(file){
+ 
       Serial.print("FILE: ");
-      doc["files"][f] = String(file.name());
+      message += String(file.name()) + ",";
  
       file = root.openNextFile();
-      f++;
   }
-  serializeJson(doc, message);
-  Serial.print("message: "+message);
+  message += "]";
+  
   server.send(200, "text/plain", message);
+}
+
+void rest_get_file_delete() {
+  setCrossOrigin();
+  if (server.arg("filename") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+  LittleFS.remove(filename);
+  LittleFS.info(fs_info);  
+  server.send(200, "text/plain", "{\"result\": \"success\"}");
 }
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
@@ -440,7 +487,8 @@ void rest_upload_handler(){ // upload a new file to the LittleFS
       fsUploadFile.close();                               // Close the file again
       Serial.print("handleFileUpload Size: "); 
       Serial.println(upload.totalSize);
-      server.send(200);
+      server.send(200);      
+      LittleFS.info(fs_info);
     } else {
       server.send(500, "text/plain", "500: couldn't create file");
     }

@@ -4,8 +4,6 @@
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
 
-#include <LoRa.h>
-
 #include "DisplayUI.h"
 
 #include "lwsc_lora.h"
@@ -30,8 +28,10 @@ SimpleTimer timer;
 WiFiUDP Udp;
 int timerIdUDP;
 
-MachineData machines[64];
+MachineData machines[32];
+User users[16];
 int8_t machineCount;
+FSInfo fs_info;
 
 bool InitalizeFileSystem() {
   bool initok = false;
@@ -59,7 +59,6 @@ bool InitalizeFileSystem() {
   Serial.print("Total bytes:    "); Serial.println(LittleFS.totalBytes());
   Serial.print("Used bytes:     "); Serial.println(LittleFS.usedBytes());
 #else
-  FSInfo fs_info;
   LittleFS.info(fs_info);
   Serial.print("Total bytes:    "); Serial.println(fs_info.totalBytes);
   Serial.print("Used bytes:     "); Serial.println(fs_info.usedBytes);
@@ -214,7 +213,6 @@ void udpMsg(String msg) {
 }
 
 void setup() {
-  
   pinMode(15, INPUT);
   pinMode(2, OUTPUT);
   digitalWrite(2, HIGH);   // turn the LED on (HIGH is the voltage level)
@@ -225,6 +223,34 @@ void setup() {
 
   InitalizeFileSystem();
   ReadConfig();
+
+  
+  FSInfo fs_info;
+  LittleFS.info(fs_info);    
+  Serial.println(fs_info.usedBytes + "/" + fs_info.totalBytes);
+  
+  for(int i = 0; i < 64; i++)
+  {
+    for(int j = 0; j < 41; j++)
+    {
+      users[i].Name[j] = 0x00;
+      users[i].Password[j] = 0x00;
+    }
+    users[i].Rights = None;
+  }
+
+  strncpy(users[0].Name, "Admin", 5);
+  strncpy(users[0].Password, "lwsc-remote", 11);
+  users[0].Rights = Admin;
+
+  strncpy(users[1].Name, "Manager", 7);
+  strncpy(users[1].Password, "lauterbach", 10);
+  users[1].Rights = Saves;
+
+  strncpy(users[2].Name, "User", 4);
+  strncpy(users[2].Password, "lwsc", 4);
+  users[2].Rights = Fire;
+  
   //Serial.println("Loaded " + String(machines.size()) + " machines");
 
   // start display

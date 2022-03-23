@@ -7,6 +7,7 @@
 #include "DisplayUI.h"
 
 extern String network_ip;
+extern FSInfo fs_info;
 
 // ===== adjustable ===== //
 void DisplayUI::drawString(int x, int y, String str) {
@@ -61,14 +62,16 @@ void DisplayUI::update(bool force) {
     drawTime = millis();
     display.clear();
     
-    drawString(0, " -  LWSC ETH BRIDGE  - ");
-    drawString(1, "Heap " + String(ESP.getFreeHeap()/1024) + "k, Uptime " + String(millis()/60000) + " min");
-    drawString(2, "Ethernet IP Address:");
-    drawString(3, network_ip);
+    drawString(0, "Heap " + String(ESP.getFreeHeap()/1024) + "k, Uptime " + String(millis()/60000) + " min");
+    drawString(1, "HDD " + String(fs_info.usedBytes/1024) + "k/" + String(fs_info.totalBytes/1024) + "k (" + fs_info.usedBytes/(fs_info.totalBytes*100) + "%)");
+    drawString(2, network_ip);
+    
+    /*
     if(loopDrawIndex == 0)
-      drawString(5, "Machine Count: " + machineCount);
+      drawString(4, "Machine Count: " + machineCount);
     else
-      drawString(5, "[" + String(loopDrawIndex) + "] " + String(machines[loopDrawIndex].ShortName) + " " + String(machines[loopDrawIndex].Rssi));
+      drawString(4, "[" + String(loopDrawIndex) + "] " + String(machines[loopDrawIndex].ShortName) + " " + String(machines[loopDrawIndex].Rssi));
+     */
   
     display.display();
 

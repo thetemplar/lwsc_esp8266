@@ -4,15 +4,16 @@
 #include "src/esp8266-oled-ssd1306-4.1.0/SH1106Wire.h"
 
 #include "defines.h"
+#include "LittleFS.h" // LittleFS is declared
 
 
-extern MachineData machines[64];
+extern MachineData machines[32];
 extern int8_t machineCount;
 
 class DisplayUI {
     public:
         // ===== adjustable ===== //
-        SH1106Wire display = SH1106Wire(0x3C, 5, 4);
+        SH1106Wire display = SH1106Wire(0x3C, 5, 4, GEOMETRY_128_32);
         const uint8_t lineHeight       = 10;
         const uint32_t drawInterval     = 2000; // 100ms = 10 FPS
 
