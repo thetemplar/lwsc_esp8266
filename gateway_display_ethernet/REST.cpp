@@ -44,7 +44,7 @@ void restServerRouting() {
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
-    server.on(F("/file_delete"), HTTP_POST, rest_get_file_delete);  
+    server.on(F("/file_delete"), HTTP_POST, rest_delete_file);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
