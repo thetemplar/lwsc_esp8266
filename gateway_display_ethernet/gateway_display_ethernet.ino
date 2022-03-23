@@ -224,6 +224,7 @@ void setup() {
   InitalizeFileSystem();
   ReadConfig();
 
+  Wire.begin(4, 5);
   
   FSInfo fs_info;
   LittleFS.info(fs_info);    

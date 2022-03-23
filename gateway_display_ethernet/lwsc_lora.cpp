@@ -1,5 +1,7 @@
 #include "lwsc_lora.h"
 #include "Arduino.h"
+
+#include <Wire.h>
 #include <LoRa.h>
 #include <ESP8266WebServer.h>
 
@@ -64,6 +66,35 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   {
     durationShort = duration / 20 + 1;
   }
+
+  if(dest == 1 || dest == 2 || dest == 3) { 
+    uint8_t mask = 0x0F;
+    if(dest == 1 && relaisBitmask == 1) mask = 0b11111110;
+    if(dest == 1 && relaisBitmask == 2) mask = 0b11111101;
+    if(dest == 1 && relaisBitmask == 3) mask = 0b11111100;
+    
+    if(dest == 2 && relaisBitmask == 1) mask = 0b11111011;
+    if(dest == 2 && relaisBitmask == 2) mask = 0b11110111;
+    if(dest == 2 && relaisBitmask == 3) mask = 0b11110011;
+    
+    if(dest == 3 && relaisBitmask == 1) mask = 0b11101111;
+    if(dest == 3 && relaisBitmask == 2) mask = 0b11011111;
+    if(dest == 3 && relaisBitmask == 3) mask = 0b11001111;
+    
+    Wire.beginTransmission(0x20);
+    if (Wire.write(mask) != 1) { Serial.println("err1"); }
+    if (Wire.endTransmission(true) != (uint8_t) 0) { Serial.println("err2"); }
+    delay(duration);
+    Wire.beginTransmission(0x20);
+    if (Wire.write(0xFF) != 1) { Serial.println("err1"); }
+    if (Wire.endTransmission(true) != (uint8_t) 0) { Serial.println("err2"); }
+    
+    udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
+    server.send(200, "text/json", "{\"result\": \"success\", \"mask\": \"" + String(mask) + " / " + String(relaisBitmask) + "\", \"roundtriptime\": \"0\", \"type\": \"direct\", \"rssi\": \"0\", \"snr\": \"0\", \"reply_rssi\": \"0\", \"reply_snr\": \"0\"}");
+        
+    return 0;
+  }
+  
   LoRa.beginPacket();
   LoRa.write(loraDest);
   LoRa.write(MSG_Lora_Fire_Base + relaisBitmask);
@@ -157,7 +188,7 @@ void lora_processData()
 void lora_setup()
 {
   LoRa.setPins(2, -1, 15);
-
+    
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");
     while (1);

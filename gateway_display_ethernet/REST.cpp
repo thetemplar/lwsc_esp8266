@@ -54,11 +54,16 @@ void restServerRouting() {
 bool checkUserRights(String user, String password, UserRights neededRights){
     for(int i = 0; i < 64; i++)
     {
-      if(users[i].Name == user.c_str())
+      if(strcmp(users[i].Name, user.c_str()) == 0)
       {
-        if(users[i].Password != password.c_str() || users[i].Rights < neededRights)
+        if(strcmp(users[i].Password, password.c_str()) != 0)
         {
           server.send(400, "text/json", "{\"result\": \"no auth\"}");
+          return false;
+        }
+        if(users[i].Rights < neededRights)
+        {
+          server.send(400, "text/json", "{\"result\": \"no rights\"}");
           return false;
         }
         return true;
@@ -98,7 +103,7 @@ void web_interface() {
                   "                document.getElementById('lastFire').appendChild(copyOfLast); "\
                   "            } "\
                   "            const request = new XMLHttpRequest(); "\
-                  "            const url = '/fire?id=' + mid + '&f_id=' + fid; "\
+                  "            const url = '/fire?password=lwsc&username=User&id=' + mid + '&f_id=' + fid; "\
                   "            request.onload  = function() { "\
                   "                var jsonResponse = JSON.parse(request.responseText); "\
                   "                if(jsonResponse.result == 'success') "\

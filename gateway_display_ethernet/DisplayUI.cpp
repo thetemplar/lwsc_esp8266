@@ -50,8 +50,6 @@ void DisplayUI::setup() {
 
     display.setContrast(255);
 
-    display.flipScreenVertically();
-
     display.clear();
     display.display();
 }
