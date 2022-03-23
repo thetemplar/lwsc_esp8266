@@ -43,7 +43,7 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
-    server.on(F("/file_list"), HTTP_GET, rest_get_file_list); 
+    server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
     server.on(F("/file_delete"), HTTP_POST, rest_get_file_delete);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
@@ -438,34 +438,38 @@ void rest_get_file() {
 }
 
 void rest_get_file_list() {
-  setCrossOrigin();
-  String message = "[";
-  File root = LittleFS.open("/", "r");
- 
-  File file = root.openNextFile();
- 
-  while(file){
- 
-      Serial.print("FILE: ");
-      message += String(file.name()) + ",";
- 
-      file = root.openNextFile();
-  }
-  message += "]";
+  setCrossOrigin(); 
+  String message = ""; 
+  DynamicJsonDocument doc(2048); 
+  File root = LittleFS.open("/", "r"); 
   
-  server.send(200, "text/plain", message);
+  File file = root.openNextFile(); 
+ 
+  int f = 0; 
+  while(file){ 
+      Serial.print("FILE: "); 
+      doc["files"][f] = String(file.name()); 
+  
+      file = root.openNextFile(); 
+      f++; 
+  } 
+  serializeJson(doc, message); 
+  server.send(200, "text/plain", message); 
 }
 
-void rest_get_file_delete() {
-  setCrossOrigin();
-  if (server.arg("filename") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-    return;
-  }
-  LittleFS.remove(filename);
-  LittleFS.info(fs_info);  
-  server.send(200, "text/plain", "{\"result\": \"success\"}");
-}
+void rest_delete_file() { 
+  setCrossOrigin(); 
+  if (server.arg("filename") == ""){ 
+    server.send(400, "text/json", "{\"result\": \"fail\"}"); 
+    return; 
+  } 
+  if(LittleFS.exists("/" + server.arg("filename"))){ 
+    LittleFS.remove("/" + server.arg("filename")); 
+    server.send(200, "text/json", "{\"result\": \"success\"}"); 
+  }else{ 
+    server.send(404, "text/json", "{\"result\": \"not found\"}"); 
+  } 
+} 
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
   setCrossOrigin();

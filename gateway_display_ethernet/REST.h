@@ -18,7 +18,7 @@ void rest_get_file();
 void rest_get_file_list();
 void rest_post_save_config();
 void rest_get_version();
-void rest_get_file_delete();
+void rest_delete_file(); 
 
 void rest_get_last_msg();
 
