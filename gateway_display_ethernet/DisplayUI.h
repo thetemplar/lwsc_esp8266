@@ -4,9 +4,10 @@
 #include "src/esp8266-oled-ssd1306-4.1.0/SH1106Wire.h"
 
 #include "defines.h"
+#include "LittleFS.h" // LittleFS is declared
 
 
-extern MachineData machines[64];
+extern MachineData machines[32];
 extern int8_t machineCount;
 
 class DisplayUI {

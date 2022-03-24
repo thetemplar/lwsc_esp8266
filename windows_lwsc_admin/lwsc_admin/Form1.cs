@@ -212,7 +212,7 @@ namespace lwsc_admin
 
         private void LwscMap1_Blink(uint m_id)
         {
-            var status = RESTful("/blink?id=" + m_id, RESTType.POST, out _);
+            var status = RESTful("/blink?password=lwsc-remote&username=Admin&id=" + m_id, RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -222,7 +222,7 @@ namespace lwsc_admin
 
         private void LwscMap1_Fire(uint m_id, uint f_id)
         {
-            var status = RESTful("/fire?id=" + m_id + "&f_id=" + f_id, RESTType.POST, out string res);
+            var status = RESTful("/fire?password=lwsc-remote&username=Admin&id=" + m_id + "&f_id=" + f_id, RESTType.POST, out string res);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -264,7 +264,7 @@ namespace lwsc_admin
         private void LwscMap1_LocationUpdate(int i)
         {
             var m = machines[i];
-            var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
+            var status = RESTful("/machine?password=lwsc-remote&username=Admin&id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
                 MessageBox.Show("Error: " + status);
         }
@@ -364,7 +364,7 @@ namespace lwsc_admin
         {
             machines.Clear();
 
-            var status = RESTful("/machine_count", RESTType.GET, out string res);
+            var status = RESTful("/machine_count?password=lwsc-remote&username=Admin", RESTType.GET, out string res);
             if (status != HttpStatusCode.OK)
                 MessageBox.Show("Error: " + status);
 
@@ -373,7 +373,7 @@ namespace lwsc_admin
 
             for(int i = 0; i < c; i++)
             {
-                status = RESTful("/machine?id=" + i + "&force=1", RESTType.GET, out res);
+                status = RESTful("/machine?password=lwsc-remote&username=Admin&id=" + i + "&force=1", RESTType.GET, out res);
                 if (status != HttpStatusCode.OK)
                     break;
                 machines.Add(JsonConvert.DeserializeObject<MachineData>(res));
@@ -385,7 +385,7 @@ namespace lwsc_admin
         private void GetFunctions()
         {
             dgvFunctions.Rows.Clear();
-            var status = RESTful("/all_functions", RESTType.GET, out string res);
+            var status = RESTful("/all_functions?password=lwsc-remote&username=Admin", RESTType.GET, out string res);
             if (status != HttpStatusCode.OK)
                 MessageBox.Show("Error: " + status);
 
@@ -419,7 +419,7 @@ namespace lwsc_admin
 
                 using (var client = new WebClient())
                 {
-                    client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=mappings.json", "mappings.json");
+                    client.DownloadFile("http://" + tbIpAddress.Text + "/file?password=lwsc-remote&username=Admin&filename=mappings.json", "mappings.json");
                 }
                 string res = File.ReadAllText("mappings.json");
                 if (res == "")
@@ -525,7 +525,7 @@ namespace lwsc_admin
             m.symbolX = uint.Parse(tbMachineX.Text);
             m.symbolY = uint.Parse(tbMachineY.Text);
 
-            var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
+            var status = RESTful("/machine?password=lwsc-remote&username=Admin&id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -544,7 +544,7 @@ namespace lwsc_admin
             var old_id = m.id;
             m.id = uint.Parse(tbMNewId.Text, System.Globalization.NumberStyles.HexNumber);
 
-            var status = RESTful("/change_id?id=" + old_id + "&new_id=" + m.id, RESTType.POST, out _);
+            var status = RESTful("/change_id?password=lwsc-remote&username=Admin&id=" + old_id + "&new_id=" + m.id, RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -567,7 +567,7 @@ namespace lwsc_admin
                 return;
             using (var client = new WebClient())
             {
-                client.DownloadFile("http://" + tbIpAddress.Text + "/file?filename=machines.conf", sfd.FileName);
+                client.DownloadFile("http://" + tbIpAddress.Text + "/file?password=lwsc-remote&username=Admin&filename=machines.conf", sfd.FileName);
             }
             FileInfo f = new FileInfo(Application.ExecutablePath);
             Process.Start(f.DirectoryName);
@@ -609,7 +609,7 @@ namespace lwsc_admin
             }
 
 
-            var status = RESTful("/reboot?id=0", RESTType.POST, out _);
+            var status = RESTful("/reboot?password=lwsc-remote&username=Admin&id=0", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -630,7 +630,7 @@ namespace lwsc_admin
                 if (dialogResult != DialogResult.Yes)
                     return;
             }
-            var status = RESTful("/query_rssi", RESTType.POST, out _);
+            var status = RESTful("/query_rssi?password=lwsc-remote&username=Admin", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -642,7 +642,7 @@ namespace lwsc_admin
         {
             foreach (var m in machines)
             {
-                var status = RESTful("/machine_rssi?id=" + m.id, RESTType.GET, out string res);
+                var status = RESTful("/machine_rssi?password=lwsc-remote&username=Admin&id=" + m.id, RESTType.GET, out string res);
                 if (status != HttpStatusCode.OK)
                 {
                     MessageBox.Show("Error: " + status);
@@ -794,7 +794,7 @@ namespace lwsc_admin
 
             using (WebClient client = new WebClient())
             {
-                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "mappings.json");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "mappings.json");
             }
 
             GetMappings();
@@ -817,49 +817,25 @@ namespace lwsc_admin
 
         private void btEspHome_Click(object sender, EventArgs e)
         {
-            var status = RESTful("/bt_home", RESTType.GET, out _);
-            if (status != HttpStatusCode.OK)
-            {
-                MessageBox.Show("Error: " + status);
-                return;
-            }
         }
 
         private void btEspUp_Click(object sender, EventArgs e)
         {
-            var status = RESTful("/bt_up", RESTType.GET, out _);
-            if (status != HttpStatusCode.OK)
-            {
-                MessageBox.Show("Error: " + status);
-                return;
-            }
         }
 
         private void btEspDown_Click(object sender, EventArgs e)
         {
-            var status = RESTful("/bt_down", RESTType.GET, out _);
-            if (status != HttpStatusCode.OK)
-            {
-                MessageBox.Show("Error: " + status);
-                return;
-            }
         }
 
         private void btEspClick_Click(object sender, EventArgs e)
         {
-            var status = RESTful("/bt_click", RESTType.GET, out _);
-            if (status != HttpStatusCode.OK)
-            {
-                MessageBox.Show("Error: " + status);
-                return;
-            }
         }
 
         private void btResetCounter_Click(object sender, EventArgs e)
         {
             foreach (var m in machines)
             {
-                var status = RESTful("/set_relaiscounter?id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out _);
+                var status = RESTful("/set_relaiscounter?password=lwsc-remote&username=Admin&id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out _);
                 if (status != HttpStatusCode.OK)
                 {
                     MessageBox.Show("Error: " + status);
@@ -872,7 +848,7 @@ namespace lwsc_admin
         {
             foreach (var m in machines)
             {
-                var status = RESTful("/reboot?id=" + m.id, RESTType.POST, out _);
+                var status = RESTful("/reboot?password=lwsc-remote&username=Admin&id=" + m.id, RESTType.POST, out _);
                 if (status != HttpStatusCode.OK)
                 {
                     MessageBox.Show("Error: " + status);
@@ -925,7 +901,7 @@ namespace lwsc_admin
 
             using (WebClient client = new WebClient())
             {
-                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "mappings.json");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "mappings.json");
             }
 
             GetMappings();
@@ -945,7 +921,7 @@ namespace lwsc_admin
 
             using (WebClient client = new WebClient())
             {
-                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "mappings.json");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "mappings.json");
             }
 
             GetMappings();
@@ -954,7 +930,7 @@ namespace lwsc_admin
         private void btResetCounterMachine_Click(object sender, EventArgs e)
         {
             var m = machines[mSelected];
-            var status = RESTful("/set_relaiscounter?id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out _);
+            var status = RESTful("/set_relaiscounter?password=lwsc-remote&username=Admin&id=" + m.id + "&relais1Counter=0&relais2Counter=0", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1056,7 +1032,7 @@ namespace lwsc_admin
 
             foreach (var m in machines)
             {
-                var status = RESTful("/machine?id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
+                var status = RESTful("/machine?password=lwsc-remote&username=Admin&id=" + m.id + "&name=" + m.name + "&shortName=" + m.shortName + "&disabled=" + (m.disabled ? "1" : "0") + "&symbolX=" + m.symbolX + "&symbolY=" + m.symbolY + "", RESTType.POST, out _);
                 if (status != HttpStatusCode.OK)
                 {
                     MessageBox.Show("Error: " + status);
@@ -1064,7 +1040,7 @@ namespace lwsc_admin
                 }
                 foreach(var f in m.functions)
                 {
-                    status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+                    status = RESTful("/function?password=lwsc-remote&username=Admin&id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
                     if (status != HttpStatusCode.OK)
                     {
                         MessageBox.Show("Error: " + status);
@@ -1085,7 +1061,7 @@ namespace lwsc_admin
                 return;
 
             var m = machines[mSelected];
-            var status = RESTful("/machine?id=" + m.id + "", RESTType.DELETE, out _);
+            var status = RESTful("/machine?password=lwsc-remote&username=Admin&id=" + m.id + "", RESTType.DELETE, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1108,7 +1084,7 @@ namespace lwsc_admin
             if (cbFRelais1_1.Checked) f.relaisBitmask += 0x01;
             if (cbFRelais2_1.Checked) f.relaisBitmask += 0x02;
 
-            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            var status = RESTful("/function?password=lwsc-remote&username=Admin&id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1128,7 +1104,7 @@ namespace lwsc_admin
             if (cbFRelais1_2.Checked) f.relaisBitmask += 0x01;
             if (cbFRelais2_2.Checked) f.relaisBitmask += 0x02;
 
-            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            var status = RESTful("/function?password=lwsc-remote&username=Admin&id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1148,7 +1124,7 @@ namespace lwsc_admin
             if (cbFRelais1_3.Checked) f.relaisBitmask += 0x01;
             if (cbFRelais2_3.Checked) f.relaisBitmask += 0x02;
 
-            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            var status = RESTful("/function?password=lwsc-remote&username=Admin&id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1168,7 +1144,7 @@ namespace lwsc_admin
             if (cbFRelais1_4.Checked) f.relaisBitmask += 0x01;
             if (cbFRelais2_4.Checked) f.relaisBitmask += 0x02;
 
-            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            var status = RESTful("/function?password=lwsc-remote&username=Admin&id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1188,7 +1164,7 @@ namespace lwsc_admin
             if (cbFRelais1_5.Checked) f.relaisBitmask += 0x01;
             if (cbFRelais2_5.Checked) f.relaisBitmask += 0x02;
 
-            var status = RESTful("/function?id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
+            var status = RESTful("/function?password=lwsc-remote&username=Admin&id=" + m.id + "&f_id=" + f.functionId + "&name=" + f.name + "&duration=" + f.duration + "&relaisBitmask=" + (int)f.relaisBitmask + "&symbolX=" + f.symbolX + "&symbolY=" + f.symbolY + "&rotation=" + (int)f.rotation + "", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);

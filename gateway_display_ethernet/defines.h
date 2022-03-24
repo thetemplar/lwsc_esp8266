@@ -98,6 +98,19 @@ enum MsgTypes : uint8_t
   MSG_ERROR = 0xFF
 };
 
+enum UserRights {
+  None = 0,
+  Fire,
+  Saves,
+  Admin
+};
+
+struct User {
+  char Name[41];
+  char Password[41];
+  UserRights Rights;
+};
+
 struct MachineFunction {
   char Name[38];
   uint8_t RelaisBitmask;

@@ -19,13 +19,9 @@ void rest_delete_file();
 void rest_get_file_list();
 void rest_post_save_config();
 void rest_get_version();
+void rest_delete_file(); 
 
 void rest_get_last_msg();
+void rest_get_check_user();
 
 void rest_post_set_relaiscounter();
-
-
-void rest_bt_up();
-void rest_bt_down();
-void rest_bt_click();
-void rest_bt_home();
