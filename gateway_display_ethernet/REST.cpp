@@ -45,7 +45,6 @@ void restServerRouting() {
     server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on(F("/file"), HTTP_DELETE, rest_delete_file);  
     server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
-    server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
     server.on(F("/file_delete"), HTTP_POST, rest_delete_file);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
@@ -313,7 +312,7 @@ void rest_post_machine() {
   Serial.println("rest_post_machine: " + String(id));
   
   String s = "changed";
-  if(id >= (int)machineCount)
+  if(id >= (uint32_t)machineCount)
   {
     s = "added";
     memset(&machines[id].Name, 0x00, 38);
@@ -479,19 +478,20 @@ void rest_get_file() {
   file.close();
 }
 
-void rest_delete_file() {
-  setCrossOrigin();
-  if (server.arg("filename") == ""){
-    server.send(400, "text/json", "{\"result\": \"fail\"}");
-    return;
-  }
-  if(LittleFS.exists("/" + server.arg("filename"))){
-    LittleFS.remove("/" + server.arg("filename"));
-    server.send(200, "text/json", "{\"result\": \"success\"}");
-  }else{
-    server.send(404, "text/json", "{\"result\": \"not found\"}");
-  }
-}
+void rest_delete_file() { 
+  setCrossOrigin(); 
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
+  if (server.arg("filename") == ""){ 
+    server.send(400, "text/json", "{\"result\": \"fail\"}"); 
+    return; 
+  } 
+  if(LittleFS.exists("/" + server.arg("filename"))){ 
+    LittleFS.remove("/" + server.arg("filename")); 
+    server.send(200, "text/json", "{\"result\": \"success\"}"); 
+  }else{ 
+    server.send(404, "text/json", "{\"result\": \"not found\"}"); 
+  } 
+} 
 
 void rest_get_file_list() {
   setCrossOrigin(); 
@@ -513,21 +513,6 @@ void rest_get_file_list() {
   serializeJson(doc, message); 
   server.send(200, "text/plain", message); 
 }
-
-void rest_delete_file() { 
-  setCrossOrigin(); 
-  if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
-  if (server.arg("filename") == ""){ 
-    server.send(400, "text/json", "{\"result\": \"fail\"}"); 
-    return; 
-  } 
-  if(LittleFS.exists("/" + server.arg("filename"))){ 
-    LittleFS.remove("/" + server.arg("filename")); 
-    server.send(200, "text/json", "{\"result\": \"success\"}"); 
-  }else{ 
-    server.send(404, "text/json", "{\"result\": \"not found\"}"); 
-  } 
-} 
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
   setCrossOrigin();
