@@ -13,7 +13,7 @@ extern int8_t machineCount;
 class DisplayUI {
     public:
         // ===== adjustable ===== //
-        SH1106Wire display = SH1106Wire(0x3C, 4, 5, GEOMETRY_128_32);
+        SH1106Wire display = SH1106Wire(0x3C, 5, 4);
         const uint8_t lineHeight       = 10;
         const uint32_t drawInterval     = 2000; // 100ms = 10 FPS
 
