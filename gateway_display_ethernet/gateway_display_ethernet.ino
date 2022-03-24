@@ -225,8 +225,6 @@ void setup() {
   displayUI.setup();
   
   WiFi.mode(WIFI_OFF);
-  //lora_setup();
-
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(SPI_MODE0);
