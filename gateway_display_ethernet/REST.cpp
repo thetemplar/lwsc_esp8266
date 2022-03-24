@@ -92,7 +92,7 @@ void rest_get_check_user()
     {
       if(strcmp(users[i].Password, server.arg("password").c_str()) != 0)
       {
-        server.send(200, "text/json", "{\"result\": \"wrong password\"}");
+        server.send(401, "text/json", "{\"result\": \"wrong password\"}");
         return;
       }
       if(users[i].Rights == 0)
@@ -108,7 +108,7 @@ void rest_get_check_user()
     }
   }
   
-  server.send(200, "text/json", "{\"result\": \"no auth\"}");
+  server.send(401, "text/json", "{\"result\": \"no auth\"}");
 }
 
 void web_interface() {
