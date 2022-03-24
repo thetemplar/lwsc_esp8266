@@ -50,6 +50,7 @@ void restServerRouting() {
     server.on(F("/set_relaiscounter"), HTTP_POST, rest_post_set_relaiscounter);
     server.on(F("/reboot"), HTTP_POST, rest_post_reboot);
     server.on(F("/version"), HTTP_GET, rest_get_version);
+    server.on(F("/check_user"), HTTP_GET, rest_get_check_user);
 }
 bool checkUserRights(String user, String password, UserRights neededRights){
     for(int i = 0; i < 64; i++)
@@ -80,6 +81,31 @@ void setCrossOrigin(){
     server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET"));
     server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
 };
+
+void rest_get_check_user()
+{
+  setCrossOrigin();
+  for(int i = 0; i < 64; i++)
+  {
+    if(strcmp(users[i].Name, server.arg("username").c_str()) == 0)
+    {
+      if(strcmp(users[i].Password, server.arg("password").c_str()) != 0)
+      {
+        server.send(200, "text/json", "{\"result\": \"wrong password\"}");
+      }
+      if(users[i].Rights == 0)
+        server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"None\"}");
+      if(users[i].Rights == Fire)
+        server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Fire\"}");
+      if(users[i].Rights == Saves)
+        server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Write File\"}");
+      if(users[i].Rights == Admin)
+        server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Admin\"}");
+    }
+  }
+  
+  server.send(200, "text/json", "{\"result\": \"no auth\"}");
+}
 
 void web_interface() {
   setCrossOrigin();

@@ -21,5 +21,6 @@ void rest_get_version();
 void rest_delete_file(); 
 
 void rest_get_last_msg();
+void rest_get_check_user();
 
 void rest_post_set_relaiscounter();
