@@ -312,7 +312,7 @@ void rest_post_machine() {
   Serial.println("rest_post_machine: " + String(id));
   
   String s = "changed";
-  if(id >= (int)machineCount)
+  if(id >= (uint32_t)machineCount)
   {
     s = "added";
     memset(&machines[id].Name, 0x00, 38);
