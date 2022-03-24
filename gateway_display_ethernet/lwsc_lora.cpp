@@ -84,14 +84,14 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
     Wire.beginTransmission(0x20);
     if (Wire.write(mask) != 1) { Serial.println("err1"); }
     if (Wire.endTransmission(true) != (uint8_t) 0) { Serial.println("err2"); }
+    server.send(200, "text/json", "{\"result\": \"success\", \"mask\": \"" + String(mask) + " / " + String(relaisBitmask) + "\", \"roundtriptime\": \"0\", \"type\": \"direct\", \"rssi\": \"0\", \"snr\": \"0\", \"reply_rssi\": \"0\", \"reply_snr\": \"0\"}");
+    udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
+            
     delay(duration);
     Wire.beginTransmission(0x20);
     if (Wire.write(0xFF) != 1) { Serial.println("err1"); }
     if (Wire.endTransmission(true) != (uint8_t) 0) { Serial.println("err2"); }
     
-    udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
-    server.send(200, "text/json", "{\"result\": \"success\", \"mask\": \"" + String(mask) + " / " + String(relaisBitmask) + "\", \"roundtriptime\": \"0\", \"type\": \"direct\", \"rssi\": \"0\", \"snr\": \"0\", \"reply_rssi\": \"0\", \"reply_snr\": \"0\"}");
-        
     return 0;
   }
   

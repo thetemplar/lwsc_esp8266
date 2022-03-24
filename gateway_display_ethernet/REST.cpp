@@ -43,6 +43,7 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
+    server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
     server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
     server.on(F("/file_delete"), HTTP_POST, rest_delete_file);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
@@ -92,6 +93,7 @@ void rest_get_check_user()
       if(strcmp(users[i].Password, server.arg("password").c_str()) != 0)
       {
         server.send(200, "text/json", "{\"result\": \"wrong password\"}");
+        return;
       }
       if(users[i].Rights == 0)
         server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"None\"}");
@@ -101,6 +103,8 @@ void rest_get_check_user()
         server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Write File\"}");
       if(users[i].Rights == Admin)
         server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Admin\"}");
+
+      return;
     }
   }
   
@@ -426,22 +430,8 @@ void IRAM_ATTR rest_post_fire() {
   ackStart = millis();
   ackTimeout = 350;
   ackId = id;
-
-  //TESTING  
-  int test_delay = random(200, 500);
   
-  uint32_t diff = test_delay;
-  if(diff < ackTimeout)
-  {
-    server.send(200, "text/json", "{\"result\": \"success\", \"roundtriptime\": \"" + String (diff) + "\", \"type\": \"lora\", \"rssi\": \"" + String((-1 * random(50, 120))) + "\", \"snr\": \"" + String((random(2, 10))) + "\", \"reply_rssi\": \"" + String((-1 * random(50, 120))) + "\", \"reply_snr\": \"" + String((random(2, 10))) + "\"}");
-    ackStart = 0;
-  }
-  else
-  {
-    server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
-    ackStart = 0;
-  }
-      
+  //no server.send -> in processWiFiData()->ack!       
 }
 
 void rest_post_blink() {
