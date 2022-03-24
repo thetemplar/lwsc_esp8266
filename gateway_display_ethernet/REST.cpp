@@ -59,19 +59,19 @@ bool checkUserRights(String user, String password, UserRights neededRights){
       {
         if(strcmp(users[i].Password, password.c_str()) != 0)
         {
-          server.send(400, "text/json", "{\"result\": \"no auth\"}");
+          server.send(401, "text/json", "{\"result\": \"no auth\"}");
           return false;
         }
         if(users[i].Rights < neededRights)
         {
-          server.send(400, "text/json", "{\"result\": \"no rights\"}");
+          server.send(401, "text/json", "{\"result\": \"no rights\"}");
           return false;
         }
         return true;
       }
     }
     
-    server.send(400, "text/json", "{\"result\": \"no auth\"}");
+    server.send(401, "text/json", "{\"result\": \"no auth\"}");
     return false;
 }
   
