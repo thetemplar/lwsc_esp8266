@@ -33,12 +33,29 @@ User users[16];
 int8_t machineCount;
 FSInfo fs_info;
 
+void udpBroadcast() {
+  IPAddress broadcastIP(255, 255, 255, 255);
+  Udp.beginPacket(broadcastIP, 5556);
+  Udp.printf("WIFIBRIDGE %d.%d.%d.%d ETH", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
+  Udp.endPacket();
+}
+
+void udpMsg(String msg) {
+  String s = String("[") + String(millis()) + String("] ") + msg;
+  Serial.println(s);
+  IPAddress broadcastIP(255, 255, 255, 255);
+  Udp.beginPacket(broadcastIP, 5557);
+  Udp.printf(s.c_str());
+  Udp.endPacket();
+  s.toCharArray(lastMsg, 400);
+}
+
 bool InitalizeFileSystem() {
   bool initok = false;
   initok = LittleFS.begin();
   if (!(initok)) // Format SPIFS, of not formatted. - Try 1
   {
-    Serial.println("LittleFS file system formatted.");
+    udpMsg("LittleFS file system formatted.");
     LittleFS.format();
     initok = LittleFS.begin();
   }
@@ -49,24 +66,24 @@ bool InitalizeFileSystem() {
   }
   if (initok)
   {
-    Serial.println("LittleFS is OK");
+    udpMsg("LittleFS is OK");
   } else {
-    Serial.println("LittleFS is not OK");
+    udpMsg("LittleFS is not OK");
   }
-  Serial.println("LittleFS Information:");
+  udpMsg("LittleFS Information:");
 #ifdef ARDUINO_ARCH_ESP32
   // different methods of getting information
   Serial.print("Total bytes:    "); Serial.println(LittleFS.totalBytes());
   Serial.print("Used bytes:     "); Serial.println(LittleFS.usedBytes());
 #else
   LittleFS.info(fs_info);
-  Serial.print("Total bytes:    "); Serial.println(fs_info.totalBytes);
-  Serial.print("Used bytes:     "); Serial.println(fs_info.usedBytes);
-  Serial.print("Block size:     "); Serial.println(fs_info.blockSize);
-  Serial.print("Page size:      "); Serial.println(fs_info.pageSize);
-  Serial.print("Max open files: "); Serial.println(fs_info.maxOpenFiles);
-  Serial.print("Max path length:"); Serial.println(fs_info.maxPathLength);
-  Serial.println();
+  udpMsg("Total bytes:    "); udpMsg(String(fs_info.totalBytes));
+  udpMsg("Used bytes:     "); udpMsg(String(fs_info.usedBytes));
+  udpMsg("Block size:     "); udpMsg(String(fs_info.blockSize));
+  udpMsg("Page size:      "); udpMsg(String(fs_info.pageSize));
+  udpMsg("Max open files: "); udpMsg(String(fs_info.maxOpenFiles));
+  udpMsg("Max path length:"); udpMsg(String(fs_info.maxPathLength));
+  udpMsg("---");
 #endif
 
   return initok;
@@ -77,21 +94,20 @@ void ReadConfig()
   File configFile = LittleFS.open("/machines.conf", "r");
   if (!configFile)
   {
-    Serial.println(F("Failed to open machines.conf"));
+    udpMsg(F("Failed to open machines.conf"));
   } else {
-    Serial.println(F("Opened machines.conf"));
-    uint8_t len = 0;
+    udpMsg(F("Opened machines.conf"));
     configFile.readBytes((char*)&machineCount, 1);
-    Serial.println(F("readBytes len: ") + String(machineCount));
+    udpMsg(F("readBytes len: ") + String(machineCount));
     for (int i = 0; i < machineCount; i++)
     {
-      Serial.println(F("reading # ") + String(i));
+      udpMsg(F("reading # ") + String(i));
       configFile.readBytes((char*)&machines[i].Name, 38);
       configFile.readBytes((char*)&machines[i].ShortName, 9);
       configFile.readBytes((char*)&machines[i].Disabled, 1);
       configFile.readBytes((char*)&machines[i].SymbolX, 4);
       configFile.readBytes((char*)&machines[i].SymbolY, 4);
-      Serial.println(F("read: 0x00") + String(i, HEX));
+      udpMsg(F("read: 0x00") + String(i, HEX));
 
       configFile.readBytes((char*)&machines[i].Functions[0].Name, 38);
       configFile.readBytes((char*)&machines[i].Functions[0].Duration, 4);
@@ -128,7 +144,7 @@ void ReadConfig()
       configFile.readBytes((char*)&machines[i].Functions[4].SymbolY, 4);
       configFile.readBytes((char*)&machines[i].Functions[4].Rotation, 1);
 
-      Serial.println("added: " + String(machines[i].ShortName));
+      udpMsg("added: " + String(machines[i].ShortName));
     }
   }
   configFile.close();
@@ -139,11 +155,11 @@ void WriteConfig()
   File configFile = LittleFS.open("/machines.conf", "w");
   if (!configFile)
   {
-    Serial.println(F("Failed to open machines.conf"));
+    udpMsg(F("Failed to open machines.conf"));
   } else {
-    Serial.println(F("Opened machines.conf"));
+    udpMsg(F("Opened machines.conf"));
     configFile.write((char*)&machineCount, 1);
-    Serial.println(F("write len: ") + String(machineCount));
+    udpMsg(F("write len: ") + String(machineCount));
     for (int i = 0; i < machineCount; i++)
     {
       Serial.println(F("writing # ") + String(i));
@@ -152,7 +168,7 @@ void WriteConfig()
       configFile.write((char*)&machines[i].Disabled, 1);
       configFile.write((char*)&machines[i].SymbolX, 4);
       configFile.write((char*)&machines[i].SymbolY, 4);
-      Serial.println(F("write: 0x00") + String(i, HEX));
+      udpMsg(F("write: 0x00") + String(i, HEX));
 
       configFile.write((char*)&machines[i].Functions[0].Name, 38);
       configFile.write((char*)&machines[i].Functions[0].Duration, 4);
@@ -189,27 +205,10 @@ void WriteConfig()
       configFile.write((char*)&machines[i].Functions[4].SymbolY, 4);
       configFile.write((char*)&machines[i].Functions[4].Rotation, 1);
 
-      Serial.println("written: " + String(machines[i].ShortName));
+      udpMsg("written: " + String(machines[i].ShortName));
     }
   }
   configFile.close();
-}
-
-void udpBroadcast() {
-  IPAddress broadcastIP(255, 255, 255, 255);
-  Udp.beginPacket(broadcastIP, 5556);
-  Udp.printf("WIFIBRIDGE %d.%d.%d.%d ETH", eth.localIP()[0], eth.localIP()[1], eth.localIP()[2], eth.localIP()[3]);
-  Udp.endPacket();
-}
-
-void udpMsg(String msg) {
-  String s = String("[") + String(millis()) + String("] ") + msg;
-  Serial.println(s);
-  IPAddress broadcastIP(255, 255, 255, 255);
-  Udp.beginPacket(broadcastIP, 5557);
-  Udp.printf(s.c_str());
-  Udp.endPacket();
-  s.toCharArray(lastMsg, 400);
 }
 
 void setup() {
@@ -217,51 +216,15 @@ void setup() {
   pinMode(2, OUTPUT);
   digitalWrite(2, HIGH);   // turn the LED on (HIGH is the voltage level)
   
+  
   // start serial
   Serial.begin(115200);
   Serial.println();
 
-  InitalizeFileSystem();
-  ReadConfig();
-
-  Wire.begin(4, 5);
-  
-  FSInfo fs_info;
-  LittleFS.info(fs_info);    
-  Serial.println(fs_info.usedBytes + "/" + fs_info.totalBytes);
-  
-  for(int i = 0; i < 64; i++)
-  {
-    for(int j = 0; j < 41; j++)
-    {
-      users[i].Name[j] = 0x00;
-      users[i].Password[j] = 0x00;
-    }
-    users[i].Rights = None;
-  }
-
-  strncpy(users[0].Name, "Admin", 5);
-  strncpy(users[0].Password, "lwsc-remote", 11);
-  users[0].Rights = Admin;
-
-  strncpy(users[1].Name, "Manager", 7);
-  strncpy(users[1].Password, "lauterbach", 10);
-  users[1].Rights = Saves;
-
-  strncpy(users[2].Name, "User", 4);
-  strncpy(users[2].Password, "lwsc", 4);
-  users[2].Rights = Fire;
-  
-  //Serial.println("Loaded " + String(machines.size()) + " machines");
-
   // start display
   displayUI.setup();
-
-  pinMode(2, OUTPUT);
-
+  
   WiFi.mode(WIFI_OFF);
-  lora_setup();
-
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
   SPI.setDataMode(SPI_MODE0);
@@ -290,6 +253,45 @@ void setup() {
   Serial.print("ethernet gateway: ");
   Serial.println(eth.gatewayIP());
 
+
+  InitalizeFileSystem();
+  ReadConfig();
+
+  Wire.begin(4, 5);
+  
+  FSInfo fs_info;
+  LittleFS.info(fs_info);    
+  Serial.println(fs_info.usedBytes + "/" + fs_info.totalBytes);
+  
+  for(int i = 0; i < 16; i++)
+  {
+    for(int j = 0; j < 41; j++)
+    {
+      users[i].Name[j] = 0x00;
+      users[i].Password[j] = 0x00;
+    }
+    users[i].Rights = (UserRights)0;
+  }
+
+  strncpy(users[0].Name, "Admin", 5);
+  strncpy(users[0].Password, "lwsc-remote", 11);
+  users[0].Rights = Admin;
+
+  strncpy(users[1].Name, "Manager", 7);
+  strncpy(users[1].Password, "lauterbach", 10);
+  users[1].Rights = Saves;
+
+  strncpy(users[2].Name, "User", 4);
+  strncpy(users[2].Password, "lwsc", 4);
+  users[2].Rights = Fire;
+  
+  //Serial.println("Loaded " + String(machines.size()) + " machines");
+
+
+  pinMode(2, OUTPUT);
+
+  lora_setup();
+  
   timerIdUDP = timer.setInterval(1000, udpBroadcast);
   timer.enable(timerIdUDP);
 

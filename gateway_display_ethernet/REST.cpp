@@ -120,7 +120,7 @@ void web_interface() {
                   "            request.send();   "\
                   "        } "\
                   "      </script>  "\
-                  "      <style type='text/css'>"\	
+                  "      <style type='text/css'>"\
                   "        html,"\
                   "        body {"\
                   "          overflow-x: hidden;"\
@@ -186,6 +186,7 @@ void web_interface() {
 
 void rest_get_version() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -195,28 +196,32 @@ void rest_get_version() {
   server.send(200, "text/json", "{}");
 }
 
-void rest_post_save_config() {     
+void rest_post_save_config() {    
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return; 
   WriteConfig();
   server.send(200, "text/json", "{\"result\": \"success\"}");
 }
 
 extern char lastMsg[400];
 extern uint32_t fireCounter;
-void rest_get_last_msg() {     
+void rest_get_last_msg() {  
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;   
   server.send(200, "text/json", "{\"result\": \"" + String(lastMsg) + "\", \"firecounter\": \"" + String(fireCounter) + "\"}");
 }
 
 void rest_get_machine_count()
 {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   server.send(200, "text/json", "{\"count\": \"" + String(machineCount) + "\"}");
 }
 
 void rest_get_machine()
 {  
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -224,7 +229,7 @@ void rest_get_machine()
 
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   
-  if(machineCount == 0 || id >= machineCount)
+  if(machineCount == 0 || id >= (uint32_t)machineCount)
   {
     server.send(404, "text/json", "{\"result\": \"no data\"}");
     return;
@@ -235,7 +240,7 @@ void rest_get_machine()
   String message = "";
   DynamicJsonDocument doc(2048);
   doc["id"] = id;
-  doc["name"] = md->Name;
+  doc["name"] = machines[id].Name;
   doc["shortName"] = md->ShortName;
   doc["disabled"] = md->Disabled;
   doc["symbolX"] = md->SymbolX;
@@ -261,8 +266,9 @@ void rest_get_machine()
   server.send(200, "text/json", message);
 }
 
-void rest_post_machine() {
+void rest_post_machine() {  
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -276,13 +282,12 @@ void rest_post_machine() {
   Serial.println("rest_post_machine: " + String(id));
   
   String s = "changed";
-  MachineData* md;
-  if(id >= machineCount)
+  if(id >= (int)machineCount)
   {
     s = "added";
     memset(&machines[id].Name, 0x00, 38);
     memset(&machines[id].ShortName, 0x00, 9);
-    for(int i = 0; i < 5; i++)
+    for(uint8_t i = 0; i < 5; i++)
     {
       memset(&machines[id].Functions[i].Name, 0x00, 38);
       machines[id].Functions[i].Duration = 0;
@@ -297,7 +302,7 @@ void rest_post_machine() {
 
   if(server.arg("name") != "")
   {
-    for(int i = 0; i < 37; i++)
+    for(unsigned int i = 0; i < 37; i++)
     {
       if(i < server.arg("name").length())
         machines[id].Name[i] = server.arg("name")[i];
@@ -308,7 +313,7 @@ void rest_post_machine() {
     
   if(server.arg("shortName") != "")
   {
-    for(int i = 0; i < 8; i++)
+    for(unsigned int i = 0; i < 8; i++)
     {
       if(i < server.arg("shortName").length())
         machines[id].ShortName[i] = server.arg("shortName")[i];
@@ -329,6 +334,7 @@ void rest_post_machine() {
 
 void rest_post_function() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == "" || server.arg("f_id") == "" || server.arg("name") == "" || server.arg("duration") == "" || server.arg("relaisBitmask") == "" || server.arg("symbolX") == "" || server.arg("symbolY") == "" || server.arg("rotation") == ""){
     server.send(200, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -344,7 +350,7 @@ void rest_post_function() {
     s = "removed";
   }
     
-  for(int i = 0; i < 37; i++)
+  for(unsigned int i = 0; i < 37; i++)
   {
     if(i < server.arg("name").length())
       machines[id].Functions[f_id].Name[i] = server.arg("name")[i];
@@ -363,6 +369,8 @@ void rest_post_function() {
 
 void rest_force_fire()
 {
+  setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == "" || server.arg("duration") == ""  || server.arg("bitmask") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -377,6 +385,7 @@ void rest_force_fire()
 
 void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("id") == "" || server.arg("f_id") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -384,8 +393,8 @@ void IRAM_ATTR rest_post_fire() {
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   uint32_t f_id = strtoul(server.arg("f_id").c_str(), NULL, 10);
 
-  if(machines[id].Functions[f_id].RelaisBitmask & 0x01 == 0x01) machines[id].Relais1Counter++;
-  if(machines[id].Functions[f_id].RelaisBitmask & 0x02 == 0x02) machines[id].Relais2Counter++;
+  if((machines[id].Functions[f_id].RelaisBitmask & 0x01) == 0x01) machines[id].Relais1Counter++;
+  if((machines[id].Functions[f_id].RelaisBitmask & 0x02) == 0x02) machines[id].Relais2Counter++;
   lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
   
   ackStart = millis();
@@ -411,6 +420,7 @@ void IRAM_ATTR rest_post_fire() {
 
 void rest_post_blink() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
    if (server.arg("id") == "lora"){
     lora_blink(0xff);
     server.send(200, "text/json", "{\"result\": \"lora\"}");
@@ -428,17 +438,19 @@ void rest_post_blink() {
 
 void rest_get_file() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("filename") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
   }
   File file = LittleFS.open("/" + server.arg("filename"), "r");
-  size_t sent = server.streamFile(file, "application/octet-stream");
+  server.streamFile(file, "application/octet-stream");
   file.close();
 }
 
 void rest_get_file_list() {
   setCrossOrigin(); 
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   String message = ""; 
   DynamicJsonDocument doc(2048); 
   File root = LittleFS.open("/", "r"); 
@@ -459,6 +471,7 @@ void rest_get_file_list() {
 
 void rest_delete_file() { 
   setCrossOrigin(); 
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
   if (server.arg("filename") == ""){ 
     server.send(400, "text/json", "{\"result\": \"fail\"}"); 
     return; 
@@ -473,6 +486,7 @@ void rest_delete_file() {
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START)
   {
@@ -506,6 +520,7 @@ void rest_upload_handler(){ // upload a new file to the LittleFS
 
 void rest_get_all_functions() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   String message = "";
   DynamicJsonDocument doc(8192);
   int ff = 0;
@@ -532,6 +547,7 @@ void rest_get_all_functions() {
 
 void rest_post_set_relaiscounter() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;
@@ -555,6 +571,7 @@ void rest_post_set_relaiscounter() {
 
 void rest_post_reboot() {
   setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
    if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     return;

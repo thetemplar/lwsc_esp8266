@@ -99,7 +99,7 @@ enum MsgTypes : uint8_t
 };
 
 enum UserRights {
-  None,
+  None = 0,
   Fire,
   Saves,
   Admin
