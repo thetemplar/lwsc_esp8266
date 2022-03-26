@@ -34,6 +34,7 @@ void restServerRouting() {
     server.on(F("/save_config"), HTTP_POST, rest_post_save_config);
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
+    server.on(F("/search_function"), HTTP_GET, rest_get_search_function);
     server.on(F("/machine"), HTTP_POST, rest_post_machine);
     server.on(F("/last_msg"), HTTP_GET, rest_get_last_msg);
     server.on(F("/function"), HTTP_POST, rest_post_function);
@@ -294,6 +295,38 @@ void rest_get_machine()
   }
   serializeJson(doc, message);
   server.send(200, "text/json", message);
+}
+
+void rest_get_search_function()
+{  
+  setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
+  if (server.arg("name") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+
+  for(int id = 0; id < machineCount; id++)
+  {
+    MachineData* md = &machines[id];  
+    
+    String message = "";
+  
+    for (int f = 0; f < 5; f++)
+    {
+      if(md->Functions[f].RelaisBitmask > 0x00 || strcmp(server.arg("name").c_str(), md->Functions[f].Name) == 0)
+      {    
+        DynamicJsonDocument doc(2048);
+        doc["success"] = "found";
+        doc["functionId"] = f;
+        doc["machineId"] = id;
+        doc["name"] = md->Functions[f].Name;
+        serializeJson(doc, message);
+        server.send(200, "text/json", message); 
+      }
+    }
+  }
+  server.send(404, "text/json", "{\"result\": \"no data\", \"functionId\": \"-1\", \"machineId\": \"-1\", \"name\": \"-\"}");
 }
 
 void rest_post_machine() {  
