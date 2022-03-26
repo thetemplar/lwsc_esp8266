@@ -14,7 +14,6 @@
 #include "Keypad_I2C.h"
 #include "Keypad.h"
 
-//#include "LittleFS.h" // LittleFS is declared
 
 //Libraries for OLED Display
 #include <Wire.h>
@@ -69,81 +68,6 @@ Keypad_I2C customKeypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS, 0x2
 
 String selectedPad = "";
 
-
-
-struct MachineFunction {
-  char Name[38];
-  uint8_t RelaisBitmask;
-  int32_t Duration; //-1 = toggle
-  
-  uint32_t SymbolX;
-  uint32_t SymbolY;
-  uint8_t Rotation;
-};
-
-struct MachineData {
-  char Name[38];
-  char ShortName[9];
-  uint8_t Distance;
-  uint8_t Disabled;
-  uint32_t Relais1Counter;
-  uint32_t Relais2Counter;
-
-  uint32_t SymbolX;
-  uint32_t SymbolY;
-
-  MachineFunction Functions[5];
-  
-  int8_t Rssi;
-  int8_t Snr;
-  int8_t MachineRssi;
-  int8_t MachineSnr;
-  uint64_t LastSeen;
-};
-
-MachineData machines[32];
-int8_t machineCount;
-FSInfo fs_info;
-
-bool InitalizeFileSystem() {
-  bool initok = false;
-  initok = LittleFS.begin();
-  if (!(initok)) // Format SPIFS, of not formatted. - Try 1
-  {
-    udpMsg("LittleFS file system formatted.");
-    LittleFS.format();
-    initok = LittleFS.begin();
-  }
-  if (!(initok)) // format SPIFS. - Try 2
-  {
-    LittleFS.format();
-    initok = LittleFS.begin();
-  }
-  if (initok)
-  {
-    udpMsg("LittleFS is OK");
-  } else {
-    udpMsg("LittleFS is not OK");
-  }
-  udpMsg("LittleFS Information:");
-#ifdef ARDUINO_ARCH_ESP32
-  // different methods of getting information
-  Serial.print("Total bytes:    "); Serial.println(LittleFS.totalBytes());
-  Serial.print("Used bytes:     "); Serial.println(LittleFS.usedBytes());
-#else
-  LittleFS.info(fs_info);
-  udpMsg("Total bytes:    "); udpMsg(String(fs_info.totalBytes));
-  udpMsg("Used bytes:     "); udpMsg(String(fs_info.usedBytes));
-  udpMsg("Block size:     "); udpMsg(String(fs_info.blockSize));
-  udpMsg("Page size:      "); udpMsg(String(fs_info.pageSize));
-  udpMsg("Max open files: "); udpMsg(String(fs_info.maxOpenFiles));
-  udpMsg("Max path length:"); udpMsg(String(fs_info.maxPathLength));
-  udpMsg("---");
-#endif
-
-  return initok;
-}
-
 void setup() {
   //initialize Serial Monitor
   Serial.begin(115200);
@@ -172,9 +96,6 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   customKeypad.begin();
-  
-  InitalizeFileSystem();
-  ReadConfig();
 
   display.clearDisplay();
   display.setTextColor(WHITE);
@@ -203,93 +124,6 @@ void setup() {
 int StrToHex(char str[])
 {
   return (int) strtol(str, 0, 16);
-}
-
-
-void ReadConfig()
-{
-  File configFile = LittleFS.open("/machines.conf", "r");
-  if (!configFile)
-  {
-    udpMsg(F("Failed to open machines.conf"));
-  } else {
-    udpMsg(F("Opened machines.conf"));
-    configFile.readBytes((char*)&machineCount, 1);
-    udpMsg(F("readBytes len: ") + String(machineCount));
-    for (int i = 0; i < machineCount; i++)
-    {
-      udpMsg(F("reading # ") + String(i));
-      configFile.readBytes((char*)&machines[i].Name, 38);
-      configFile.readBytes((char*)&machines[i].ShortName, 9);
-      configFile.readBytes((char*)&machines[i].Disabled, 1);
-      configFile.readBytes((char*)&machines[i].SymbolX, 4);
-      configFile.readBytes((char*)&machines[i].SymbolY, 4);
-      udpMsg(F("read: 0x00") + String(i, HEX));
-
-      configFile.readBytes((char*)&machines[i].Functions[0].Name, 38);
-      configFile.readBytes((char*)&machines[i].Functions[0].Duration, 4);
-      configFile.readBytes((char*)&machines[i].Functions[0].RelaisBitmask, 1);
-      configFile.readBytes((char*)&machines[i].Functions[0].SymbolX, 4);
-      configFile.readBytes((char*)&machines[i].Functions[0].SymbolY, 4);
-      configFile.readBytes((char*)&machines[i].Functions[0].Rotation, 1);
-
-      configFile.readBytes((char*)&machines[i].Functions[1].Name, 38);
-      configFile.readBytes((char*)&machines[i].Functions[1].Duration, 4);
-      configFile.readBytes((char*)&machines[i].Functions[1].RelaisBitmask, 1);
-      configFile.readBytes((char*)&machines[i].Functions[1].SymbolX, 4);
-      configFile.readBytes((char*)&machines[i].Functions[1].SymbolY, 4);
-      configFile.readBytes((char*)&machines[i].Functions[1].Rotation, 1);
-
-      configFile.readBytes((char*)&machines[i].Functions[2].Name, 38);
-      configFile.readBytes((char*)&machines[i].Functions[2].Duration, 4);
-      configFile.readBytes((char*)&machines[i].Functions[2].RelaisBitmask, 1);
-      configFile.readBytes((char*)&machines[i].Functions[2].SymbolX, 4);
-      configFile.readBytes((char*)&machines[i].Functions[2].SymbolY, 4);
-      configFile.readBytes((char*)&machines[i].Functions[2].Rotation, 1);
-
-      configFile.readBytes((char*)&machines[i].Functions[3].Name, 38);
-      configFile.readBytes((char*)&machines[i].Functions[3].Duration, 4);
-      configFile.readBytes((char*)&machines[i].Functions[3].RelaisBitmask, 1);
-      configFile.readBytes((char*)&machines[i].Functions[3].SymbolX, 4);
-      configFile.readBytes((char*)&machines[i].Functions[3].SymbolY, 4);
-      configFile.readBytes((char*)&machines[i].Functions[3].Rotation, 1);
-
-      configFile.readBytes((char*)&machines[i].Functions[4].Name, 38);
-      configFile.readBytes((char*)&machines[i].Functions[4].Duration, 4);
-      configFile.readBytes((char*)&machines[i].Functions[4].RelaisBitmask, 1);
-      configFile.readBytes((char*)&machines[i].Functions[4].SymbolX, 4);
-      configFile.readBytes((char*)&machines[i].Functions[4].SymbolY, 4);
-      configFile.readBytes((char*)&machines[i].Functions[4].Rotation, 1);
-
-      udpMsg("added: " + String(machines[i].ShortName));
-    }
-  }
-  configFile.close();
-}
-
-uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
-{
-  fireCounter++;
-  uint8_t loraDest = (uint8_t)dest & 0xFF;
-  if(duration > 255*20-2)
-  { 
-    udpMsg("[LoRa] NOT fired to " + String(dest) + " duration: " + String(duration) + ": DURATION TOO LONG.");
-    return 0;
-  }
-  uint8_t durationShort = 0;
-  if(duration >= 0)
-  {
-    durationShort = duration / 20 + 1;
-  }
-  
-  LoRa.beginPacket();
-  LoRa.write(loraDest);
-  LoRa.write(MSG_Lora_Fire_Base + relaisBitmask);
-  LoRa.write(durationShort);
-  LoRa.endPacket();
-  int res = 0;
-  udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
-  return 0;
 }
 
 void loop() {
