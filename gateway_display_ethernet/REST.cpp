@@ -34,6 +34,7 @@ void restServerRouting() {
     server.on(F("/save_config"), HTTP_POST, rest_post_save_config);
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
+    server.on(F("/search_function"), HTTP_GET, rest_get_search_function);
     server.on(F("/machine"), HTTP_POST, rest_post_machine);
     server.on(F("/last_msg"), HTTP_GET, rest_get_last_msg);
     server.on(F("/function"), HTTP_POST, rest_post_function);
@@ -43,8 +44,8 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/file"), HTTP_GET, rest_get_file);  
-    server.on(F("/file"), HTTP_DELETE, rest_delete_file);  
     server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
+    server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
     server.on(F("/file_delete"), HTTP_POST, rest_delete_file);  
     server.on(F("/upload"), HTTP_POST, [](){ server.send(200); }, rest_upload_handler );
     server.on(F("/all_functions"), HTTP_GET, rest_get_all_functions);
@@ -79,7 +80,7 @@ bool checkUserRights(String user, String password, UserRights neededRights){
 void setCrossOrigin(){
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.sendHeader(F("Access-Control-Max-Age"), F("600"));
-    server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET"));
+    server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET,DELETE"));
     server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
 };
 
@@ -296,6 +297,38 @@ void rest_get_machine()
   server.send(200, "text/json", message);
 }
 
+void rest_get_search_function()
+{  
+  setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
+  if (server.arg("name") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    return;
+  }
+
+  for(int id = 0; id < machineCount; id++)
+  {
+    MachineData* md = &machines[id];  
+    
+    String message = "";
+  
+    for (int f = 0; f < 5; f++)
+    {
+      if(md->Functions[f].RelaisBitmask > 0x00 || strcmp(server.arg("name").c_str(), md->Functions[f].Name) == 0)
+      {    
+        DynamicJsonDocument doc(2048);
+        doc["success"] = "found";
+        doc["functionId"] = f;
+        doc["machineId"] = id;
+        doc["name"] = md->Functions[f].Name;
+        serializeJson(doc, message);
+        server.send(200, "text/json", message); 
+      }
+    }
+  }
+  server.send(404, "text/json", "{\"result\": \"no data\", \"functionId\": \"-1\", \"machineId\": \"-1\", \"name\": \"-\"}");
+}
+
 void rest_post_machine() {  
   setCrossOrigin();
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
@@ -478,21 +511,6 @@ void rest_get_file() {
   file.close();
 }
 
-void rest_delete_file() { 
-  setCrossOrigin(); 
-  if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
-  if (server.arg("filename") == ""){ 
-    server.send(400, "text/json", "{\"result\": \"fail\"}"); 
-    return; 
-  } 
-  if(LittleFS.exists("/" + server.arg("filename"))){ 
-    LittleFS.remove("/" + server.arg("filename")); 
-    server.send(200, "text/json", "{\"result\": \"success\"}"); 
-  }else{ 
-    server.send(404, "text/json", "{\"result\": \"not found\"}"); 
-  } 
-} 
-
 void rest_get_file_list() {
   setCrossOrigin(); 
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
@@ -514,8 +532,22 @@ void rest_get_file_list() {
   server.send(200, "text/plain", message); 
 }
 
+void rest_delete_file() { 
+  setCrossOrigin(); 
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
+  if (server.arg("filename") == ""){ 
+    server.send(400, "text/json", "{\"result\": \"fail\"}"); 
+    return; 
+  } 
+  if(LittleFS.exists("/" + server.arg("filename"))){ 
+    LittleFS.remove("/" + server.arg("filename")); 
+    server.send(200, "text/json", "{\"result\": \"success\"}"); 
+  }else{ 
+    server.send(404, "text/json", "{\"result\": \"not found\"}"); 
+  } 
+} 
+
 void rest_upload_handler(){ // upload a new file to the LittleFS  
-  setCrossOrigin();
   if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START)
@@ -540,9 +572,11 @@ void rest_upload_handler(){ // upload a new file to the LittleFS
       fsUploadFile.close();                               // Close the file again
       Serial.print("handleFileUpload Size: "); 
       Serial.println(upload.totalSize);
+      setCrossOrigin();
       server.send(200);      
       LittleFS.info(fs_info);
     } else {
+      setCrossOrigin();
       server.send(500, "text/plain", "500: couldn't create file");
     }
   }
