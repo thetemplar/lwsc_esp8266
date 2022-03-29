@@ -80,7 +80,7 @@ bool checkUserRights(String user, String password, UserRights neededRights){
 void setCrossOrigin(){
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.sendHeader(F("Access-Control-Max-Age"), F("600"));
-    server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET"));
+    server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET,DELETE"));
     server.sendHeader(F("Access-Control-Allow-Headers"), F("*"));
 };
 
@@ -534,7 +534,6 @@ void rest_delete_file() {
 } 
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
-  setCrossOrigin();
   if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
   HTTPUpload& upload = server.upload();
   if(upload.status == UPLOAD_FILE_START)
@@ -559,9 +558,11 @@ void rest_upload_handler(){ // upload a new file to the LittleFS
       fsUploadFile.close();                               // Close the file again
       Serial.print("handleFileUpload Size: "); 
       Serial.println(upload.totalSize);
+      setCrossOrigin();
       server.send(200);      
       LittleFS.info(fs_info);
     } else {
+      setCrossOrigin();
       server.send(500, "text/plain", "500: couldn't create file");
     }
   }
