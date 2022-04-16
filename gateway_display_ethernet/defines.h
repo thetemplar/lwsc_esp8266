@@ -124,7 +124,6 @@ struct MachineFunction {
 struct MachineData {
   char Name[38];
   char ShortName[9];
-  uint8_t Distance;
   uint8_t Disabled;
   uint32_t Relais1Counter;
   uint32_t Relais2Counter;
