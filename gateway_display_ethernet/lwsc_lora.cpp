@@ -42,7 +42,7 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   {
     durationShort = duration / 20 + 1;
   }
-  udpMsg("[LoRa] fired to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
+  udpMsg("[LoRa] fired locally to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
   return 0;
 }
 

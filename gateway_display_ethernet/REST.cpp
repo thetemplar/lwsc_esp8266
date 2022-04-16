@@ -62,11 +62,13 @@ bool checkUserRights(String user, String password, UserRights neededRights){
         if(strcmp(users[i].Password, password.c_str()) != 0)
         {
           server.send(401, "text/json", "{\"result\": \"no auth\"}");
+          udpMsg("[REST] auth: no auth (wrong password)"));
           return false;
         }
         if(users[i].Rights < neededRights)
         {
           server.send(401, "text/json", "{\"result\": \"no rights\"}");
+          udpMsg("[REST] auth: no rights" + String(server.uri()));
           return false;
         }
         return true;
@@ -74,10 +76,12 @@ bool checkUserRights(String user, String password, UserRights neededRights){
     }
     
     server.send(401, "text/json", "{\"result\": \"no auth\"}");
+    udpMsg("[REST] auth: no auth (no user)"));
     return false;
 }
   
 void setCrossOrigin(){
+    udpMsg("[REST] function called: " + String(server.uri()));
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.sendHeader(F("Access-Control-Max-Age"), F("600"));
     server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET,DELETE"));
@@ -105,6 +109,7 @@ void rest_get_check_user()
       if(users[i].Rights == Admin)
         server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Admin\"}");
 
+      udpMsg("[REST] rest_get_check_user: success - '" + String(server.arg("username")) + "' is " + String(users[i].Rights)));
       return;
     }
   }
@@ -232,6 +237,7 @@ void rest_post_save_config() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return; 
   WriteConfig();
   server.send(200, "text/json", "{\"result\": \"success\"}");
+  udpMsg("[REST] rest_post_save_config: saved");
 }
 
 extern char lastMsg[400];
@@ -240,6 +246,7 @@ void rest_get_last_msg() {
   setCrossOrigin();
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;   
   server.send(200, "text/json", "{\"result\": \"" + String(lastMsg) + "\", \"firecounter\": \"" + String(fireCounter) + "\"}");
+  udpMsg("[REST] rest_get_last_msg: ok");
 }
 
 void rest_get_machine_count()
@@ -247,6 +254,7 @@ void rest_get_machine_count()
   setCrossOrigin();
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   server.send(200, "text/json", "{\"count\": \"" + String(machineCount) + "\"}");
+  udpMsg("[REST] rest_get_machine_count: count: " + String(machineCount));
 }
 
 void rest_get_machine()
@@ -255,6 +263,7 @@ void rest_get_machine()
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_get_machine: fail: no id");
     return;
   }
 
@@ -263,6 +272,7 @@ void rest_get_machine()
   if(machineCount == 0 || id >= (uint32_t)machineCount)
   {
     server.send(404, "text/json", "{\"result\": \"no data\"}");
+    udpMsg("[REST] rest_get_machine: fail: no data");
     return;
   }
   
@@ -295,6 +305,7 @@ void rest_get_machine()
   }
   serializeJson(doc, message);
   server.send(200, "text/json", message);
+  udpMsg("[REST] rest_get_machine: ok");
 }
 
 void rest_get_search_function()
@@ -323,10 +334,12 @@ void rest_get_search_function()
         doc["name"] = md->Functions[f].Name;
         serializeJson(doc, message);
         server.send(200, "text/json", message); 
+        udpMsg("[REST] rest_get_search_function: ok");
       }
     }
   }
   server.send(404, "text/json", "{\"result\": \"no data\", \"functionId\": \"-1\", \"machineId\": \"-1\", \"name\": \"-\"}");
+  udpMsg("[REST] rest_get_search_function: fail: no data");
 }
 
 void rest_post_machine() {  
@@ -334,12 +347,14 @@ void rest_post_machine() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_machine: fail: no id");
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   if(id >= 64)
   {
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_machine: fail: id >= 64");
     return;
   }
   Serial.println("rest_post_machine: " + String(id));
@@ -393,6 +408,7 @@ void rest_post_machine() {
     machines[id].SymbolY = server.arg("symbolY").toInt();
   
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\"}");
+  udpMsg("[REST] rest_post_machine: ok");
 }
 
 void rest_post_function() {
@@ -400,6 +416,7 @@ void rest_post_function() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == "" || server.arg("f_id") == "" || server.arg("name") == "" || server.arg("duration") == "" || server.arg("relaisBitmask") == "" || server.arg("symbolX") == "" || server.arg("symbolY") == "" || server.arg("rotation") == ""){
     server.send(200, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_function: fail: no id");
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
@@ -428,6 +445,7 @@ void rest_post_function() {
   machines[id].Functions[f_id].Rotation = server.arg("rotation").toInt();
   
   server.send(200, "text/json", "{\"result\": \"success\", \"operation\": \"" + s + "\", \"id\": \"" + String(id) + "\", \"f_id\": \"" + String(f_id) + "\"}");
+  udpMsg("[REST] rest_post_function: ok");
 }
 
 void rest_force_fire()
@@ -436,6 +454,7 @@ void rest_force_fire()
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == "" || server.arg("duration") == ""  || server.arg("bitmask") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_force_fire: fail: arguments");
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
@@ -443,6 +462,7 @@ void rest_force_fire()
   uint32_t bitMask = strtoul(server.arg("bitmask").c_str(), NULL, 10);
   lora_fire(id, duration, bitMask); 
   server.send(200, "text/json", "{\"result\": \"ok\"}");
+  udpMsg("[REST] rest_force_fire: ok");
 }
 
 
@@ -451,6 +471,7 @@ void IRAM_ATTR rest_post_fire() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("id") == "" || server.arg("f_id") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_fire: fail: arguments");
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
@@ -458,15 +479,17 @@ void IRAM_ATTR rest_post_fire() {
 
   if((machines[id].Functions[f_id].RelaisBitmask & 0x01) == 0x01) machines[id].Relais1Counter++;
   if((machines[id].Functions[f_id].RelaisBitmask & 0x02) == 0x02) machines[id].Relais2Counter++;
-  lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
   
   ackStart = millis();
   ackTimeout = 350;
   ackId = id;
+  udpMsg("[REST] rest_post_fire: wait for /ack");
 
-  //TESTING  
+  lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
+
+  //TESTING
   int test_delay = random(200, 500);
-  
+
   uint32_t diff = test_delay;
   if(diff < ackTimeout)
   {
@@ -478,7 +501,7 @@ void IRAM_ATTR rest_post_fire() {
     server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
     ackStart = 0;
   }
-      
+
 }
 
 void rest_post_blink() {
@@ -487,16 +510,19 @@ void rest_post_blink() {
    if (server.arg("id") == "lora"){
     lora_blink(0xff);
     server.send(200, "text/json", "{\"result\": \"lora\"}");
+    udpMsg("[REST] rest_post_blink: ok (0xff)");
     return;
   }
    if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_blink: fail: no id");
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   lora_blink(id);
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
+  udpMsg("[REST] rest_post_blink: ok");
 }
 
 void rest_get_file() {
@@ -504,11 +530,13 @@ void rest_get_file() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("filename") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_get_file: fail: no filename");
     return;
   }
   File file = LittleFS.open("/" + server.arg("filename"), "r");
   server.streamFile(file, "application/octet-stream");
   file.close();
+  udpMsg("[REST] rest_get_file: ok");
 }
 
 void rest_get_file_list() {
@@ -530,6 +558,7 @@ void rest_get_file_list() {
   } 
   serializeJson(doc, message); 
   server.send(200, "text/plain", message); 
+  udpMsg("[REST] rest_get_file_list: ok");
 }
 
 void rest_delete_file() { 
@@ -537,14 +566,17 @@ void rest_delete_file() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Saves)) return;
   if (server.arg("filename") == ""){ 
     server.send(400, "text/json", "{\"result\": \"fail\"}"); 
-    return; 
+    udpMsg("[REST] rest_delete_file: fail: no filename");
+    return;
   } 
   if(LittleFS.exists("/" + server.arg("filename"))){ 
     LittleFS.remove("/" + server.arg("filename")); 
     server.send(200, "text/json", "{\"result\": \"success\"}"); 
-  }else{ 
+    udpMsg("[REST] rest_delete_file: ok");
+  }else{
     server.send(404, "text/json", "{\"result\": \"not found\"}"); 
-  } 
+    udpMsg("[REST] rest_delete_file: fail: not found");
+  }
 } 
 
 void rest_upload_handler(){ // upload a new file to the LittleFS  
@@ -573,11 +605,13 @@ void rest_upload_handler(){ // upload a new file to the LittleFS
       Serial.print("handleFileUpload Size: "); 
       Serial.println(upload.totalSize);
       setCrossOrigin();
-      server.send(200);      
+      server.send(200);
+      udpMsg("[REST] rest_upload_handler: ok");
       LittleFS.info(fs_info);
     } else {
       setCrossOrigin();
       server.send(500, "text/plain", "500: couldn't create file");
+      udpMsg("[REST] rest_upload_handler: fail: couldn't create file");
     }
   }
 }
@@ -607,6 +641,7 @@ void rest_get_all_functions() {
   }
   serializeJson(doc, message);
   server.send(200, "text/json", message);
+  udpMsg("[REST] rest_get_all_functions: ok");
 }
 
 void rest_post_set_relaiscounter() {
@@ -614,6 +649,7 @@ void rest_post_set_relaiscounter() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
   if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_set_relaiscounter: fail: no id");
     return;
   }
 
@@ -631,6 +667,7 @@ void rest_post_set_relaiscounter() {
   }
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
+  udpMsg("[REST] rest_post_set_relaiscounter: ok");
 }
 
 void rest_post_reboot() {
@@ -638,12 +675,14 @@ void rest_post_reboot() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
    if (server.arg("id") == ""){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_post_reboot: fail: no id");
     return;
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   if(id == 0)
   {
     server.send(200, "text/json", "{\"result\": \"success\"}");
+    udpMsg("[REST] rest_post_reboot: ok - local reboot");
     udpMsg("REBOOT");
     delay(10);
     ESP.restart();
@@ -653,4 +692,5 @@ void rest_post_reboot() {
   lora_reboot(id);
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
+  udpMsg("[REST] rest_post_reboot: ok");
 }
