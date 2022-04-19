@@ -349,6 +349,7 @@ void loop() {
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
   {
     server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
+    udpMsg("[SYSTEM] fire reply timout");
     ackStart = 0;
   }
   
