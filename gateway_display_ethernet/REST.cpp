@@ -31,6 +31,7 @@ void restServerRouting() {
             F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap() + F("<br><a href='/web'>Web Fernbedienung</a>"));
     });
     server.on(F("/web"), HTTP_GET, web_interface);
+    server.on(F("/host"), HTTP_GET, rest_get_host);
     server.on(F("/save_config"), HTTP_POST, rest_post_save_config);
     server.on(F("/machine_count"), HTTP_GET, rest_get_machine_count);
     server.on(F("/machine"), HTTP_GET, rest_get_machine);
@@ -62,7 +63,7 @@ bool checkUserRights(String user, String password, UserRights neededRights){
         if(strcmp(users[i].Password, password.c_str()) != 0)
         {
           server.send(401, "text/json", "{\"result\": \"no auth\"}");
-          udpMsg("[REST] auth: no auth (wrong password)"));
+          udpMsg("[REST] auth: no auth (wrong password)");
           return false;
         }
         if(users[i].Rights < neededRights)
@@ -76,7 +77,7 @@ bool checkUserRights(String user, String password, UserRights neededRights){
     }
     
     server.send(401, "text/json", "{\"result\": \"no auth\"}");
-    udpMsg("[REST] auth: no auth (no user)"));
+    udpMsg("[REST] auth: no auth (no user)");
     return false;
 }
   
@@ -109,7 +110,7 @@ void rest_get_check_user()
       if(users[i].Rights == Admin)
         server.send(200, "text/json", "{\"result\": \"success\", \"rights\": \"Admin\"}");
 
-      udpMsg("[REST] rest_get_check_user: success - '" + String(server.arg("username")) + "' is " + String(users[i].Rights)));
+      udpMsg("[REST] rest_get_check_user: success - '" + String(server.arg("username")) + "' is " + String(users[i].Rights));
       return;
     }
   }
@@ -218,6 +219,11 @@ void web_interface() {
   }  
   message += "</div></body></html>";
   server.send(200, "text/html", head + message);
+}
+
+void rest_get_host() {
+  setCrossOrigin();
+  server.send(200, "text/json", "{\"chip_id\": \"" + String(String(ESP.getChipId(), HEX)) + "\", \"build\": \"" + String(__DATE__) + " " + String(__TIME__) + "\", \"flash\": \"" + String(fs_info.usedBytes/(fs_info.totalBytes*100)) +"%\"}");
 }
 
 void rest_get_version() {
