@@ -23,7 +23,6 @@ extern FSInfo fs_info;
 
 uint64_t ackStart;
 uint32_t ackTimeout;
-uint32_t ackId;
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
@@ -488,7 +487,6 @@ void IRAM_ATTR rest_post_fire() {
   
   ackStart = millis();
   ackTimeout = 350;
-  ackId = id;
   udpMsg("[REST] rest_post_fire: wait for /ack");
   
   lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask); 

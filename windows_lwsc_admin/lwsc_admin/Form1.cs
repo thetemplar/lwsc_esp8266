@@ -605,7 +605,7 @@ namespace lwsc_admin
 
             using (WebClient client = new WebClient())
             {
-                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "tmp/machines.conf");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "tmp/machines.conf");
             }
 
 
