@@ -249,9 +249,7 @@ extern char lastMsg[400];
 extern uint32_t fireCounter;
 void rest_get_last_msg() {  
   setCrossOrigin();
-  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;   
   server.send(200, "text/json", "{\"result\": \"" + String(lastMsg) + "\", \"firecounter\": \"" + String(fireCounter) + "\"}");
-  udpMsg("[REST] rest_get_last_msg: ok");
 }
 
 void rest_get_machine_count()
@@ -473,7 +471,7 @@ void rest_force_fire()
 
 void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
-  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
+  //if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("id") == "" || server.arg("f_id") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     udpMsg("[REST] rest_post_fire: fail: arguments");

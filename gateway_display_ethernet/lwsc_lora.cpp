@@ -89,7 +89,7 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
     {
       server.send(200, "text/json", "{\"result\": \"success\", \"mask\": \"" + String(mask) + " / " + String(relaisBitmask) + "\", \"roundtriptime\": \"0\", \"type\": \"direct\", \"rssi\": \"0\", \"snr\": \"0\", \"reply_rssi\": \"0\", \"reply_snr\": \"0\"}");
     }
-    udpMsg("[LoRa] fired locally to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
+    udpMsg("[LoRa] fired locally to " + String(dest));
             
     delay(duration);
     Wire.beginTransmission(0x20);
@@ -105,7 +105,7 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   LoRa.write(durationShort);
   LoRa.endPacket();
   int res = 0;
-  udpMsg("[LoRa] fired via lora to " + String(dest) + " duration: " + String(duration) + " (" + String(durationShort) + ") bitmask: " + String(relaisBitmask));
+  udpMsg("[LoRa] fired via lora to " + String(dest));
   return 0;
 }
 

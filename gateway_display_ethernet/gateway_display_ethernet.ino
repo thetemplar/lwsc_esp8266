@@ -18,6 +18,7 @@ ENC28J60lwIP eth(CSPIN);
 byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 
 char lastMsg[400];
+long lastMsgTimestamp = 0;
 
 ESP8266WebServer server(80);
 DisplayUI displayUI;
@@ -42,13 +43,20 @@ void udpBroadcast() {
 }
 
 void udpMsg(String msg) {
-  String s = String("[") + String(millis()) + String("] ") + msg;
+  String s = String("[+") + String(millis() - lastMsgTimestamp) + String("ms] ") + msg;
   Serial.println(s);
   IPAddress broadcastIP(255, 255, 255, 255);
   Udp.beginPacket(broadcastIP, 5557);
   Udp.printf(s.c_str());
   Udp.endPacket();
-  s.toCharArray(lastMsg, 400);
+  if(s.length() > 100) s = s.substring(0, 100);
+  memmove(&lastMsg[s.length()+1], &lastMsg[0], 400 - (s.length() + 1));
+  memcpy(&lastMsg[0], s.c_str(), s.length());
+  //s.toCharArray(lastMsg, s.length());
+  lastMsg[s.length()] = '\n';
+  lastMsg[398] = 0x00;
+  lastMsg[399] = 0x00;
+  lastMsgTimestamp = millis();
 }
 
 bool InitalizeFileSystem() {
