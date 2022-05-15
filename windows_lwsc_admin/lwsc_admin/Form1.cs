@@ -27,6 +27,17 @@ namespace lwsc_admin
             DELETE
         }
 
+        public class Quality
+        {
+            public int machine;
+            public string name;
+
+            public float last_seen;
+            public int machine_rssi;
+            public int machine_snr;
+            public int rssi;
+            public int snr;
+        }
         public class MachineFunction
         {
             public uint machineId;
@@ -642,6 +653,20 @@ namespace lwsc_admin
         {
             foreach (var m in machines)
             {
+                var status = RESTful("/quality?password=lwsc-remote&username=Admin&id=" + m.id, RESTType.GET, out string res);
+                if (status != HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Error: " + status);
+                    return;
+                }
+                var q = JsonConvert.DeserializeObject<Quality>(res);
+
+                if (q.machine_rssi == 0)
+                    continue;
+
+                machines.FirstOrDefault(x => x.id == q.machine).rssiMap[0] = (sbyte)q.machine_rssi;
+
+                /*
                 var status = RESTful("/machine_rssi?password=lwsc-remote&username=Admin&id=" + m.id, RESTType.GET, out string res);
                 if (status != HttpStatusCode.OK)
                 {
@@ -661,6 +686,7 @@ namespace lwsc_admin
                     sbyte rssi  = (sbyte)r["rssi"];
                     m.rssiMap[id] = rssi;
                 }
+                */
             }
             lwscMap1.Invalidate();
         }
