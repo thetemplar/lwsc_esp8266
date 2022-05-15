@@ -95,7 +95,7 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
     Wire.beginTransmission(0x20);
     if (Wire.write(0xFF) != 1) { Serial.println("err1"); }
     if (Wire.endTransmission(true) != (uint8_t) 0) { Serial.println("err2"); }
-    
+    ackStart = 0;
     return 0;
   }
   
@@ -118,7 +118,6 @@ void lora_reqRssi(uint32_t dest)
 
 void lora_processData()
 {
-
   int packetSize = LoRa.parsePacket();
   if (packetSize) {
     //read packet
@@ -145,7 +144,7 @@ void lora_processData()
       machines[machineId].Snr = ownSnr;
       machines[machineId].LastSeen = millis();
       
-      udpMsg("[LoRa] processLoRaData: Got Msg_ACK from " + String() + " at Rssi(Gateway->Machine): " + String(machineRssi) + " at LocalRssi(Machine->Gateway): " + String(ownRssi) + " at SNR(Gateway->Machine): " + String(machineSnr) + " at SNR(Machine->Gateway): " + String(ownSnr));
+      udpMsg("[LoRa] processLoRaData: Msg_ACK from " + String(machineId) + " at Rssi: " + String(machineRssi) + " / " + String(ownRssi) + " at SNR: " + String(machineSnr) + " / " + String(ownSnr));
       
       if (ackStart > 0 && millis() < ackStart + ackTimeout)
       {

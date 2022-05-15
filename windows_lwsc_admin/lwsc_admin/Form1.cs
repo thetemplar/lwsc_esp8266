@@ -352,7 +352,7 @@ namespace lwsc_admin
 
         private void btSave_Click(object sender, EventArgs e)
         {
-            var status = RESTful("/save_config", RESTType.POST, out _);
+            var status = RESTful("/save_config?password=lwsc-remote&username=Admin", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -1198,6 +1198,44 @@ namespace lwsc_admin
             btEspDown.Visible = true;
             isEthernet = true;
 
+        }
+
+        private void btSaveAll_Click(object sender, EventArgs e)
+        {
+            machines.Clear();
+
+            var status = RESTful("/file_list?username=User&password=lwsc", RESTType.GET, out string res);
+            if (status != HttpStatusCode.OK)
+                MessageBox.Show("Error: " + status);
+
+            var o = JObject.Parse(res);
+            JArray jArray = (JArray)o["files"];
+
+            if (Directory.Exists("bak"))
+                Directory.Delete("bak", true);
+            Directory.CreateDirectory("bak");
+
+            foreach (JValue item in jArray)
+            {
+                status = RESTful("/file?filename=" + item.ToString() + "&username=User&password=lwsc", RESTType.GET, out res);
+                File.WriteAllText("bak/" + item.ToString(), res);
+                if (status != HttpStatusCode.OK)
+                    break;
+            }
+        }
+
+        private void btUploadAll_Click(object sender, EventArgs e)
+        {
+            foreach(var file in new DirectoryInfo("bak").GetFiles())
+            {
+                if (file.Name.EndsWith("conf"))
+                    continue;
+
+                using (WebClient client = new WebClient())
+                {
+                    client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "bak/" + file);
+                }
+            }
         }
     }
 }

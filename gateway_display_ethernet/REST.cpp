@@ -43,6 +43,7 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_POST, rest_force_fire);
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
+    server.on(F("/quality"), HTTP_GET, rest_get_quality);  
     server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
     server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
@@ -490,6 +491,20 @@ void IRAM_ATTR rest_post_fire() {
   lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask); 
   
   //no server.send -> in processWiFiData()->ack!              
+}
+
+void rest_get_quality() {
+  setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
+  if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_get_quality: fail: no id");
+    return;
+  }
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  
+  server.send(200, "text/json", "{\"result\": \"success\", \"machine\": \"" + String(id) + "\", \"name\": \"" + String(machines[id].Name) + "\", \"last_seen\": \"" + String(machines[id].LastSeen) + "\", \"machine_rssi\": \"" + String(machines[id].MachineRssi) + "\", \"machine_snr\": \"" + String(machines[id].MachineSnr) + "\", \"rssi\": \"" + String(machines[id].Rssi) + "\", \"snr\": \"" + String(machines[id].Snr) + "\"}");
+  udpMsg("[REST] rest_get_quality: ok");
 }
 
 void rest_post_blink() {
