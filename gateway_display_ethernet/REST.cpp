@@ -503,7 +503,7 @@ void rest_get_quality() {
   }
   uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
   
-  server.send(200, "text/json", "{\"result\": \"success\", \"machine\": \"" + String(id) + "\", \"name\": \"" + String(machines[id].Name) + "\", \"last_seen\": \"" + String(machines[id].LastSeen) + "\", \"machine_rssi\": \"" + String(machines[id].MachineRssi) + "\", \"machine_snr\": \"" + String(machines[id].MachineSnr) + "\", \"rssi\": \"" + String(machines[id].Rssi) + "\", \"snr\": \"" + String(machines[id].Snr) + "\"}");
+  server.send(200, "text/json", "{\"result\": \"success\", \"machine\": \"" + String(id) + "\", \"name\": \"" + String(machines[id].Name) + "\", \"last_seen\": \"" + String((millis() - machines[id].LastSeen)/1000.0) + "\", \"machine_rssi\": \"" + String(machines[id].MachineRssi) + "\", \"machine_snr\": \"" + String(machines[id].MachineSnr) + "\", \"rssi\": \"" + String(machines[id].Rssi) + "\", \"snr\": \"" + String(machines[id].Snr) + "\"}");
   udpMsg("[REST] rest_get_quality: ok");
 }
 
