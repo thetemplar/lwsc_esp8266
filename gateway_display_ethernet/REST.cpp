@@ -488,7 +488,7 @@ void IRAM_ATTR rest_post_fire() {
   ackTimeout = 350;
   udpMsg("[REST] rest_post_fire: wait for /ack");
 
-  lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
+ // lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
 
   //TESTING
   int test_delay = random(200, 500);
