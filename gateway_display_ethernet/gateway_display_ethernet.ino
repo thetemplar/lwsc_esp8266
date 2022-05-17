@@ -332,6 +332,7 @@ void setup() {
   ArduinoOTA.begin();
   
   udpMsg("Hello everyone! I am " + String(eth.localIP()[0]) + "." + String(eth.localIP()[1]) + "." + String(eth.localIP()[2]) + "." + String(eth.localIP()[3]) + "!");
+  udpMsg("Build Date: " + String(__DATE__) + " " + String(__TIME__));
   udpMsg("Loaded " + String(machineCount) + " machines");
 }
 

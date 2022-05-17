@@ -5,6 +5,7 @@ void web_interface();
 void rest_get_host();
 void rest_get_machine_count();
 void rest_get_machine();
+void rest_get_search_function();
 void rest_post_machine();
 void rest_force_fire();
 void rest_post_fire();

@@ -90,7 +90,7 @@ void setCrossOrigin(){
 };
 
 void rest_get_check_user()
-{
+{  
   setCrossOrigin();
   for(int i = 0; i < 64; i++)
   {
