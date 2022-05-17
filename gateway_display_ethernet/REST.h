@@ -10,6 +10,7 @@ void rest_post_machine();
 void rest_force_fire();
 void rest_post_fire();
 
+void rest_get_quality();
 void rest_get_all_functions();
 void rest_post_function();
 void rest_post_blink();

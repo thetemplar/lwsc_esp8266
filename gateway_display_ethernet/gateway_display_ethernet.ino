@@ -18,6 +18,7 @@ ENC28J60lwIP eth(CSPIN);
 byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 
 char lastMsg[400];
+long lastMsgTimestamp = 0;
 
 ESP8266WebServer server(80);
 DisplayUI displayUI;
@@ -32,6 +33,7 @@ MachineData machines[32];
 User users[16];
 int8_t machineCount;
 FSInfo fs_info;
+char packetBuffer[21];
 
 void udpBroadcast() {
   IPAddress broadcastIP(255, 255, 255, 255);
@@ -41,13 +43,20 @@ void udpBroadcast() {
 }
 
 void udpMsg(String msg) {
-  String s = String("[") + String(millis()) + String("] ") + msg;
+  String s = String("[+") + String(millis() - lastMsgTimestamp) + String("ms] ") + msg;
   Serial.println(s);
   IPAddress broadcastIP(255, 255, 255, 255);
   Udp.beginPacket(broadcastIP, 5557);
   Udp.printf(s.c_str());
   Udp.endPacket();
-  s.toCharArray(lastMsg, 400);
+  if(s.length() > 100) s = s.substring(0, 100);
+  memmove(&lastMsg[s.length()+1], &lastMsg[0], 400 - (s.length() + 1));
+  memcpy(&lastMsg[0], s.c_str(), s.length());
+  //s.toCharArray(lastMsg, s.length());
+  lastMsg[s.length()] = '\n';
+  lastMsg[398] = 0x00;
+  lastMsg[399] = 0x00;
+  lastMsgTimestamp = millis();
 }
 
 bool InitalizeFileSystem() {
@@ -297,7 +306,11 @@ void setup() {
 
   restServerRouting();
   server.begin();
+  
+  Udp.begin(5550);
+  udpMsg("Listening on UDP port 5550");
 
+  
   ArduinoOTA.onStart([]() {
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
@@ -351,6 +364,30 @@ void loop() {
     //server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
     //udpMsg("[SYSTEM] fire reply timout");
     //ackStart = 0;
+  }
+  
+  int packetSize = Udp.parsePacket();
+  if (packetSize) {
+    Udp.read(packetBuffer, sizeof(packetBuffer));
+    packetBuffer[packetSize] = 0;
+    udpMsg("[UDP] read: " + String(packetBuffer));
+    if(packetSize == 4)
+    {
+      char id_c[2] = {packetBuffer[0], packetBuffer[1]};
+      char f_id_c[2] = {packetBuffer[3]};
+      uint32_t id = strtoul(id_c, NULL, 10);
+      uint32_t f_id = strtoul(f_id_c, NULL, 10);
+      udpMsg("[UDP] fire at id: " + String(id) + " & f_id: " + String(f_id));
+      
+      if((machines[id].Functions[f_id].RelaisBitmask & 0x01) == 0x01) machines[id].Relais1Counter++;
+      if((machines[id].Functions[f_id].RelaisBitmask & 0x02) == 0x02) machines[id].Relais2Counter++;
+      
+      //ackStart = millis();
+      //ackTimeout = 350;
+      //udpMsg("[UDP] wait for /ack");
+      
+      lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask); 
+    }
   }
   
   //Serial.println("looptime: " + String(millis() - loopTime));

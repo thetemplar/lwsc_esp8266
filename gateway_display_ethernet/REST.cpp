@@ -23,7 +23,6 @@ extern FSInfo fs_info;
 
 uint64_t ackStart;
 uint32_t ackTimeout;
-uint32_t ackId;
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
@@ -44,6 +43,7 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_POST, rest_force_fire);
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
+    server.on(F("/quality"), HTTP_GET, rest_get_quality);  
     server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
     server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
@@ -250,9 +250,7 @@ extern char lastMsg[400];
 extern uint32_t fireCounter;
 void rest_get_last_msg() {  
   setCrossOrigin();
-  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;   
   server.send(200, "text/json", "{\"result\": \"" + String(lastMsg) + "\", \"firecounter\": \"" + String(fireCounter) + "\"}");
-  udpMsg("[REST] rest_get_last_msg: ok");
 }
 
 void rest_get_machine_count()
@@ -474,7 +472,7 @@ void rest_force_fire()
 
 void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
-  if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
+  //if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   if (server.arg("id") == "" || server.arg("f_id") == "" ){
     server.send(400, "text/json", "{\"result\": \"fail\"}");
     udpMsg("[REST] rest_post_fire: fail: arguments");
@@ -488,7 +486,6 @@ void IRAM_ATTR rest_post_fire() {
   
   ackStart = millis();
   ackTimeout = 350;
-  ackId = id;
   udpMsg("[REST] rest_post_fire: wait for /ack");
 
   lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask);
@@ -508,6 +505,20 @@ void IRAM_ATTR rest_post_fire() {
     ackStart = 0;
   }
 
+}
+
+void rest_get_quality() {
+  setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
+  if (server.arg("id") == ""){
+    server.send(400, "text/json", "{\"result\": \"fail\"}");
+    udpMsg("[REST] rest_get_quality: fail: no id");
+    return;
+  }
+  uint32_t id = strtoul(server.arg("id").c_str(), NULL, 10);
+  
+  server.send(200, "text/json", "{\"result\": \"success\", \"machine\": \"" + String(id) + "\", \"name\": \"" + String(machines[id].Name) + "\", \"last_seen\": \"" + String((millis() - machines[id].LastSeen)/1000.0) + "\", \"machine_rssi\": \"" + String(machines[id].MachineRssi) + "\", \"machine_snr\": \"" + String(machines[id].MachineSnr) + "\", \"rssi\": \"" + String(machines[id].Rssi) + "\", \"snr\": \"" + String(machines[id].Snr) + "\"}");
+  udpMsg("[REST] rest_get_quality: ok");
 }
 
 void rest_post_blink() {

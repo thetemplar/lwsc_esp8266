@@ -65,7 +65,7 @@ namespace lwsc_admin
                         var dirL = Math.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
                         dir = new PointF(((float)(dir.X / dirL) * 4) * offset, ((float)(dir.Y / dirL) * 4) * offset);
                         var mp = Midpoint(new Point((int)m.symbolX, (int)m.symbolY), new Point((int)md.symbolX, (int)md.symbolY));
-                        g.DrawLine(new Pen(GetColorFromRedYellowGreenGradient(100 - ((r.Value + 40) / (-90.0 + 40) * 100))), new PointF(a.X - dir.Y, a.Y + dir.X), new PointF(b.X - dir.Y, b.Y + dir.X));
+                        g.DrawLine(new Pen(GetColorFromRedYellowGreenGradient(100 - ((r.Value + 70) / (-120.0 + 70) * 100))), new PointF(a.X - dir.Y, a.Y + dir.X), new PointF(b.X - dir.Y, b.Y + dir.X));
                         if (md.id < m.id)
                             g.DrawString(r.Value + "db", this.Font, Brushes.White, new Point(mp.X, mp.Y + 8));
                         else

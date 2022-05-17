@@ -27,6 +27,17 @@ namespace lwsc_admin
             DELETE
         }
 
+        public class Quality
+        {
+            public int machine;
+            public string name;
+
+            public float last_seen;
+            public int machine_rssi;
+            public int machine_snr;
+            public int rssi;
+            public int snr;
+        }
         public class MachineFunction
         {
             public uint machineId;
@@ -352,7 +363,7 @@ namespace lwsc_admin
 
         private void btSave_Click(object sender, EventArgs e)
         {
-            var status = RESTful("/save_config", RESTType.POST, out _);
+            var status = RESTful("/save_config?password=lwsc-remote&username=Admin", RESTType.POST, out _);
             if (status != HttpStatusCode.OK)
             {
                 MessageBox.Show("Error: " + status);
@@ -605,7 +616,7 @@ namespace lwsc_admin
 
             using (WebClient client = new WebClient())
             {
-                client.UploadFile("http://" + tbIpAddress.Text + "/upload", "tmp/machines.conf");
+                client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "tmp/machines.conf");
             }
 
 
@@ -642,6 +653,20 @@ namespace lwsc_admin
         {
             foreach (var m in machines)
             {
+                var status = RESTful("/quality?password=lwsc-remote&username=Admin&id=" + m.id, RESTType.GET, out string res);
+                if (status != HttpStatusCode.OK)
+                {
+                    MessageBox.Show("Error: " + status);
+                    return;
+                }
+                var q = JsonConvert.DeserializeObject<Quality>(res);
+
+                if (q.machine_rssi == 0)
+                    continue;
+
+                machines.FirstOrDefault(x => x.id == q.machine).rssiMap[0] = (sbyte)q.machine_rssi;
+
+                /*
                 var status = RESTful("/machine_rssi?password=lwsc-remote&username=Admin&id=" + m.id, RESTType.GET, out string res);
                 if (status != HttpStatusCode.OK)
                 {
@@ -661,6 +686,7 @@ namespace lwsc_admin
                     sbyte rssi  = (sbyte)r["rssi"];
                     m.rssiMap[id] = rssi;
                 }
+                */
             }
             lwscMap1.Invalidate();
         }
@@ -1198,6 +1224,44 @@ namespace lwsc_admin
             btEspDown.Visible = true;
             isEthernet = true;
 
+        }
+
+        private void btSaveAll_Click(object sender, EventArgs e)
+        {
+            machines.Clear();
+
+            var status = RESTful("/file_list?username=User&password=lwsc", RESTType.GET, out string res);
+            if (status != HttpStatusCode.OK)
+                MessageBox.Show("Error: " + status);
+
+            var o = JObject.Parse(res);
+            JArray jArray = (JArray)o["files"];
+
+            if (Directory.Exists("bak"))
+                Directory.Delete("bak", true);
+            Directory.CreateDirectory("bak");
+
+            foreach (JValue item in jArray)
+            {
+                status = RESTful("/file?filename=" + item.ToString() + "&username=User&password=lwsc", RESTType.GET, out res);
+                File.WriteAllText("bak/" + item.ToString(), res);
+                if (status != HttpStatusCode.OK)
+                    break;
+            }
+        }
+
+        private void btUploadAll_Click(object sender, EventArgs e)
+        {
+            foreach(var file in new DirectoryInfo("bak").GetFiles())
+            {
+                if (file.Name.EndsWith("conf"))
+                    continue;
+
+                using (WebClient client = new WebClient())
+                {
+                    client.UploadFile("http://" + tbIpAddress.Text + "/upload?password=lwsc-remote&username=Admin", "bak/" + file);
+                }
+            }
         }
     }
 }

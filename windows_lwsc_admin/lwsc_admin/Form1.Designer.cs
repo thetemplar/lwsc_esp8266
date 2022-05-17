@@ -33,6 +33,8 @@ namespace lwsc_admin
             this.tvMachines = new System.Windows.Forms.TreeView();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.pMachine = new System.Windows.Forms.Panel();
+            this.tbMachineY = new System.Windows.Forms.TextBox();
+            this.tbMachineX = new System.Windows.Forms.TextBox();
             this.btFSave5 = new System.Windows.Forms.Button();
             this.cbFRelais2_5 = new System.Windows.Forms.CheckBox();
             this.cbFRelais1_5 = new System.Windows.Forms.CheckBox();
@@ -75,6 +77,8 @@ namespace lwsc_admin
             this.label1 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.btUploadAll = new System.Windows.Forms.Button();
+            this.btSaveAll = new System.Windows.Forms.Button();
             this.btDynDns = new System.Windows.Forms.Button();
             this.btRefresh = new System.Windows.Forms.Button();
             this.btDebug = new System.Windows.Forms.Button();
@@ -122,8 +126,6 @@ namespace lwsc_admin
             this.rtbLog = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.tbMachineX = new System.Windows.Forms.TextBox();
-            this.tbMachineY = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
@@ -218,6 +220,22 @@ namespace lwsc_admin
             this.pMachine.Name = "pMachine";
             this.pMachine.Size = new System.Drawing.Size(1787, 205);
             this.pMachine.TabIndex = 3;
+            // 
+            // tbMachineY
+            // 
+            this.tbMachineY.Location = new System.Drawing.Point(5, 155);
+            this.tbMachineY.MaxLength = 8;
+            this.tbMachineY.Name = "tbMachineY";
+            this.tbMachineY.Size = new System.Drawing.Size(46, 22);
+            this.tbMachineY.TabIndex = 41;
+            // 
+            // tbMachineX
+            // 
+            this.tbMachineX.Location = new System.Drawing.Point(5, 125);
+            this.tbMachineX.MaxLength = 8;
+            this.tbMachineX.Name = "tbMachineX";
+            this.tbMachineX.Size = new System.Drawing.Size(46, 22);
+            this.tbMachineX.TabIndex = 40;
             // 
             // btFSave5
             // 
@@ -598,6 +616,8 @@ namespace lwsc_admin
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.btUploadAll);
+            this.tabPage4.Controls.Add(this.btSaveAll);
             this.tabPage4.Controls.Add(this.btDynDns);
             this.tabPage4.Controls.Add(this.btRefresh);
             this.tabPage4.Controls.Add(this.btDebug);
@@ -615,6 +635,26 @@ namespace lwsc_admin
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "RSSI/Map";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // btUploadAll
+            // 
+            this.btUploadAll.Location = new System.Drawing.Point(658, 44);
+            this.btUploadAll.Name = "btUploadAll";
+            this.btUploadAll.Size = new System.Drawing.Size(121, 31);
+            this.btUploadAll.TabIndex = 22;
+            this.btUploadAll.Text = "Upload /bak";
+            this.btUploadAll.UseVisualStyleBackColor = true;
+            this.btUploadAll.Click += new System.EventHandler(this.btUploadAll_Click);
+            // 
+            // btSaveAll
+            // 
+            this.btSaveAll.Location = new System.Drawing.Point(401, 44);
+            this.btSaveAll.Name = "btSaveAll";
+            this.btSaveAll.Size = new System.Drawing.Size(121, 31);
+            this.btSaveAll.TabIndex = 18;
+            this.btSaveAll.Text = "Save Files";
+            this.btSaveAll.UseVisualStyleBackColor = true;
+            this.btSaveAll.Click += new System.EventHandler(this.btSaveAll_Click);
             // 
             // btDynDns
             // 
@@ -1085,22 +1125,6 @@ namespace lwsc_admin
             this.toolStripStatusLabel.Name = "toolStripStatusLabel";
             this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 16);
             // 
-            // tbMachineX
-            // 
-            this.tbMachineX.Location = new System.Drawing.Point(5, 125);
-            this.tbMachineX.MaxLength = 8;
-            this.tbMachineX.Name = "tbMachineX";
-            this.tbMachineX.Size = new System.Drawing.Size(46, 22);
-            this.tbMachineX.TabIndex = 40;
-            // 
-            // tbMachineY
-            // 
-            this.tbMachineY.Location = new System.Drawing.Point(5, 155);
-            this.tbMachineY.MaxLength = 8;
-            this.tbMachineY.Name = "tbMachineY";
-            this.tbMachineY.Size = new System.Drawing.Size(46, 22);
-            this.tbMachineY.TabIndex = 41;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -1233,6 +1257,8 @@ namespace lwsc_admin
         private System.Windows.Forms.Button btDynDns;
         private System.Windows.Forms.TextBox tbMachineY;
         private System.Windows.Forms.TextBox tbMachineX;
+        private System.Windows.Forms.Button btSaveAll;
+        private System.Windows.Forms.Button btUploadAll;
     }
 }
 
