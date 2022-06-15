@@ -27,7 +27,7 @@ uint32_t ackTimeout;
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
         server.send(200, F("text/html"),
-            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap() + F("<br><a href='/web'>Web Fernbedienung</a>"));
+            F("Welcome to the REST Web Server @LWSC Display 0x00") + String(ESP.getChipId(), HEX) + " - " + millis() + "ms - Heap: " + ESP.getFreeHeap() + "<br>" + String(__DATE__) + " " + String(__TIME__) + F("<br><a href='/web'>Web Fernbedienung</a>"));
     });
     server.on(F("/web"), HTTP_GET, web_interface);
     server.on(F("/host"), HTTP_GET, rest_get_host);
@@ -469,7 +469,9 @@ void rest_force_fire()
   udpMsg("[REST] rest_force_fire: ok");
 }
 
-
+int sessionCounter = 0;
+unsigned long long lastFire = 0;
+extern void Whatsapp(String msg);
 void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
   //if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
@@ -490,7 +492,15 @@ void IRAM_ATTR rest_post_fire() {
   
   lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask); 
   
-  //no server.send -> in processWiFiData()->ack!              
+  //no server.send -> in processWiFiData()->ack!    
+
+  if(millis() > lastFire + 43200000)
+  {
+    Whatsapp(String("%5BLWSC%5D%20New%20Session%21%20Last%20Session%20had%20%27") + String(sessionCounter) + String("%27%20fires%21"));
+    sessionCounter = 0;
+  }
+  lastFire = millis();
+  sessionCounter++;
 }
 
 void rest_get_quality() {
@@ -547,17 +557,16 @@ void rest_get_file_list() {
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   String message = ""; 
   DynamicJsonDocument doc(2048); 
-  File root = LittleFS.open("/", "r"); 
-  
+  File root = LittleFS.open("/"+server.arg("path"), "r"); 
+
   File file = root.openNextFile(); 
- 
   int f = 0; 
   while(file){ 
-      Serial.print("FILE: "); 
-      doc["files"][f] = String(file.name()); 
-  
-      file = root.openNextFile(); 
-      f++; 
+    Serial.print("FILE: "); 
+    doc["files"][f] = String(file.name()); 
+
+    file = root.openNextFile(); 
+    f++; 
   } 
   serializeJson(doc, message); 
   server.send(200, "text/plain", message); 
@@ -572,8 +581,8 @@ void rest_delete_file() {
     udpMsg("[REST] rest_delete_file: fail: no filename");
     return; 
   } 
-  if(LittleFS.exists("/" + server.arg("filename"))){ 
-    LittleFS.remove("/" + server.arg("filename")); 
+  if(LittleFS.exists("/" + server.arg("path") + server.arg("filename"))){ 
+    LittleFS.remove("/" + server.arg("path") + server.arg("filename")); 
     server.send(200, "text/json", "{\"result\": \"success\"}"); 
     udpMsg("[REST] rest_delete_file: ok");
   }else{ 

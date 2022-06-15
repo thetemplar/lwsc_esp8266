@@ -3,6 +3,9 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
+//#include <NTPClient.h>
+#include <WiFiClient.h>
+#include <ESP8266HTTPClient.h>
 
 #include "DisplayUI.h"
 
@@ -27,6 +30,7 @@ String network_ip;
 SimpleTimer timer;
 
 WiFiUDP Udp;
+//NTPClient timeClient(Udp, "pool.ntp.org", 3600, 6000000);
 int timerIdUDP;
 
 MachineData machines[32];
@@ -57,6 +61,30 @@ void udpMsg(String msg) {
   lastMsg[398] = 0x00;
   lastMsg[399] = 0x00;
   lastMsgTimestamp = millis();
+}
+
+void Whatsapp(String msg)
+{  
+  WiFiClient client;  
+  HTTPClient http;  
+  Serial.print("[HTTP] begin whatsapp...\n");
+  String url = String("http://api.callmebot.com/whatsapp.php?phone=+4917696994788&text=") + msg + String("&apikey=922552");
+  Serial.print("[HTTP] " + url + "\n");
+  http.begin(client, url);
+  int httpResponseCode = http.GET();
+  if (httpResponseCode>0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    String payload = http.getString();
+    Serial.println(payload);
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();
+  Serial.print("[HTTP] whatsapp done...\n");
 }
 
 bool InitalizeFileSystem() {
@@ -344,9 +372,15 @@ void setup() {
   });
   ArduinoOTA.begin();
   
+  //timeClient.begin();
+  //timeClient.forceUpdate();
+  
   udpMsg("Hello everyone! I am " + String(eth.localIP()[0]) + "." + String(eth.localIP()[1]) + "." + String(eth.localIP()[2]) + "." + String(eth.localIP()[3]) + "!");
   udpMsg("Build Date: " + String(__DATE__) + " " + String(__TIME__));
   udpMsg("Loaded " + String(machineCount) + " machines");
+
+  //https://api.callmebot.com/whatsapp.php?phone=+4917696994788&text=This+is+a+test&apikey=922552
+  Whatsapp(String("%5BLWSC%5D%20Restarted%21%20%200x") + String(ESP.getChipId(), HEX));
 }
 
 extern uint64_t ackStart;
@@ -357,6 +391,7 @@ void loop() {
   timer.run();
   displayUI.update();
   server.handleClient();
+  //timeClient.update();
   lora_processData();
 
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
