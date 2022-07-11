@@ -44,6 +44,8 @@ void restServerRouting() {
     server.on(F("/force_fire"), HTTP_GET, rest_force_fire);
     server.on(F("/blink"), HTTP_POST, rest_post_blink);
     server.on(F("/quality"), HTTP_GET, rest_get_quality);  
+    server.on(F("/warning"), HTTP_POST, rest_post_warning);
+    server.on(F("/warning"), HTTP_GET, rest_get_warning);  
     server.on(F("/file"), HTTP_GET, rest_get_file);  
     server.on(F("/file_list"), HTTP_GET, rest_get_file_list);  
     server.on(F("/file"), HTTP_DELETE, rest_delete_file);   
@@ -471,7 +473,6 @@ void rest_force_fire()
 
 int sessionCounter = 0;
 unsigned long long lastFire = 0;
-extern void Whatsapp(String msg);
 void IRAM_ATTR rest_post_fire() {
   setCrossOrigin();
   //if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
@@ -496,7 +497,6 @@ void IRAM_ATTR rest_post_fire() {
 
   if(millis() > lastFire + 43200000)
   {
-    Whatsapp(String("%5BLWSC%5D%20New%20Session%21%20Last%20Session%20had%20%27") + String(sessionCounter) + String("%27%20fires%21"));
     sessionCounter = 0;
   }
   lastFire = millis();
@@ -536,6 +536,44 @@ void rest_post_blink() {
   
   server.send(200, "text/json", "{\"result\": \"success\"}");
   udpMsg("[REST] rest_post_blink: ok");
+}
+
+extern uint64_t warning_remaining;
+extern String warning_msg;
+void rest_get_warning() {
+  setCrossOrigin();
+  if(millis() < warning_remaining)
+    server.send(200, "text/json", "{\"result\": \"success\", \"type\": \"warning\", \"message\": \"" + String(warning_msg) + "\", \"time_left\": \"" + String((warning_remaining - millis()) / 1000) + "\"}");
+  else
+    server.send(200, "text/json", "{\"result\": \"success\", \"type\": \"none\"}");
+  udpMsg("[REST] rest_get_warning: ok");
+}
+
+void rest_post_warning() {
+  setCrossOrigin();
+  if(!checkUserRights(server.arg("username"), server.arg("password"), Admin)) return;
+  
+  if (server.arg("message") == "")
+    warning_msg = "Achtung!";
+  else
+  {
+    String s = server.arg("message");
+    if(s.length() > 100) s = s.substring(0, 100);
+    warning_msg = s;
+  }
+    
+  if (server.arg("time_left") == "")
+    warning_remaining = millis() + 30 * 1000;
+  else
+  {
+    uint32_t ttl = strtoul(server.arg("time_left").c_str(), NULL, 10);
+    if(ttl > 300)
+      ttl = 300;
+    warning_remaining = millis() + ttl * 1000;
+  }
+    
+  server.send(200, "text/json", "{\"result\": \"success\", \"message\": \"" + String(warning_msg) + "\", \"time_left\": \"" + String((warning_remaining - millis()) / 1000) + "\"}");
+  udpMsg("[REST] rest_post_warning: ok");
 }
 
 void rest_get_file() {

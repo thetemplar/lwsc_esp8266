@@ -39,6 +39,9 @@ int8_t machineCount;
 FSInfo fs_info;
 char packetBuffer[21];
 
+uint64_t warning_remaining = 0;
+String warning_msg;
+
 void udpBroadcast() {
   IPAddress broadcastIP(255, 255, 255, 255);
   Udp.beginPacket(broadcastIP, 5556);
@@ -61,30 +64,6 @@ void udpMsg(String msg) {
   lastMsg[398] = 0x00;
   lastMsg[399] = 0x00;
   lastMsgTimestamp = millis();
-}
-
-void Whatsapp(String msg)
-{  
-  WiFiClient client;  
-  HTTPClient http;  
-  Serial.print("[HTTP] begin whatsapp...\n");
-  String url = String("http://api.callmebot.com/whatsapp.php?phone=+4917696994788&text=") + msg + String("&apikey=922552");
-  Serial.print("[HTTP] " + url + "\n");
-  http.begin(client, url);
-  int httpResponseCode = http.GET();
-  if (httpResponseCode>0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
-    String payload = http.getString();
-    Serial.println(payload);
-  }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
-  // Free resources
-  http.end();
-  Serial.print("[HTTP] whatsapp done...\n");
 }
 
 bool InitalizeFileSystem() {
@@ -378,9 +357,6 @@ void setup() {
   udpMsg("Hello everyone! I am " + String(eth.localIP()[0]) + "." + String(eth.localIP()[1]) + "." + String(eth.localIP()[2]) + "." + String(eth.localIP()[3]) + "!");
   udpMsg("Build Date: " + String(__DATE__) + " " + String(__TIME__));
   udpMsg("Loaded " + String(machineCount) + " machines");
-
-  //https://api.callmebot.com/whatsapp.php?phone=+4917696994788&text=This+is+a+test&apikey=922552
-  Whatsapp(String("%5BLWSC%5D%20Restarted%21%20%200x") + String(ESP.getChipId(), HEX));
 }
 
 extern uint64_t ackStart;
@@ -393,6 +369,14 @@ void loop() {
   server.handleClient();
   //timeClient.update();
   lora_processData();
+
+  if(millis() < warning_remaining)
+  {
+    IPAddress broadcastIP(255, 255, 255, 255);
+    Udp.beginPacket(broadcastIP, 5558);
+    Udp.printf(String("Warning active: '" + warning_msg + "'").c_str());
+    Udp.endPacket();
+  }
 
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
   {

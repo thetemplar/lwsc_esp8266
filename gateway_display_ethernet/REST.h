@@ -14,6 +14,8 @@ void rest_get_quality();
 void rest_get_all_functions();
 void rest_post_function();
 void rest_post_blink();
+void rest_post_warning();
+void rest_get_warning();
 void rest_post_reboot();
 void rest_upload_handler();
 void rest_get_file();
