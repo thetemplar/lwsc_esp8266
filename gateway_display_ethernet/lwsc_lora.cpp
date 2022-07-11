@@ -11,6 +11,9 @@ extern uint32_t ackTimeout;
 extern ESP8266WebServer server;
 extern MachineData machines[256];
 
+extern uint64_t warning_remaining;
+extern String warning_msg;
+
 uint8_t buf[128];
 
 uint32_t fireCounter = 0;
@@ -182,8 +185,12 @@ void lora_processData()
       udpMsg("[LoRa] MSG_RSSI_Ping (" + String(ownRssi) + ")");
     } else if (buf[1] == MSG_Version_Reply) {    
       udpMsg("[LoRa] MSG_Version_Reply: '" + String((char*)&buf[2]) + "'");
+    } else if (buf[1] == MSG_Warning_Safety) {    
+      udpMsg("[LoRa] MSG_Warning_Safety!");
+      warning_remaining = millis() + 30 * 1000;
+      warning_msg = "Sicherheit!";
     } else {
-      udpMsg("[LoRa] processLoRaData: unknown payload: '" + String((char*)&buf[0]) + "'");
+      udpMsg("[LoRa] processLoRaData: unknown payload: [0]='" + String((char*)&buf[1]) + "' [1]='" + String((char*)&buf[1]) + "'");
     }
   }
 }
