@@ -94,7 +94,7 @@ enum MsgTypes : uint8_t
   MSG_RSSI_Ping = 0xAE,
   MSG_RSSI_Ping_Reply = 0xAF,
   //0xE... Input/Sensor
-  MSG_Warning_Safety = 0xE0
+  MSG_Warning_Safety = 0xE0,
   //0xF... System
   MSG_KeepAlive = 0xFA,
   MSG_ERROR = 0xFF

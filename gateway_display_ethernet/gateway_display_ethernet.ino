@@ -40,6 +40,7 @@ FSInfo fs_info;
 char packetBuffer[21];
 
 uint64_t warning_remaining = 0;
+uint64_t warning_last_sent = 0;
 String warning_msg;
 
 void udpBroadcast() {
@@ -370,12 +371,13 @@ void loop() {
   //timeClient.update();
   lora_processData();
 
-  if(millis() < warning_remaining)
+  if(millis() < warning_remaining && millis() > warning_last_sent + 2500)
   {
     IPAddress broadcastIP(255, 255, 255, 255);
     Udp.beginPacket(broadcastIP, 5558);
     Udp.printf(String("Warning active: '" + warning_msg + "'").c_str());
     Udp.endPacket();
+    warning_last_sent = millis();
   }
 
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
