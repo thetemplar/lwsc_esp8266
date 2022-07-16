@@ -12,6 +12,8 @@ int checkTimer;
 
 uint8_t buf[128];
 
+bool send_msg = false;
+
 void lora_setup()
 {
   LoRa.setPins(2, 16, 15);
@@ -96,18 +98,8 @@ void lora_processData()
 
 void checkTimerCb()
 {  
-  Serial.println("checkTimerCb");
-  digitalWrite(LED_BUILTIN, LOW);   // turn the LED on (HIGH is the voltage level)
-  delay(25);                       // wait for a second
-  digitalWrite(LED_BUILTIN, HIGH);    // turn the LED off by making the voltage LOW
-  
-  if (digitalRead(4) == HIGH) {
-    Serial.println(" > Sicherheit! <");
-    LoRa.beginPacket();
-    LoRa.write(0x00);
-    LoRa.write(0xE0);
-    LoRa.endPacket();
-    Serial.println("Lora send complete.");
+  if (digitalRead(4)  == HIGH) {
+    send_msg = true;
   }
 }
 
@@ -122,9 +114,27 @@ void setup() {
   
   checkTimer = timer.setInterval(2500, checkTimerCb);
   timer.enable(checkTimer);
+  digitalWrite(LED_BUILTIN, HIGH);    // turn the LED off by making the voltage LOW
 }
 
 void loop() {  
   timer.run();
-  lora_processData();
+  //lora_processData();
+
+  if(send_msg)
+  {    
+    LoRa.beginPacket();
+    LoRa.write(0x00);
+    LoRa.write(0xE0);
+    LoRa.endPacket();
+    
+    send_msg = false;
+    Serial.println("Lora send complete.");
+
+    
+    digitalWrite(LED_BUILTIN, LOW);   // turn the LED on (HIGH is the voltage level)
+    delay(55);                       // wait for a second
+    digitalWrite(LED_BUILTIN, HIGH);    // turn the LED off by making the voltage LOW
+    delay(55);                       // wait for a second
+  }
 }
