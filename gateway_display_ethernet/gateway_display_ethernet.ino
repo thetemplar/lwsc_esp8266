@@ -30,6 +30,9 @@ String network_ip;
 SimpleTimer timer;
 
 WiFiUDP Udp;
+
+WiFiClient client;
+HTTPClient http;
 //NTPClient timeClient(Udp, "pool.ntp.org", 3600, 6000000);
 int timerIdUDP;
 
@@ -52,12 +55,20 @@ void udpBroadcast() {
 
 void udpMsg(String msg) {
   String s = String("[+") + String(millis() - lastMsgTimestamp) + String("ms] ") + msg;
+  
   Serial.println(s);
   IPAddress broadcastIP(255, 255, 255, 255);
+  if(s.length() > 100) s = s.substring(0, 100);
+
+  //http.begin(client, "http://lwsc-db.000webhostapp.com/dbwrite2.php");
+  //http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  //int httpCode = http.POST("sendval=" + String(s));
+  //http.end();   
+  
   Udp.beginPacket(broadcastIP, 5557);
   Udp.printf(s.c_str());
   Udp.endPacket();
-  if(s.length() > 100) s = s.substring(0, 100);
+  
   memmove(&lastMsg[s.length()+1], &lastMsg[0], 400 - (s.length() + 1));
   memcpy(&lastMsg[0], s.c_str(), s.length());
   //s.toCharArray(lastMsg, s.length());
@@ -362,6 +373,7 @@ void setup() {
 
 extern uint64_t ackStart;
 extern uint32_t ackTimeout;
+extern uint32_t ackMachine;
 void loop() {
   //uint32_t loopTime = millis();
   ArduinoOTA.handle();
@@ -383,7 +395,7 @@ void loop() {
   if (ackStart > 0 && millis() >= ackStart + ackTimeout)
   {
     server.send(200, "text/json", "{\"result\": \"no reply\", \"timeout\": \"" + String(ackTimeout) + "\"}");
-    udpMsg("[SYSTEM] fire reply timout");
+    udpMsg("[SYSTEM] fire reply timout (" + String(ackMachine) + ")");
     ackStart = 0;
   }
   
@@ -398,7 +410,7 @@ void loop() {
       char f_id_c[2] = {packetBuffer[3]};
       uint32_t id = strtoul(id_c, NULL, 10);
       uint32_t f_id = strtoul(f_id_c, NULL, 10);
-      udpMsg("[UDP] fire at id: " + String(id) + " & f_id: " + String(f_id));
+      //udpMsg("[UDP] fire at id: " + String(id) + " & f_id: " + String(f_id));
       
       if((machines[id].Functions[f_id].RelaisBitmask & 0x01) == 0x01) machines[id].Relais1Counter++;
       if((machines[id].Functions[f_id].RelaisBitmask & 0x02) == 0x02) machines[id].Relais2Counter++;

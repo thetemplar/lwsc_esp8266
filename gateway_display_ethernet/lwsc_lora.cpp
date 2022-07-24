@@ -92,7 +92,7 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
     {
       server.send(200, "text/json", "{\"result\": \"success\", \"mask\": \"" + String(mask) + " / " + String(relaisBitmask) + "\", \"roundtriptime\": \"0\", \"type\": \"direct\", \"rssi\": \"0\", \"snr\": \"0\", \"reply_rssi\": \"0\", \"reply_snr\": \"0\"}");
     }
-    udpMsg("[LoRa] fired locally to " + String(dest));
+    udpMsg("[LoRa] fired via gpio to " + String(dest));
             
     delay(duration);
     Wire.beginTransmission(0x20);
@@ -108,7 +108,7 @@ uint16_t lora_fire(uint32_t dest, int32_t duration, uint8_t relaisBitmask)
   LoRa.write(durationShort);
   LoRa.endPacket();
   int res = 0;
-  udpMsg("[LoRa] fired via lora to " + String(dest));
+  udpMsg("[LoRa] fired via lora to " + String(dest) + " / " + String(relaisBitmask));
   return 0;
 }
 
@@ -147,7 +147,7 @@ void lora_processData()
       machines[machineId].Snr = ownSnr;
       machines[machineId].LastSeen = millis();
       
-      udpMsg("[LoRa] processLoRaData: Msg_ACK from " + String(machineId) + " at Rssi: " + String(machineRssi) + " / " + String(ownRssi) + " at SNR: " + String(machineSnr) + " / " + String(ownSnr));
+      udpMsg("[LoRa] process: Msg_ACK from " + String(machineId) + " at Rssi: " + String(machineRssi) + " / " + String(ownRssi) + " at SNR: " + String(machineSnr) + " / " + String(ownSnr));
       
       if (ackStart > 0 && millis() < ackStart + ackTimeout)
       {
@@ -170,7 +170,7 @@ void lora_processData()
       machines[machineId].Snr = ownSnr;
       machines[machineId].LastSeen = millis();
       
-      udpMsg("[LoRa] processLoRaData: keep-alive by " + String(machineId) + " - Rssi: " + String(LoRa.packetRssi()) + " at SNR: " + String(LoRa.packetSnr()));
+      udpMsg("[LoRa] process: keep-alive by " + String(machineId) + " - Rssi: " + String(LoRa.packetRssi()) + " at SNR: " + String(LoRa.packetSnr()));
     } else if (buf[1] == MSG_RSSI_Ping) {    
       delay(250);  
       int16_t ownRssi = LoRa.packetRssi();
@@ -182,15 +182,15 @@ void lora_processData()
       LoRa.write(aa1);
       LoRa.write(aa2);
       LoRa.endPacket();
-      udpMsg("[LoRa] MSG_RSSI_Ping (" + String(ownRssi) + ")");
+      udpMsg("[LoRa] process: MSG_RSSI_Ping (" + String(ownRssi) + ")");
     } else if (buf[1] == MSG_Version_Reply) {    
-      udpMsg("[LoRa] MSG_Version_Reply: '" + String((char*)&buf[2]) + "'");
+      udpMsg("[LoRa] process: MSG_Version_Reply: '" + String((char*)&buf[2]) + "'");
     } else if (buf[1] == MSG_Warning_Safety) {    
-      udpMsg("[LoRa] MSG_Warning_Safety!");
+      udpMsg("[LoRa] process: MSG_Warning_Safety!");
       warning_remaining = millis() + 30 * 1000;
       warning_msg = "Sicherheit!";
     } else {
-      udpMsg("[LoRa] processLoRaData: unknown payload: [0]='" + String((char*)&buf[1]) + "' [1]='" + String((char*)&buf[1]) + "'");
+      udpMsg("[LoRa] process: unknown payload: [0]='" + String((char*)&buf[1]) + "' [1]='" + String((char*)&buf[1]) + "'");
     }
   }
 }

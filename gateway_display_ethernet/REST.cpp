@@ -23,6 +23,7 @@ extern FSInfo fs_info;
 
 uint64_t ackStart;
 uint32_t ackTimeout;
+uint32_t ackMachine;
 
 void restServerRouting() {
     server.on("/", HTTP_GET, []() {
@@ -84,7 +85,7 @@ bool checkUserRights(String user, String password, UserRights neededRights){
 }
   
 void setCrossOrigin(){
-    udpMsg("[REST] function called: " + String(server.uri()));
+    //udpMsg("[REST] function called: " + String(server.uri()));
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.sendHeader(F("Access-Control-Max-Age"), F("600"));
     server.sendHeader(F("Access-Control-Allow-Methods"), F("POST,GET,DELETE"));
@@ -260,7 +261,7 @@ void rest_get_machine_count()
   setCrossOrigin();
   if(!checkUserRights(server.arg("username"), server.arg("password"), Fire)) return;
   server.send(200, "text/json", "{\"count\": \"" + String(machineCount) + "\"}");
-  udpMsg("[REST] rest_get_machine_count: count: " + String(machineCount));
+  //udpMsg("[REST] rest_get_machine_count: count: " + String(machineCount));
 }
 
 void rest_get_machine()
@@ -487,11 +488,12 @@ void IRAM_ATTR rest_post_fire() {
   if((machines[id].Functions[f_id].RelaisBitmask & 0x01) == 0x01) machines[id].Relais1Counter++;
   if((machines[id].Functions[f_id].RelaisBitmask & 0x02) == 0x02) machines[id].Relais2Counter++;
   
-  ackStart = millis();
-  ackTimeout = 350;
-  udpMsg("[REST] rest_post_fire: wait for /ack");
   
+  udpMsg("[REST] fire: " + String(machines[id].Functions[f_id].Name));
   lora_fire(id, machines[id].Functions[f_id].Duration, machines[id].Functions[f_id].RelaisBitmask); 
+  ackStart = millis();
+  ackTimeout = 400;
+  ackMachine = id;
   
   //no server.send -> in processWiFiData()->ack!    
 
@@ -608,7 +610,7 @@ void rest_get_file_list() {
   } 
   serializeJson(doc, message); 
   server.send(200, "text/plain", message); 
-  udpMsg("[REST] rest_get_file_list: ok");
+  //udpMsg("[REST] rest_get_file_list: ok");
 }
 
 void rest_delete_file() { 
@@ -691,7 +693,7 @@ void rest_get_all_functions() {
   }
   serializeJson(doc, message);
   server.send(200, "text/json", message);
-  udpMsg("[REST] rest_get_all_functions: ok");
+  //udpMsg("[REST] rest_get_all_functions: ok");
 }
 
 void rest_post_set_relaiscounter() {
